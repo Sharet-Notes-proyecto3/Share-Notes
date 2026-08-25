@@ -15,6 +15,13 @@ export const toggleUser = async (req: Request, res: Response, next: NextFunction
   } catch (err) { next(err); }
 };
 
+export const changeUserRole = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await service.changeUserRole(parseInt(req.params.id), req.body.role, req.user!.userId);
+    res.json(result);
+  } catch (err) { next(err); }
+};
+
 export const listReports = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await service.listReports(req.query.status as string | undefined);

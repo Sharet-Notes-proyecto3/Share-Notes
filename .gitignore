@@ -1,16 +1,38 @@
 # Dependencias
 node_modules/
 
-# Entornos (Variables sensibles)
+# Variables de entorno y secretos (NUNCA subir credenciales)
 .env
 .env.*
+.env.local
+!.env.example
+
+# Compilados y distribuciones
+dist/
+dist-ssr/
+build/
+coverage/
+*.tsbuildinfo
+
+# Subidas de archivos de usuarios
+uploads/
+backend/uploads/
 
 # Logs
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# SO e IDEs
+# Sistema Operativo y Editores
 .DS_Store
 Thumbs.db
 .vscode/
+!.vscode/extensions.json
 .idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

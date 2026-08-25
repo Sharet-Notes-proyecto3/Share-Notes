@@ -6,7 +6,7 @@ const service = new AuthService();
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
     if (!name || !email || !password) {
       res.status(400).json({ message: 'Nombre, email y contraseña son requeridos' });
       return;
@@ -15,7 +15,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       res.status(400).json({ message: 'La contraseña debe tener mínimo 8 caracteres' });
       return;
     }
-    const user = await service.register(name, email, password);
+    const user = await service.register(name, email, password, role || 'student');
     res.status(201).json({ message: 'Registro exitoso', user });
   } catch (err) { next(err); }
 };

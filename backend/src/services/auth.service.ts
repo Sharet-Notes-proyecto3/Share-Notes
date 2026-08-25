@@ -17,7 +17,7 @@ interface UserRow extends RowDataPacket {
 
 export class AuthService {
 
-  async register(name: string, email: string, password: string) {
+  async register(name: string, email: string, password: string, role: UserRole = 'student') {
     // Verificar si el email ya existe
     const [rows] = await pool.query<UserRow[]>(
       'SELECT id FROM users WHERE email = ?',
@@ -29,12 +29,12 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const [result] = await pool.query(
-      'INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)',
-      [name, email, passwordHash]
+      'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
+      [name, email, passwordHash, role]
     );
 
     const insertId = (result as any).insertId;
-    return { id: insertId, name, email, role: 'student' };
+    return { id: insertId, name, email, role };
   }
 
   async login(email: string, password: string) {
