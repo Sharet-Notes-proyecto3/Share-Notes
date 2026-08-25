@@ -1,117 +1,172 @@
-// =============================================================================
-// MODIFICACIÓN 1 — COMPONENTE: MENÚ DE PERFIL Y ESTADO DE SESIÓN
-// Responsable: Integrante 1 (Autenticación & Perfil)
-// =============================================================================
-
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
 export default function UserMenu() {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin, isModerator, isTeacher, isStudent } =
+    useAuth();
+
   const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener(
+        'mousedown',
+        handleClickOutside
+      );
+    };
+  }, []);
 
   if (!user) return null;
 
-  const roleLabels = {
-    admin: { label: 'Administrador', color: '#ef4444', icon: '👑' },
-    moderator: { label: 'Moderador', color: '#f59e0b', icon: '🛡️' },
-    teacher: { label: 'Docente', color: '#3b82f6', icon: '👨‍🏫' },
-    student: { label: 'Estudiante', color: '#10b981', icon: '🎓' },
+  const getRoleName = () => {
+    if (isAdmin) return 'Administrador';
+    if (isModerator) return 'Moderador';
+    if (isTeacher) return 'Docente';
+    if (isStudent) return 'Estudiante';
+
+    return 'Usuario';
   };
 
-  const currentRole = roleLabels[user.role] || roleLabels.student;
+  const getInitials = () => {
+    const name = user.name || user.email || 'U';
+
+    const parts = name
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+
+    if (parts.length === 1) {
+      return parts[0].substring(0, 2).toUpperCase();
+    }
+
+    return (
+      parts[0][0] + parts[parts.length - 1][0]
+    ).toUpperCase();
+  };
+
+  const handleLogout = () => {
+    setOpen(false);
+    logout();
+  };
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div
+      className="user-menu-wrapper"
+      ref={menuRef}
+    >
       <button
+        type="button"
+        className={`user-menu-trigger ${
+          open ? 'user-menu-trigger-active' : ''
+        }`}
         onClick={() => setOpen(!open)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          background: 'var(--sidebar-bg)',
-          border: '1px solid var(--border-color)',
-          borderRadius: '24px',
-          padding: '6px 14px',
-          color: '#fff',
-          cursor: 'pointer',
-        }}
+        aria-expanded={open}
+        aria-haspopup="true"
       >
-        <div
-          style={{
-            width: '28px',
-            height: '28px',
-            borderRadius: '50%',
-            background: currentRole.color,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '14px',
-            fontWeight: 'bold',
-          }}
+        <div className="user-avatar">
+          {getInitials()}
+        </div>
+
+        <div className="user-trigger-info">
+          <strong>{user.name || 'Usuario'}</strong>
+          <span>{getRoleName()}</span>
+        </div>
+
+        <span
+          className={`user-menu-chevron ${
+            open ? 'chevron-open' : ''
+          }`}
         >
-          {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-        </div>
-        <div style={{ textAlign: 'left' }}>
-          <div style={{ fontSize: '13px', fontWeight: '600', lineHeight: 1.2 }}>{user.name}</div>
-          <div style={{ fontSize: '11px', color: currentRole.color }}>{currentRole.icon} {currentRole.label}</div>
-        </div>
+          ↓
+        </span>
       </button>
 
       {open && (
-        <div
-          style={{
-            position: 'absolute',
-            right: 0,
-            top: '42px',
-            background: 'var(--sidebar-bg)',
-            border: '1px solid var(--border-color)',
-            borderRadius: '12px',
-            width: '220px',
-            padding: '12px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-            zIndex: 100,
-          }}
-        >
-          <div style={{ paddingBottom: '10px', borderBottom: '1px solid var(--border-color)' }}>
-            <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#fff' }}>{user.name}</p>
-            <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>{user.email}</p>
-            <span
-              style={{
-                display: 'inline-block',
-                marginTop: '6px',
-                padding: '2px 8px',
-                borderRadius: '10px',
-                fontSize: '11px',
-                background: `${currentRole.color}22`,
-                color: currentRole.color,
-                fontWeight: '600',
-              }}
-            >
-              {currentRole.label}
+        <div className="profile-menu">
+          <div className="profile-header">
+            <div className="profile-avatar-large">
+              {getInitials()}
+            </div>
+
+            <div className="profile-main-info">
+              <h3>{user.name || 'Usuario'}</h3>
+              <p>{user.email}</p>
+            </div>
+          </div>
+
+          <div className="profile-status">
+            <span className="status-dot"></span>
+
+            <span>Sesión activa</span>
+
+            <span className="profile-role">
+              {getRoleName()}
             </span>
           </div>
 
+          <div className="profile-divider"></div>
+
+          <div className="profile-actions">
+            <button
+              type="button"
+              className="profile-action"
+              onClick={() => setOpen(false)}
+            >
+              <span className="action-icon">◉</span>
+
+              <span>
+                <strong>Mi perfil</strong>
+                <small>
+                  Consulta tu información personal
+                </small>
+              </span>
+
+              <span className="action-arrow">›</span>
+            </button>
+
+            <button
+              type="button"
+              className="profile-action"
+              onClick={() => setOpen(false)}
+            >
+              <span className="action-icon">⚙</span>
+
+              <span>
+                <strong>Preferencias</strong>
+                <small>
+                  Personaliza tu experiencia
+                </small>
+              </span>
+
+              <span className="action-arrow">›</span>
+            </button>
+          </div>
+
+          <div className="profile-divider"></div>
+
           <button
-            onClick={logout}
-            style={{
-              width: '100%',
-              marginTop: '10px',
-              padding: '8px 12px',
-              background: 'rgba(239, 68, 68, 0.15)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              borderRadius: '8px',
-              color: '#f87171',
-              cursor: 'pointer',
-              fontWeight: '500',
-              fontSize: '13px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-            }}
+            type="button"
+            className="logout-action"
+            onClick={handleLogout}
           >
-            🚪 Cerrar Sesión
+            <span className="logout-icon">↪</span>
+
+            <span>
+              <strong>Cerrar sesión</strong>
+              <small>Salir de tu cuenta</small>
+            </span>
           </button>
         </div>
       )}
