@@ -5,39 +5,53 @@
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
+export const getStoredToken = () => localStorage.getItem('token') || '';
+
+export const setStoredToken = (token) => {
+  if (token) {
+    localStorage.setItem('token', token);
+  }
+};
+
+export const clearStoredToken = () => localStorage.removeItem('token');
+
 /**
  * Helper para realizar peticiones fetch estandarizadas al backend
  */
-async function request(endpoint, options = {}) {
-  const { method = 'GET', body, token, isFormData = false } = options;
-  
-  const headers = {};
-  if (!isFormData) {
-    headers['Content-Type'] = 'application/json';
+export async function apiRequest(endpoint, options = {}) {
+  const { method = 'GET', body, token, isFormData: customIsFormData, headers = {}, ...restOptions } = options;
+  const isFormData = customIsFormData || (typeof FormData !== 'undefined' && body instanceof FormData);
+
+  const nextHeaders = { ...headers };
+  if (!isFormData && !nextHeaders['Content-Type'] && !nextHeaders['content-type']) {
+    nextHeaders['Content-Type'] = 'application/json';
   }
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+
+  const authToken = token || getStoredToken();
+  if (authToken && !nextHeaders.Authorization) {
+    nextHeaders.Authorization = `Bearer ${authToken}`;
   }
 
   const config = {
     method,
-    headers,
+    headers: nextHeaders,
+    ...restOptions,
   };
 
-  if (body) {
-    config.body = isFormData ? body : JSON.stringify(body);
+  if (body !== undefined) {
+    config.body = isFormData ? body : (typeof body === 'string' ? body : JSON.stringify(body));
   }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
-  // Si la respuesta es un archivo binario (ej. PDF)
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('application/pdf')) {
-    if (!response.ok) throw new Error('Error al descargar el archivo PDF');
+  const contentType = response.headers.get('content-type') || '';
+  const isBinary = contentType.includes('application/pdf') || /application\/octet-stream|image\//i.test(contentType);
+
+  if (isBinary) {
+    if (!response.ok) throw new Error('Error al descargar archivo binario');
     return response.blob();
   }
 
-  // Parsear JSON
   let data = {};
   try {
     data = await response.json();
@@ -46,7 +60,7 @@ async function request(endpoint, options = {}) {
   }
 
   if (!response.ok) {
-    const errorMsg = data.message || data.error || `Error HTTP ${response.status}`;
+    const errorMsg = (data && data.message) || (data && data.error) || `Error HTTP ${response.status}`;
     throw new Error(errorMsg);
   }
 
@@ -54,8 +68,31 @@ async function request(endpoint, options = {}) {
 }
 
 export const api = {
-  get: (endpoint, token) => request(endpoint, { method: 'GET', token }),
-  post: (endpoint, body, token, isFormData = false) => request(endpoint, { method: 'POST', body, token, isFormData }),
-  patch: (endpoint, body, token) => request(endpoint, { method: 'PATCH', body, token }),
-  delete: (endpoint, token) => request(endpoint, { method: 'DELETE', token }),
+  get: (endpoint, tokenOrOptions) => {
+    const options = typeof tokenOrOptions === 'string' ? { token: tokenOrOptions } : (tokenOrOptions || {});
+    return apiRequest(endpoint, { ...options, method: 'GET' });
+  },
+  post: (endpoint, body, tokenOrOptions, isFormData = false) => {
+    let options = {};
+    if (typeof tokenOrOptions === 'string') {
+      options = { token: tokenOrOptions, isFormData };
+    } else if (tokenOrOptions && typeof tokenOrOptions === 'object') {
+      options = tokenOrOptions;
+    }
+    return apiRequest(endpoint, { ...options, method: 'POST', body, isFormData: isFormData || options.isFormData });
+  },
+  patch: (endpoint, body, tokenOrOptions) => {
+    const options = typeof tokenOrOptions === 'string' ? { token: tokenOrOptions } : (tokenOrOptions || {});
+    return apiRequest(endpoint, { ...options, method: 'PATCH', body });
+  },
+  put: (endpoint, body, tokenOrOptions) => {
+    const options = typeof tokenOrOptions === 'string' ? { token: tokenOrOptions } : (tokenOrOptions || {});
+    return apiRequest(endpoint, { ...options, method: 'PUT', body });
+  },
+  delete: (endpoint, tokenOrOptions) => {
+    const options = typeof tokenOrOptions === 'string' ? { token: tokenOrOptions } : (tokenOrOptions || {});
+    return apiRequest(endpoint, { ...options, method: 'DELETE' });
+  },
 };
+
+export default api;
