@@ -3,7 +3,7 @@
 // Responsable: Integrante 4 (Panel de Control, Estadísticas, Roles y Reportes)
 // =============================================================================
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { adminService } from '../../services/admin.service';
 import { useAuth } from '../../context/AuthContext';
 import UsersTable from './UsersTable';
@@ -33,7 +33,32 @@ export default function AdminView() {
   };
 
   useEffect(() => {
-    if (token) loadAdminData();
+    let isMounted = true;
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const [usersRes, reportsRes] = await Promise.all([
+          adminService.getUsers(token),
+          adminService.getReports(token),
+        ]);
+        if (isMounted) {
+          setUsers(usersRes.data || usersRes || []);
+          setReports(reportsRes.data || reportsRes || []);
+        }
+      } catch (err) {
+        console.error('Error al cargar datos administrativos:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    if (token) {
+      fetchData();
+    }
+
+    return () => {
+      isMounted = false;
+    };
   }, [token]);
 
   if (!isModerator) {

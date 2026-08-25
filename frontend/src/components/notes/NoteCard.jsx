@@ -3,7 +3,6 @@
 // Responsable: Integrante 2 (Apuntes, Archivos, Visor & QR)
 // =============================================================================
 
-import React from 'react';
 import { API_BASE_URL } from '../../services/api';
 
 export default function NoteCard({ note, onOpenQR, onOpenPreview }) {

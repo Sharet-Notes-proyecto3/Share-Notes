@@ -3,7 +3,6 @@
 // Responsable: Integrante 4 (Administración & Moderación)
 // =============================================================================
 
-import React from 'react';
 import { adminService } from '../../services/admin.service';
 import { useAuth } from '../../context/AuthContext';
 

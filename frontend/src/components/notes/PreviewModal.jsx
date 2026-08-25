@@ -3,7 +3,7 @@
 // Responsable: Integrante 2 (Apuntes, Visor In-App & Multimedia)
 // =============================================================================
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { API_BASE_URL } from '../../services/api';
 
 export default function PreviewModal({ note, onClose }) {

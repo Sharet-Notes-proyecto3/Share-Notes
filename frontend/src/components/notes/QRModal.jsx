@@ -3,7 +3,7 @@
 // Responsable: Integrante 2 (Apuntes & QR)
 // =============================================================================
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { notesService } from '../../services/notes.service';
 import { useAuth } from '../../context/AuthContext';
 

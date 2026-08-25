@@ -41,7 +41,7 @@ async function request(endpoint, options = {}) {
   let data = {};
   try {
     data = await response.json();
-  } catch (e) {
+  } catch {
     // Respuesta vacía o no JSON
   }
 

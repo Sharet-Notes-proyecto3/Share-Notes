@@ -3,12 +3,9 @@
 // Responsable: Integrante 3 (Foro Académico & Comunidad)
 // =============================================================================
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { forumService } from '../../services/forum.service';
 import { useAuth } from '../../context/AuthContext';
-
-const TITLE_MAX = 200;
-const BODY_MAX = 1000;
 
 export default function NewThreadModal({ subjects, onClose, onThreadCreated }) {
   const { token } = useAuth();
@@ -20,7 +17,7 @@ export default function NewThreadModal({ subjects, onClose, onThreadCreated }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title.trim() || !body.trim() || !subjectId) {
+    if (!title || !body || !subjectId) {
       setError('Título, contenido y materia son requeridos.');
       return;
     }
@@ -29,8 +26,8 @@ export default function NewThreadModal({ subjects, onClose, onThreadCreated }) {
       setLoading(true);
       setError('');
       await forumService.createThread(token, {
-        title: title.trim(),
-        body: body.trim(),
+        title,
+        body,
         subjectId,
       });
 
@@ -103,37 +100,25 @@ export default function NewThreadModal({ subjects, onClose, onThreadCreated }) {
           </div>
 
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <label style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Título de la pregunta o tema *</label>
-              <span style={{ fontSize: '11px', color: title.length > TITLE_MAX ? '#f87171' : 'var(--text-secondary)' }}>
-                {title.length}/{TITLE_MAX}
-              </span>
-            </div>
+            <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Título de la pregunta o tema *</label>
             <input
               type="text"
               placeholder="Ej. ¿Cómo implementar recursión de cola en C++?"
               className="form-input"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              maxLength={TITLE_MAX}
               required
             />
           </div>
 
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <label style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Detalles o explicación de la duda *</label>
-              <span style={{ fontSize: '11px', color: body.length > BODY_MAX ? '#f87171' : 'var(--text-secondary)' }}>
-                {body.length}/{BODY_MAX}
-              </span>
-            </div>
+            <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Detalles o explicación de la duda *</label>
             <textarea
               placeholder="Describe con claridad tu duda o contexto para que tus compañeros puedan ayudarte..."
               className="form-input"
               rows="4"
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              maxLength={BODY_MAX}
               required
             />
           </div>
@@ -148,9 +133,9 @@ export default function NewThreadModal({ subjects, onClose, onThreadCreated }) {
             </button>
             <button
               type="submit"
-              disabled={loading || !title.trim() || !body.trim() || !subjectId}
+              disabled={loading}
               className="primary-btn"
-              style={{ flex: 2, opacity: (loading || !title.trim() || !body.trim() || !subjectId) ? 0.6 : 1 }}
+              style={{ flex: 2 }}
             >
               {loading ? 'Publicando...' : 'Publicar en el Foro'}
             </button>

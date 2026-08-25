@@ -3,7 +3,7 @@
 // Responsable: Integrante 2 (Apuntes, Búsqueda, QR, Visor y Reportes PDF)
 // =============================================================================
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { notesService } from '../../services/notes.service';
 import { useAuth } from '../../context/AuthContext';
 import NoteCard from './NoteCard';
@@ -25,7 +25,7 @@ export default function NotesGrid() {
   const [selectedNoteForQR, setSelectedNoteForQR] = useState(null);
   const [selectedNoteForPreview, setSelectedNoteForPreview] = useState(null);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [notesRes, subjectsRes] = await Promise.all([
@@ -39,11 +39,36 @@ export default function NotesGrid() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, selectedSubject, searchTerm]);
 
   useEffect(() => {
-    if (token) loadData();
-  }, [token, selectedSubject]);
+    let isMounted = true;
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const [notesRes, subjectsRes] = await Promise.all([
+          notesService.getNotes(token, selectedSubject, searchTerm),
+          notesService.getSubjects(token),
+        ]);
+        if (isMounted) {
+          setNotes(notesRes.data || notesRes || []);
+          setSubjects(subjectsRes.data || subjectsRes || []);
+        }
+      } catch (err) {
+        console.error('Error al cargar apuntes:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    if (token) {
+      fetchData();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [token, selectedSubject, searchTerm]);
 
   const handleSearch = (e) => {
     e.preventDefault();
