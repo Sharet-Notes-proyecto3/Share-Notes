@@ -1,136 +1,413 @@
-// =============================================================================
-// MODIFICACIÓN 1 — COMPONENTE: FORMULARIO DE INGRESO Y REGISTRO
-// Responsable: Integrante 1 (Autenticación & Perfil)
-// =============================================================================
-
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import './Auth.css';
 
 export default function AuthModal() {
   const { login, register } = useAuth();
+
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('student');
+
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const getPasswordStrength = () => {
+    if (!password) return 0;
+
+    let strength = 0;
+
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+    return strength;
+  };
+
+  const passwordStrength = getPasswordStrength();
+
+  const getStrengthLabel = () => {
+    switch (passwordStrength) {
+      case 1:
+        return 'Débil';
+      case 2:
+        return 'Regular';
+      case 3:
+        return 'Buena';
+      case 4:
+        return 'Excelente';
+      default:
+        return '';
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setError('');
     setSuccess('');
     setSubmitting(true);
 
     try {
       if (isLogin) {
-        await login(email, password);
+        await login(email.trim(), password);
       } else {
-        if (password.length < 8) {
-          throw new Error('La contraseña debe contener al menos 8 caracteres');
+        if (name.trim().length < 3) {
+          throw new Error('Ingresa tu nombre completo.');
         }
-        await register(name, email, password, role);
-        setSuccess('¡Cuenta creada con éxito! Ahora puedes iniciar sesión.');
+
+        if (password.length < 8) {
+          throw new Error(
+            'La contraseña debe contener al menos 8 caracteres.'
+          );
+        }
+
+        await register(
+          name.trim(),
+          email.trim(),
+          password,
+          role
+        );
+
+        setSuccess(
+          '¡Cuenta creada correctamente! Ahora puedes iniciar sesión.'
+        );
+
         setIsLogin(true);
         setPassword('');
       }
     } catch (err) {
-      setError(err.message || 'Ocurrió un error en la autenticación');
+      setError(
+        err?.message || 'Ocurrió un error durante la autenticación.'
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
+  const changeMode = () => {
+    setIsLogin(!isLogin);
+    setError('');
+    setSuccess('');
+    setPassword('');
+  };
+
   return (
-    <div className="auth-wrapper" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
-      <div style={{ background: 'var(--sidebar-bg)', padding: '40px', borderRadius: '16px', width: '100%', maxWidth: '420px', border: '1px solid var(--border-color)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <div style={{ fontSize: '32px', marginBottom: '8px' }}>📚</div>
-          <h2 style={{ margin: 0, color: '#fff', fontSize: '24px' }}>
-            {isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
-          </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '6px' }}>
-            Plataforma de Apuntes Universitarios ShareNotes
-          </p>
-        </div>
+    <div className="auth-page">
+      <div className="auth-background-glow auth-glow-one"></div>
+      <div className="auth-background-glow auth-glow-two"></div>
 
-        {error && (
-          <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>
-            ⚠️ {error}
+      <div className="auth-container">
+        {/* Panel informativo */}
+        <section className="auth-showcase">
+          <div className="showcase-logo">
+            <div className="showcase-logo-icon">SN</div>
+            <span>ShareNotes</span>
           </div>
-        )}
 
-        {success && (
-          <div style={{ background: 'rgba(34, 197, 94, 0.15)', border: '1px solid #22c55e', color: '#86efac', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>
-            ✅ {success}
-          </div>
-        )}
+          <div className="showcase-content">
+            <span className="showcase-badge">
+              Plataforma académica
+            </span>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {!isLogin && (
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Nombre completo</label>
-              <input
-                type="text"
-                placeholder="Ej. Ana Solarte"
-                className="form-input"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
+            <h1>
+              Comparte,
+              <br />
+              aprende y
+              <br />
+              <span>crece.</span>
+            </h1>
+
+            <p>
+              Un espacio para compartir apuntes, resolver dudas
+              y conectar con tu comunidad académica.
+            </p>
+
+            <div className="showcase-features">
+              <div className="showcase-feature">
+                <span className="feature-icon">01</span>
+                <div>
+                  <strong>Apuntes organizados</strong>
+                  <small>
+                    Encuentra material académico fácilmente.
+                  </small>
+                </div>
+              </div>
+
+              <div className="showcase-feature">
+                <span className="feature-icon">02</span>
+                <div>
+                  <strong>Comunidad académica</strong>
+                  <small>
+                    Comparte conocimientos con otros estudiantes.
+                  </small>
+                </div>
+              </div>
+
+              <div className="showcase-feature">
+                <span className="feature-icon">03</span>
+                <div>
+                  <strong>Acceso seguro</strong>
+                  <small>
+                    Tu información protegida en todo momento.
+                  </small>
+                </div>
+              </div>
             </div>
-          )}
-
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Correo electrónico institucional</label>
-            <input
-              type="email"
-              placeholder="tu_correo@uni.edu.co"
-              className="form-input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Contraseña (mínimo 8 caracteres)</label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              className="form-input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+          <div className="showcase-footer">
+            Proyecto de Software 3 · ShareNotes
           </div>
+        </section>
 
-          {!isLogin && (
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Rol académico</label>
-              <select className="form-input" value={role} onChange={(e) => setRole(e.target.value)}>
-                <option value="student">🎓 Estudiante</option>
-                <option value="teacher">👨‍🏫 Docente / Profesor</option>
-                <option value="moderator">🛡️ Moderador</option>
-              </select>
+        {/* Formulario */}
+        <section className="auth-form-section">
+          <div className="auth-card">
+            <div className="auth-card-header">
+              <div className="mobile-logo">
+                <div className="showcase-logo-icon">SN</div>
+              </div>
+
+              <span className="auth-eyebrow">
+                {isLogin ? 'BIENVENIDO DE NUEVO' : 'ÚNETE A SHAREDNOTES'}
+              </span>
+
+              <h2>
+                {isLogin
+                  ? 'Inicia sesión'
+                  : 'Crea tu cuenta'}
+              </h2>
+
+              <p>
+                {isLogin
+                  ? 'Accede a tu espacio académico.'
+                  : 'Comienza a compartir conocimiento.'}
+              </p>
             </div>
-          )}
 
-          <button type="submit" className="primary-btn" disabled={submitting} style={{ marginTop: '8px' }}>
-            {submitting ? 'Procesando...' : isLogin ? 'Ingresar a la Plataforma' : 'Registrarse'}
-          </button>
-        </form>
+            {error && (
+              <div className="auth-alert auth-alert-error">
+                <span className="alert-icon">!</span>
+                <div>
+                  <strong>No pudimos continuar</strong>
+                  <p>{error}</p>
+                </div>
+              </div>
+            )}
 
-        <div style={{ textAlign: 'center', marginTop: '20px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-          <button
-            type="button"
-            onClick={() => { setIsLogin(!isLogin); setError(''); setSuccess(''); }}
-            style={{ background: 'none', border: 'none', color: '#60a5fa', cursor: 'pointer', fontSize: '14px', textDecoration: 'underline' }}
-          >
-            {isLogin ? '¿No tienes cuenta? Regístrate aquí' : '¿Ya tienes cuenta? Inicia sesión aquí'}
-          </button>
-        </div>
+            {success && (
+              <div className="auth-alert auth-alert-success">
+                <span className="alert-icon">✓</span>
+                <div>
+                  <strong>¡Todo listo!</strong>
+                  <p>{success}</p>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="auth-form">
+              {!isLogin && (
+                <div className="auth-field">
+                  <label htmlFor="name">
+                    Nombre completo
+                  </label>
+
+                  <div className="input-wrapper">
+                    <span className="input-icon">A</span>
+
+                    <input
+                      id="name"
+                      type="text"
+                      placeholder="Ej. Ana Milena Solarte"
+                      value={name}
+                      onChange={(e) =>
+                        setName(e.target.value)
+                      }
+                      autoComplete="name"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="auth-field">
+                <label htmlFor="email">
+                  Correo electrónico
+                </label>
+
+                <div className="input-wrapper">
+                  <span className="input-icon">@</span>
+
+                  <input
+                    id="email"
+                    type="email"
+                    placeholder="tu_correo@uni.edu.co"
+                    value={email}
+                    onChange={(e) =>
+                      setEmail(e.target.value)
+                    }
+                    autoComplete="email"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="auth-field">
+                <div className="field-label-row">
+                  <label htmlFor="password">
+                    Contraseña
+                  </label>
+
+                  {!isLogin && (
+                    <span className="password-requirement">
+                      Mínimo 8 caracteres
+                    </span>
+                  )}
+                </div>
+
+                <div className="input-wrapper">
+                  <span className="input-icon">●</span>
+
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Ingresa tu contraseña"
+                    value={password}
+                    onChange={(e) =>
+                      setPassword(e.target.value)
+                    }
+                    autoComplete={
+                      isLogin
+                        ? 'current-password'
+                        : 'new-password'
+                    }
+                    required
+                  />
+
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() =>
+                      setShowPassword(!showPassword)
+                    }
+                    aria-label={
+                      showPassword
+                        ? 'Ocultar contraseña'
+                        : 'Mostrar contraseña'
+                    }
+                  >
+                    {showPassword ? 'Ocultar' : 'Ver'}
+                  </button>
+                </div>
+
+                {!isLogin && password && (
+                  <div className="password-strength">
+                    <div className="strength-bars">
+                      {[1, 2, 3, 4].map((level) => (
+                        <span
+                          key={level}
+                          className={
+                            level <= passwordStrength
+                              ? `strength-active strength-${passwordStrength}`
+                              : ''
+                          }
+                        ></span>
+                      ))}
+                    </div>
+
+                    <small>
+                      Seguridad:{' '}
+                      <strong>
+                        {getStrengthLabel()}
+                      </strong>
+                    </small>
+                  </div>
+                )}
+              </div>
+
+              {!isLogin && (
+                <div className="auth-field">
+                  <label htmlFor="role">
+                    Perfil académico
+                  </label>
+
+                  <div className="input-wrapper select-wrapper">
+                    <span className="input-icon">◆</span>
+
+                    <select
+                      id="role"
+                      value={role}
+                      onChange={(e) =>
+                        setRole(e.target.value)
+                      }
+                    >
+                      <option value="student">
+                        Estudiante
+                      </option>
+
+                      <option value="teacher">
+                        Docente / Profesor
+                      </option>
+
+                      <option value="moderator">
+                        Moderador
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="auth-submit"
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <span className="loading-spinner"></span>
+                    Procesando...
+                  </>
+                ) : (
+                  <>
+                    {isLogin
+                      ? 'Ingresar a ShareNotes'
+                      : 'Crear mi cuenta'}
+                    <span className="submit-arrow">→</span>
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="auth-divider">
+              <span></span>
+              <small>o</small>
+              <span></span>
+            </div>
+
+            <div className="auth-switch">
+              <span>
+                {isLogin
+                  ? '¿Todavía no tienes una cuenta?'
+                  : '¿Ya tienes una cuenta?'}
+              </span>
+
+              <button
+                type="button"
+                onClick={changeMode}
+              >
+                {isLogin
+                  ? 'Crear cuenta'
+                  : 'Iniciar sesión'}
+              </button>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );

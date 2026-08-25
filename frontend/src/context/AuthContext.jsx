@@ -1,50 +1,36 @@
 // =============================================================================
-// MODIFICACIÓN 1 — CONTEXTO GLOBAL DE AUTENTICACIÓN Y ROLES
-// Responsable: Integrante 1 (Autenticación y Sesión)
+// CONTEXTO GLOBAL DE AUTENTICACIÓN, SESIÓN Y ROLES
+// Responsable: Integrante 1 - Autenticación y Sesión
 // =============================================================================
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+
 import { authService } from '../services/auth.service';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(localStorage.getItem('token') || null);
+  // ---------------------------------------------------------------------------
+  // ESTADO DE SESIÓN
+  // ---------------------------------------------------------------------------
+
+  const [token, setToken] = useState(
+    () => localStorage.getItem('token') || null
+  );
+
   const [user, setUser] = useState(null);
+
+  // Indica si todavía estamos comprobando la sesión almacenada.
   const [loading, setLoading] = useState(true);
 
-  // Cargar datos de perfil al iniciar o cambiar el token
-  useEffect(() => {
-    async function loadUser() {
-      if (token) {
-        try {
-          const profileData = await authService.getProfile(token);
-          setUser(profileData);
-        } catch (error) {
-          console.error('Error al cargar perfil:', error);
-          logout();
-        }
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    }
-    loadUser();
-  }, [token]);
-
-  const login = async (email, password) => {
-    const data = await authService.login(email, password);
-    if (data.token) {
-      localStorage.setItem('token', data.token);
-      setToken(data.token);
-      setUser(data.user);
-    }
-    return data;
-  };
-
-  const register = async (name, email, password, role = 'student') => {
-    return await authService.register(name, email, password, role);
-  };
+  // ---------------------------------------------------------------------------
+  // CERRAR SESIÓN
+  // ---------------------------------------------------------------------------
 
   const logout = () => {
     localStorage.removeItem('token');
@@ -52,11 +38,128 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // ---------------------------------------------------------------------------
+  // RECUPERAR SESIÓN AL INICIAR LA APLICACIÓN
+  // ---------------------------------------------------------------------------
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadUser = async () => {
+      setLoading(true);
+
+      // No existe token guardado.
+      if (!token) {
+        if (isActive) {
+          setUser(null);
+          setLoading(false);
+        }
+
+        return;
+      }
+
+      try {
+        // Consultamos el perfil utilizando el token almacenado.
+        const profileData = await authService.getProfile(token);
+
+        if (!isActive) return;
+
+        setUser(profileData);
+      } catch (error) {
+        console.error(
+          'La sesión almacenada no es válida:',
+          error
+        );
+
+        if (!isActive) return;
+
+        // Si el token ya no es válido, limpiamos la sesión.
+        localStorage.removeItem('token');
+        setToken(null);
+        setUser(null);
+      } finally {
+        if (isActive) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadUser();
+
+    // Evita actualizar estados si el componente deja de estar activo.
+    return () => {
+      isActive = false;
+    };
+  }, [token]);
+
+  // ---------------------------------------------------------------------------
+  // INICIAR SESIÓN
+  // ---------------------------------------------------------------------------
+
+  const login = async (email, password) => {
+    const data = await authService.login(email, password);
+
+    if (!data?.token) {
+      throw new Error(
+        'El servidor no devolvió un token de autenticación.'
+      );
+    }
+
+    // Guardamos el token para mantener la sesión.
+    localStorage.setItem('token', data.token);
+
+    setToken(data.token);
+
+    // Si el backend ya devuelve el usuario, lo mostramos inmediatamente.
+    if (data.user) {
+      setUser(data.user);
+    }
+
+    return data;
+  };
+
+  // ---------------------------------------------------------------------------
+  // REGISTRO
+  // ---------------------------------------------------------------------------
+
+  const register = async (
+    name,
+    email,
+    password,
+    role = 'student'
+  ) => {
+    return await authService.register(
+      name,
+      email,
+      password,
+      role
+    );
+  };
+
+  // ---------------------------------------------------------------------------
+  // ROLES DEL USUARIO
+  // ---------------------------------------------------------------------------
+
   const isAdmin = user?.role === 'admin';
-  const isModerator = user?.role === 'admin' || user?.role === 'moderator';
+
+  const isModerator =
+    user?.role === 'admin' ||
+    user?.role === 'moderator';
+
   const isTeacher = user?.role === 'teacher';
+
   const isStudent = user?.role === 'student';
-  const isAuthenticated = !!token && !!user;
+
+  // ---------------------------------------------------------------------------
+  // ESTADO DE AUTENTICACIÓN
+  // ---------------------------------------------------------------------------
+
+  const isAuthenticated =
+    Boolean(token) && Boolean(user);
+
+  // ---------------------------------------------------------------------------
+  // CONTEXTO GLOBAL
+  // ---------------------------------------------------------------------------
 
   return (
     <AuthContext.Provider
@@ -64,14 +167,17 @@ export const AuthProvider = ({ children }) => {
         token,
         user,
         loading,
+
         login,
         register,
         logout,
+
+        isAuthenticated,
+
         isAdmin,
         isModerator,
         isTeacher,
         isStudent,
-        isAuthenticated,
       }}
     >
       {children}
@@ -79,10 +185,18 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
+// =============================================================================
+// HOOK DE AUTENTICACIÓN
+// =============================================================================
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
+
   if (!context) {
-    throw new Error('useAuth debe ser utilizado dentro de un AuthProvider');
+    throw new Error(
+      'useAuth debe ser utilizado dentro de un AuthProvider'
+    );
   }
+
   return context;
 };
