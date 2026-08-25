@@ -1,6 +1,6 @@
 // =============================================================================
 // MODIFICACIÓN 2 — COMPONENTE: VISTA PRINCIPAL Y GRID DE APUNTES
-// Responsable: Integrante 2 (Apuntes, Búsqueda, QR y Reportes PDF)
+// Responsable: Integrante 2 (Apuntes, Búsqueda, QR, Visor y Reportes PDF)
 // =============================================================================
 
 import React, { useState, useEffect } from 'react';
@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 import NoteCard from './NoteCard';
 import UploadModal from './UploadModal';
 import QRModal from './QRModal';
+import PreviewModal from './PreviewModal';
 
 export default function NotesGrid() {
   const { token } = useAuth();
@@ -22,6 +23,7 @@ export default function NotesGrid() {
   // Modales
   const [showUpload, setShowUpload] = useState(false);
   const [selectedNoteForQR, setSelectedNoteForQR] = useState(null);
+  const [selectedNoteForPreview, setSelectedNoteForPreview] = useState(null);
 
   const loadData = async () => {
     try {
@@ -65,8 +67,8 @@ export default function NotesGrid() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
         <div>
           <h2 style={{ margin: '0 0 4px', color: '#fff', fontSize: '24px' }}>📚 Repositorio de Apuntes</h2>
-          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>
-            Explora, descarga y comparte material de estudio universitario
+          <p style={{ margin: 0, color: 'var(--text-secondary, #94a3b8)', fontSize: '14px' }}>
+            Explora, visualiza, descarga y comparte material de estudio universitario
           </p>
         </div>
 
@@ -133,14 +135,14 @@ export default function NotesGrid() {
 
       {/* Grid de Apuntes */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '50px', color: 'var(--text-secondary)' }}>
+        <div style={{ textAlign: 'center', padding: '50px', color: 'var(--text-secondary, #94a3b8)' }}>
           ⏳ Cargando apuntes de la plataforma...
         </div>
       ) : notes.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--sidebar-bg)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--sidebar-bg, #1e293b)', borderRadius: '12px', border: '1px dashed var(--border-color, #334155)' }}>
           <div style={{ fontSize: '40px', marginBottom: '12px' }}>📭</div>
           <h3 style={{ color: '#fff', margin: '0 0 6px' }}>No se encontraron apuntes</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>
+          <p style={{ color: 'var(--text-secondary, #94a3b8)', fontSize: '14px', margin: 0 }}>
             Sé el primero en subir un apunte para esta materia.
           </p>
         </div>
@@ -153,7 +155,12 @@ export default function NotesGrid() {
           }}
         >
           {notes.map((note) => (
-            <NoteCard key={note.id} note={note} onOpenQR={(n) => setSelectedNoteForQR(n)} />
+            <NoteCard
+              key={note.id}
+              note={note}
+              onOpenQR={(n) => setSelectedNoteForQR(n)}
+              onOpenPreview={(n) => setSelectedNoteForPreview(n)}
+            />
           ))}
         </div>
       )}
@@ -171,6 +178,13 @@ export default function NotesGrid() {
         <QRModal
           note={selectedNoteForQR}
           onClose={() => setSelectedNoteForQR(null)}
+        />
+      )}
+
+      {selectedNoteForPreview && (
+        <PreviewModal
+          note={selectedNoteForPreview}
+          onClose={() => setSelectedNoteForPreview(null)}
         />
       )}
     </div>
