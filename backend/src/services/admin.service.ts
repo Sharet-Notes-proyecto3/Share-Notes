@@ -30,6 +30,19 @@ export class AdminService {
     return { message: user.is_active ? 'Usuario suspendido' : 'Usuario reactivado' };
   }
 
+  async changeUserRole(userId: number, role: 'student' | 'teacher' | 'moderator' | 'admin', adminId: number) {
+    if (userId === adminId) throw new AppError(400, 'No puedes cambiar tu propio rol');
+    if (!['student', 'teacher', 'moderator', 'admin'].includes(role)) {
+      throw new AppError(400, 'Rol inválido');
+    }
+
+    const [rows] = await pool.query<RowDataPacket[]>('SELECT id FROM users WHERE id = ?', [userId]);
+    if (!rows[0]) throw new AppError(404, 'Usuario no encontrado');
+
+    await pool.query('UPDATE users SET role = ? WHERE id = ?', [role, userId]);
+    return { message: `Rol actualizado a ${role}` };
+  }
+
   // ─── Reportes ─────────────────────────────────────────────────────────────
 
   async listReports(status?: string) {

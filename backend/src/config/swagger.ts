@@ -221,7 +221,7 @@ const options: swaggerJsdoc.Options = {
         },
         post: {
           tags: ['2. Apuntes'],
-          summary: 'Subir un apunte (PDF, JPG o PNG — máx. 10 MB)',
+          summary: 'Subir un apunte (PDF, JPG o PNG — máx. 100 MB)',
           security: [{ bearerAuth: [] }],
           requestBody: {
             required: true,

@@ -15,6 +15,9 @@ router.get('/users', ctrl.listUsers);
 // PATCH  /api/admin/users/:id/toggle — suspender / reactivar usuario
 router.patch('/users/:id/toggle', ctrl.toggleUser);
 
+// PATCH  /api/admin/users/:id/role   — cambiar rol de usuario
+router.patch('/users/:id/role', ctrl.changeUserRole);
+
 // ─── Reportes ──────────────────────────────────────────────────────────────
 // GET    /api/admin/reports          — listar reportes (query: ?status=pending)
 router.get('/reports', ctrl.listReports);
