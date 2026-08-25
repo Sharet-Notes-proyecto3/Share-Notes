@@ -3,37 +3,17 @@
 // Responsable: Integrante 3 (Foro, Respuestas & Votación)
 // =============================================================================
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { forumService } from '../../services/forum.service';
 import { useAuth } from '../../context/AuthContext';
 
-const REPLY_MAX = 400;
-
-// Formatea una fecha ISO a un texto corto y legible en español
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  try {
-    return new Date(dateStr).toLocaleString('es-CO', {
-      day: '2-digit',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return '';
-  }
-}
-
 export default function ThreadCard({ thread, onRefresh }) {
-  const { token, user } = useAuth();
+  const { token } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const [replies, setReplies] = useState(thread.replies || []);
   const [newReply, setNewReply] = useState('');
   const [loadingReplies, setLoadingReplies] = useState(false);
   const [submittingReply, setSubmittingReply] = useState(false);
-
-  // El autor del debate no puede responder su propio hilo
-  const isOwnThread = !!user && !!thread.author_id && user.id === thread.author_id;
 
   const toggleExpand = async () => {
     if (!expanded) {
@@ -53,11 +33,10 @@ export default function ThreadCard({ thread, onRefresh }) {
   const handleAddReply = async (e) => {
     e.preventDefault();
     if (!newReply.trim()) return;
-    if (isOwnThread) return; // Protección extra por si se fuerza el submit
 
     try {
       setSubmittingReply(true);
-      await forumService.addReply(token, thread.id, newReply.trim());
+      await forumService.addReply(token, thread.id, newReply);
       setNewReply('');
       const updated = await forumService.getThreadDetails(token, thread.id);
       setReplies(updated.replies || []);
@@ -103,7 +82,7 @@ export default function ThreadCard({ thread, onRefresh }) {
           📖 {thread.subject_name || 'Materia General'}
         </span>
         <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-          💬 {thread.reply_count ?? replies.length ?? 0} respuestas
+          💬 {thread.reply_count || replies.length || 0} respuestas
         </span>
       </div>
 
@@ -112,17 +91,9 @@ export default function ThreadCard({ thread, onRefresh }) {
         {thread.body}
       </p>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '12px', flexWrap: 'wrap', gap: '6px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
         <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-          👤 <strong>{thread.author_name || 'Compañero'}</strong>
-          {isOwnThread && (
-            <span style={{ marginLeft: '6px', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: 'rgba(96,165,250,0.15)', color: '#60a5fa' }}>
-              Tú
-            </span>
-          )}
-          {thread.created_at && (
-            <span style={{ marginLeft: '8px', opacity: 0.7 }}>🕒 {formatDate(thread.created_at)}</span>
-          )}
+          👤 <strong>{thread.user_name || 'Compañero'}</strong>
         </span>
 
         <button
@@ -163,12 +134,7 @@ export default function ThreadCard({ thread, onRefresh }) {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                     <span style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>
-                      {reply.author_name || 'Compañero'}
-                      {reply.created_at && (
-                        <span style={{ marginLeft: '8px', fontSize: '11px', fontWeight: 400, color: 'var(--text-secondary)' }}>
-                          🕒 {formatDate(reply.created_at)}
-                        </span>
-                      )}
+                      {reply.user_name || 'Compañero'}
                     </span>
                     <button
                       onClick={() => handleVote(reply.id)}
@@ -190,57 +156,32 @@ export default function ThreadCard({ thread, onRefresh }) {
                     </button>
                   </div>
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-                    {reply.body}
+                    {reply.content}
                   </p>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Formulario para Responder — bloqueado si es tu propio debate */}
-          {isOwnThread ? (
-            <div
-              style={{
-                marginTop: '12px',
-                padding: '12px',
-                borderRadius: '8px',
-                background: 'rgba(96, 165, 250, 0.08)',
-                border: '1px dashed rgba(96, 165, 250, 0.4)',
-                color: 'var(--text-secondary)',
-                fontSize: '13px',
-                textAlign: 'center',
-              }}
+          {/* Formulario para Responder */}
+          <form onSubmit={handleAddReply} style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+            <input
+              type="text"
+              placeholder="Escribe tu respuesta o aporte..."
+              className="form-input"
+              value={newReply}
+              onChange={(e) => setNewReply(e.target.value)}
+              style={{ flex: 1 }}
+            />
+            <button
+              type="submit"
+              disabled={submittingReply}
+              className="primary-btn"
+              style={{ padding: '0 16px', fontSize: '13px' }}
             >
-              🔒 No puedes responder tu propio debate. Espera a que un compañero participe.
-            </div>
-          ) : (
-            <form onSubmit={handleAddReply} style={{ marginTop: '12px' }}>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input
-                  type="text"
-                  placeholder="Escribe tu respuesta o aporte..."
-                  className="form-input"
-                  value={newReply}
-                  onChange={(e) => setNewReply(e.target.value)}
-                  maxLength={REPLY_MAX}
-                  style={{ flex: 1 }}
-                />
-                <button
-                  type="submit"
-                  disabled={submittingReply || !newReply.trim()}
-                  className="primary-btn"
-                  style={{ padding: '0 16px', fontSize: '13px', opacity: (submittingReply || !newReply.trim()) ? 0.6 : 1 }}
-                >
-                  {submittingReply ? '...' : 'Responder'}
-                </button>
-              </div>
-              <div style={{ textAlign: 'right', marginTop: '4px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                  {newReply.length}/{REPLY_MAX}
-                </span>
-              </div>
-            </form>
-          )}
+              {submittingReply ? '...' : 'Responder'}
+            </button>
+          </form>
         </div>
       )}
     </div>

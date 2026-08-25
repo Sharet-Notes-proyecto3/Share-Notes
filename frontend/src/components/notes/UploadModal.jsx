@@ -3,7 +3,7 @@
 // Responsable: Integrante 2 (Apuntes, Archivos & Subidas)
 // =============================================================================
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { notesService } from '../../services/notes.service';
 import { useAuth } from '../../context/AuthContext';
 

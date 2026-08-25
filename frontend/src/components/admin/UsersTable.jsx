@@ -3,7 +3,6 @@
 // Responsable: Integrante 4 (Administración & Control de Acceso)
 // =============================================================================
 
-import React from 'react';
 import { adminService } from '../../services/admin.service';
 import { useAuth } from '../../context/AuthContext';
 

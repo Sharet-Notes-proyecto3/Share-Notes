@@ -3,7 +3,7 @@
 // Responsable: Integrante 1 - Autenticación y Sesión
 // =============================================================================
 
-import React, {
+import {
   createContext,
   useContext,
   useEffect,
@@ -189,6 +189,7 @@ export const AuthProvider = ({ children }) => {
 // HOOK DE AUTENTICACIÓN
 // =============================================================================
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
 
