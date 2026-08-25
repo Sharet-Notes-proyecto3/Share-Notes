@@ -1,3 +1,11 @@
+## Integrantes:
+- Ana Milena Zuñiga
+- Aura Camila Arteaga Castillo
+- Jhonatan Mauricio Muchavisoy Jajoy
+-Andres Botina
+##
+
+
 # 📚 ShareNotes — Plataforma Universitaria de Apuntes & Comunidad
 
 ![CI Status](https://img.shields.io/github/actions/workflow/status/Sharet-Notes-proyecto3/Share-Notes/ci.yml?branch=main&label=CI%20Pipeline)
