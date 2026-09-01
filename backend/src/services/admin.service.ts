@@ -3,6 +3,7 @@ import pool from '../config/database';
 import { AppError } from '../middlewares/error.middleware';
 import { RowDataPacket } from 'mysql2';
 import QRCode from 'qrcode';
+import { getRelatedArticle } from '../utils/wikiClient';
 
 export class AdminService {
 
@@ -140,5 +141,15 @@ export class AdminService {
     const url = process.env.APP_PUBLIC_URL || 'http://localhost:3000';
     const qrDataUrl = await QRCode.toDataURL(url, { width: 300, margin: 2 });
     return qrDataUrl;
+  }
+
+  // ─── Wiki Search ──────────────────────────────────────────────────────────
+
+  async wikiSearch(searchQuery: string) {
+    if (!searchQuery || searchQuery.trim().length === 0) {
+      throw new AppError(400, 'El término de búsqueda no puede estar vacío');
+    }
+    const result = await getRelatedArticle(searchQuery, 20);
+    return result;
   }
 }
