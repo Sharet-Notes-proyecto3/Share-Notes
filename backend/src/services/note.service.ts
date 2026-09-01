@@ -5,6 +5,7 @@ import { RowDataPacket } from 'mysql2';
 import fs from 'fs';
 import path from 'path';
 import { sendEmailNotification, generatePdfReport } from '../utils/microservicesClient';
+import { getRelatedArticle } from '../integrations/wikipedia.api';
 
 interface NoteRow extends RowDataPacket {
   id: number;
@@ -55,7 +56,9 @@ export class NoteService {
       ]
     );
 
-    return { message: 'Apunte subido correctamente' };
+    const articuloRelacionado = await getRelatedArticle(data.title);
+
+return { message: 'Apunte subido correctamente', articuloRelacionado };
   }
 
   /**
