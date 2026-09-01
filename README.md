@@ -2,7 +2,7 @@
 - Ana Milena Zuñiga
 - Aura Camila Arteaga Castillo
 - Jhonatan Mauricio Muchavisoy Jajoy  
--Andres Botina
+- Andres Botina
 
 
 # 📚 ShareNotes — Plataforma Universitaria de Apuntes & Comunidad
