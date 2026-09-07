@@ -1,12 +1,39 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { authService } from '../../services/auth.service';
 
 export default function UserMenu() {
   const { user, logout, isAdmin, isModerator, isTeacher, isStudent } =
     useAuth();
 
   const [open, setOpen] = useState(false);
+  const [wikiTopic, setWikiTopic] = useState('Desarrollo de software');
+  const [wikiUrl, setWikiUrl] = useState('');
+  const [loadingWiki, setLoadingWiki] = useState(false);
   const menuRef = useRef(null);
+
+  const fetchWiki = async (topic) => {
+    const query = topic || wikiTopic;
+    if (!query?.trim()) return;
+    try {
+      setLoadingWiki(true);
+      const res = await authService.getRelatedTopic(query);
+      setWikiUrl(res?.articulo || '');
+    } catch (err) {
+      console.error('Error al obtener artículo de Wikipedia:', err);
+      setWikiUrl('');
+    } finally {
+      setLoadingWiki(false);
+    }
+  };
+
+  const handleToggleMenu = () => {
+    const nextState = !open;
+    setOpen(nextState);
+    if (nextState && !wikiUrl && !loadingWiki) {
+      fetchWiki(wikiTopic);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -71,7 +98,7 @@ export default function UserMenu() {
         className={`user-menu-trigger ${
           open ? 'user-menu-trigger-active' : ''
         }`}
-        onClick={() => setOpen(!open)}
+        onClick={handleToggleMenu}
         aria-expanded={open}
         aria-haspopup="true"
       >
@@ -117,6 +144,86 @@ export default function UserMenu() {
           </div>
 
           <div className="profile-divider"></div>
+
+          {/* Sección de Artículo Wikipedia de Interés Académico */}
+          <div style={{ padding: '12px 16px', background: 'rgba(15, 23, 42, 0.4)', borderBottom: '1px solid var(--border-color, #334155)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ fontSize: '11px', fontWeight: '700', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                🌐 Artículo Académico (Wikipedia)
+              </span>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                fetchWiki(wikiTopic);
+              }}
+              style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}
+            >
+              <input
+                type="text"
+                value={wikiTopic}
+                onChange={(e) => setWikiTopic(e.target.value)}
+                placeholder="Tema o carrera..."
+                style={{
+                  flex: 1,
+                  padding: '6px 8px',
+                  borderRadius: '6px',
+                  border: '1px solid #334155',
+                  background: '#0f172a',
+                  color: '#fff',
+                  fontSize: '11px',
+                }}
+              />
+              <button
+                type="submit"
+                disabled={loadingWiki}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  background: '#0284c7',
+                  color: '#fff',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+                title="Consultar en Wikipedia"
+              >
+                {loadingWiki ? '...' : '🔍'}
+              </button>
+            </form>
+
+            {wikiUrl ? (
+              <a
+                href={wikiUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 8px',
+                  borderRadius: '6px',
+                  background: 'rgba(56, 189, 248, 0.1)',
+                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                  color: '#38bdf8',
+                  fontSize: '11px',
+                  textDecoration: 'none',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <span>📖</span>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{wikiUrl}</span>
+              </a>
+            ) : (
+              <div style={{ fontSize: '10px', color: '#64748b' }}>
+                {loadingWiki ? 'Buscando artículo en Wikipedia...' : 'No se encontró un artículo directo.'}
+              </div>
+            )}
+          </div>
 
           <div className="profile-actions">
             <button

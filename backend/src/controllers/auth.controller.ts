@@ -38,3 +38,11 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
     res.json(profile);
   } catch (err) { next(err); }
 };
+
+export const getRelatedTopic = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tema = (req.query.tema as string) || '';
+    const result = await service.getRelatedTopic(tema);
+    res.json(result);
+  } catch (err) { next(err); }
+};

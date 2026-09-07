@@ -76,4 +76,12 @@ export const authService = {
 
     return await api.get('/auth/profile', token);
   },
+
+  /**
+   * Obtiene un artículo de Wikipedia relacionado con un tema o carrera.
+   */
+  async getRelatedTopic(tema) {
+    const query = tema ? `?tema=${encodeURIComponent(tema)}` : '';
+    return await api.get(`/auth/profile/related-topic${query}`);
+  },
 };
