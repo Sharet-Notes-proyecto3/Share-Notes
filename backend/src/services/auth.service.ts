@@ -5,6 +5,7 @@ import pool from '../config/database';
 import { JwtPayload, UserRole } from '../types';
 import { AppError } from '../middlewares/error.middleware';
 import { RowDataPacket } from 'mysql2';
+import { getRelatedArticle } from '../integrations/wikipedia.api';
 
 interface UserRow extends RowDataPacket {
   id: number;
@@ -74,6 +75,17 @@ export class AuthService {
     );
     if (!rows[0]) throw new AppError(404, 'Usuario no encontrado');
     return rows[0];
+  }
+
+  /**
+   * Obtiene un artículo de Wikipedia relacionado con un tema (ej. carrera del estudiante)
+   */
+  async getRelatedTopic(tema: string) {
+    if (!tema || !tema.trim()) {
+      return { articulo: null };
+    }
+    const articulo = await getRelatedArticle(tema.trim());
+    return { articulo };
   }
 }
 
