@@ -188,6 +188,42 @@ const options: swaggerJsdoc.Options = {
         },
       },
 
+      // ── /auth/profile/related-topic ───────────────────────────────────
+      '/auth/profile/related-topic': {
+        get: {
+          tags: ['1. Autenticación'],
+          summary: 'Obtener artículo de Wikipedia relacionado con un tema (API Externa)',
+          parameters: [
+            {
+              name: 'tema',
+              in: 'query',
+              schema: { type: 'string' },
+              example: 'desarrollo de software',
+              description: 'Tema o carrera para buscar en Wikipedia',
+            },
+          ],
+          responses: {
+            200: {
+              description: 'Artículo de Wikipedia encontrado',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      articulo: {
+                        type: 'string',
+                        nullable: true,
+                        example: 'https://es.wikipedia.org/wiki/Desarrollo_de_software',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+
       // ── /notes/subjects ───────────────────────────────────────────────
       '/notes/subjects': {
         get: {
