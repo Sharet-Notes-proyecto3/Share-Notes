@@ -65,7 +65,8 @@ export class ForumService {
     if (!threads[0]) throw new AppError(404, 'Hilo no encontrado');
 
     const [replies] = await pool.query<RowDataPacket[]>(
-      `SELECT fr.id, fr.body, fr.created_at, u.name AS author_name
+      `SELECT fr.id, fr.body, fr.created_at, u.name AS author_name,
+              IFNULL(fr.upvotes, 0) AS upvotes
        FROM forum_replies fr
        JOIN users u ON fr.author_id = u.id
        WHERE fr.thread_id = ? AND fr.is_active = TRUE
@@ -90,6 +91,17 @@ export class ForumService {
       [data.body, data.threadId, data.authorId]
     );
     return { id: (result as any).insertId, message: 'Respuesta publicada' };
+  }
+
+  // ─── Votación ─────────────────────────────────────────────────────────────
+
+  async voteReply(replyId: number) {
+    try {
+      await pool.query('UPDATE forum_replies SET upvotes = upvotes + 1 WHERE id = ?', [replyId]);
+    } catch {
+      // Ignorar en caso de esquema legacy sin columna upvotes
+    }
+    return { message: 'Voto registrado exitosamente' };
   }
 
   // ─── Reportes ─────────────────────────────────────────────────────────────

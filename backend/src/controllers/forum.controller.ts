@@ -51,6 +51,14 @@ export const createReply = async (req: Request, res: Response, next: NextFunctio
   } catch (err) { next(err); }
 };
 
+export const voteReply = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const replyId = parseInt(req.params.id);
+    const result = await service.voteReply(replyId);
+    res.json(result);
+  } catch (err) { next(err); }
+};
+
 export const reportContent = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { targetType, targetId, reason } = req.body;
