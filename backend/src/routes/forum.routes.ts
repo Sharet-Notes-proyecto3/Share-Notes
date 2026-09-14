@@ -22,6 +22,9 @@ router.get('/:id', ctrl.getThread);
 // Body: { body }
 router.post('/:id/reply', ctrl.createReply);
 
+// POST /api/forum/replies/:id/vote — votar respuesta
+router.post('/replies/:id/vote', ctrl.voteReply);
+
 // POST /api/forum/report    — reportar contenido
 // Body: { targetType: 'note'|'thread'|'reply', targetId, reason }
 router.post('/report', ctrl.reportContent);
