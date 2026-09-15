@@ -25,6 +25,12 @@ router.post('/:id/reply', ctrl.createReply);
 // POST /api/forum/replies/:id/vote — votar respuesta
 router.post('/replies/:id/vote', ctrl.voteReply);
 
+// DELETE /api/forum/replies/:id — eliminar un comentario/respuesta
+router.delete('/replies/:id', ctrl.deleteReply);
+
+// DELETE /api/forum/:id         — eliminar un hilo de discusión
+router.delete('/:id', ctrl.deleteThread);
+
 // POST /api/forum/report    — reportar contenido
 // Body: { targetType: 'note'|'thread'|'reply', targetId, reason }
 router.post('/report', ctrl.reportContent);

@@ -25,8 +25,16 @@ export const forumService = {
   },
 
   
-  async voteReply(token, replyId) {
-    return await api.post(`/forum/replies/${replyId}/vote`, {}, token);
+  async voteReply(token, replyId, action = 'vote') {
+    return await api.post(`/forum/replies/${replyId}/vote`, { action }, token);
+  },
+
+  async deleteReply(token, replyId) {
+    return await api.delete(`/forum/replies/${replyId}`, token);
+  },
+
+  async deleteThread(token, threadId) {
+    return await api.delete(`/forum/${threadId}`, token);
   },
 
   
