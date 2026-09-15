@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AuthModal from './components/auth/AuthModal';
 import UserMenu from './components/auth/UserMenu';
@@ -10,6 +10,23 @@ import './App.css';
 function MainLayout() {
   const { isAuthenticated, isModerator } = useAuth();
   const [activeTab, setActiveTab] = useState('notes');
+
+  // ── Tema claro / oscuro (Integrante 1 – Anna) ──────────────────────────
+  const [isDark, setIsDark] = useState(
+    () => localStorage.getItem('sharenotes-theme') !== 'light'
+  );
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isDark) {
+      root.classList.remove('light-mode');
+      localStorage.setItem('sharenotes-theme', 'dark');
+    } else {
+      root.classList.add('light-mode');
+      localStorage.setItem('sharenotes-theme', 'light');
+    }
+  }, [isDark]);
+  // ────────────────────────────────────────────────────────────────────────
 
   if (!isAuthenticated) {
     return <AuthModal />;
@@ -82,7 +99,20 @@ function MainLayout() {
             {activeTab === 'admin' && '🛡️ Módulo de Administración y Control'}
           </div>
 
-          <UserMenu />
+          {/* ── Tema + Usuario (Integrante 1 – Anna) ── */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              id="theme-toggle-btn"
+              className="theme-toggle-btn"
+              onClick={() => setIsDark(prev => !prev)}
+              aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+              title={isDark ? 'Modo claro' : 'Modo oscuro'}
+            >
+              <span className="theme-toggle-icon">{isDark ? '☀️' : '🌙'}</span>
+              <span>{isDark ? 'Día' : 'Noche'}</span>
+            </button>
+            <UserMenu />
+          </div>
         </header>
 
         {/* Vista activa */}

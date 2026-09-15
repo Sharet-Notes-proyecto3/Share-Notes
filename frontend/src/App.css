@@ -3,6 +3,7 @@
   height: 100vh;
   overflow: hidden;
   background: radial-gradient(circle at top left, #083344 0%, #0f172a 100%);
+  transition: background 0.4s ease;
 }
 
 .sidebar {
