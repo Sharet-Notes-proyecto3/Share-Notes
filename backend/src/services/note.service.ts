@@ -82,7 +82,7 @@ export class NoteService {
   async list(filters: { subjectId?: number; semester?: number; careerId?: number; search?: string }) {
     let query = `
       SELECT n.id, n.title, n.description, n.original_name, n.mimetype,
-             n.file_size, n.created_at,
+             n.file_size, n.created_at, n.uploader_id,
              s.name AS subject_name, s.semester,
              c.name AS career_name,
              u.name AS uploader_name

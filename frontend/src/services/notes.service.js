@@ -3,7 +3,7 @@
 // Responsable: Integrante 2 (Apuntes, QR y Microservicio MS-PDF)
 // =============================================================================
 
-import { api } from './api';
+import { api, API_BASE_URL } from './api';
 
 export const notesService = {
   /**
@@ -38,6 +38,20 @@ export const notesService = {
   },
 
   /**
+   * Obtiene el archivo binario (Blob) protegido con JWT para el visor in-app
+   */
+  async getNoteBlob(token, noteId) {
+    return await api.get(`/notes/${noteId}/download`, token);
+  },
+
+  /**
+   * Elimina un apunte (solo el autor o un administrador)
+   */
+  async deleteNote(token, noteId) {
+    return await api.delete(`/notes/${noteId}`, token);
+  },
+
+  /**
    * Genera y descarga el reporte PDF consolidado (vía Microservicio MS-PDF)
    */
   async downloadNotesReport(token) {
@@ -53,9 +67,17 @@ export const notesService = {
   },
 
   /**
-   * Obtiene el código QR de un apunte específico
+   * Obtiene el código QR de un apunte específico que apunta a la descarga
    */
   async getNoteQR(token, noteId) {
-    return await api.get(`/notes/${noteId}/qr`, token);
+    try {
+      const res = await api.get(`/notes/${noteId}/qr`, token);
+      if (res && (res.qrCodeDataUrl || res.qr)) return res;
+    } catch {
+      // Fallback a generador dinámico si la ruta backend es vía endpoint
+    }
+    const downloadUrl = `${API_BASE_URL}/notes/${noteId}/download`;
+    const qrCodeDataUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(downloadUrl)}`;
+    return { qrCodeDataUrl, downloadUrl };
   },
 };
