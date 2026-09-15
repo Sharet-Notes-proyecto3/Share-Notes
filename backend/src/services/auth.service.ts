@@ -14,6 +14,7 @@ interface UserRow extends RowDataPacket {
   password_hash: string;
   role: UserRole;
   is_active: boolean;
+  created_at?: string;
 }
 
 export class AuthService {
@@ -70,7 +71,7 @@ export class AuthService {
 
   async getProfile(userId: number) {
     const [rows] = await pool.query<UserRow[]>(
-      'SELECT id, name, email, role, created_at FROM users WHERE id = ?',
+      'SELECT id, name, email, role, is_active, created_at FROM users WHERE id = ?',
       [userId]
     );
     if (!rows[0]) throw new AppError(404, 'Usuario no encontrado');

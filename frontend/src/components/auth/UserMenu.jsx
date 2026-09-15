@@ -1,16 +1,38 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/auth.service';
+import ProfileModal from './ProfileModal';
+
+// Reutiliza la misma clave que ProfileModal (Integrante 1 – Anna)
+const getPhotoKey = (userId) => `sharenotes-avatar-${userId}`;
+const getNameKey  = (userId) => `sharenotes-name-${userId}`;
 
 export default function UserMenu() {
   const { user, logout, isAdmin, isModerator, isTeacher, isStudent } =
     useAuth();
 
   const [open, setOpen] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [wikiTopic, setWikiTopic] = useState('Desarrollo de software');
   const [wikiUrl, setWikiUrl] = useState('');
   const [loadingWiki, setLoadingWiki] = useState(false);
   const menuRef = useRef(null);
+
+  // ── Foto de perfil y nombre (Integrante 1 – Anna) ─────────────────────────
+  const [avatar, setAvatar] = useState(
+    () => user ? localStorage.getItem(getPhotoKey(user.id)) || null : null
+  );
+  const [displayName, setDisplayName] = useState(
+    () => user ? localStorage.getItem(getNameKey(user.id)) || user?.name || '' : ''
+  );
+
+  // Sincroniza cuando cambia el usuario o cuando el menú se abre/cierra
+  useEffect(() => {
+    if (!user) return;
+    setAvatar(localStorage.getItem(getPhotoKey(user.id)) || null);
+    setDisplayName(localStorage.getItem(getNameKey(user.id)) || user.name || '');
+  }, [user, open]);
+  // ─────────────────────────────────────────────────────────────────────────
 
   const fetchWiki = async (topic) => {
     const query = topic || wikiTopic;
@@ -102,12 +124,15 @@ export default function UserMenu() {
         aria-expanded={open}
         aria-haspopup="true"
       >
-        <div className="user-avatar">
-          {getInitials()}
+        <div className="user-avatar" style={{ overflow: 'hidden' }}>
+          {avatar
+            ? <img src={avatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+            : getInitials()
+          }
         </div>
 
         <div className="user-trigger-info">
-          <strong>{user.name || 'Usuario'}</strong>
+          <strong>{displayName || user.name || 'Usuario'}</strong>
           <span>{getRoleName()}</span>
         </div>
 
@@ -123,12 +148,15 @@ export default function UserMenu() {
       {open && (
         <div className="profile-menu">
           <div className="profile-header">
-            <div className="profile-avatar-large">
-              {getInitials()}
+            <div className="profile-avatar-large" style={{ overflow: 'hidden' }}>
+              {avatar
+                ? <img src={avatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                : getInitials()
+              }
             </div>
 
             <div className="profile-main-info">
-              <h3>{user.name || 'Usuario'}</h3>
+              <h3>{displayName || user.name || 'Usuario'}</h3>
               <p>{user.email}</p>
             </div>
           </div>
@@ -229,7 +257,10 @@ export default function UserMenu() {
             <button
               type="button"
               className="profile-action"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false);
+                setShowProfile(true);
+              }}
             >
               <span className="action-icon">◉</span>
 
@@ -276,6 +307,10 @@ export default function UserMenu() {
             </span>
           </button>
         </div>
+      )}
+
+      {showProfile && (
+        <ProfileModal onClose={() => setShowProfile(false)} />
       )}
     </div>
   );
