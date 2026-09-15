@@ -54,7 +54,28 @@ export const createReply = async (req: Request, res: Response, next: NextFunctio
 export const voteReply = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const replyId = parseInt(req.params.id);
-    const result = await service.voteReply(replyId);
+    const { action } = req.body || {};
+    const result = await service.voteReply(replyId, action === 'unvote' ? 'unvote' : 'vote');
+    res.json(result);
+  } catch (err) { next(err); }
+};
+
+export const deleteReply = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const replyId = parseInt(req.params.id);
+    const userId = req.user!.userId;
+    const userRole = req.user!.role;
+    const result = await service.deleteReply(replyId, userId, userRole);
+    res.json(result);
+  } catch (err) { next(err); }
+};
+
+export const deleteThread = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const threadId = parseInt(req.params.id);
+    const userId = req.user!.userId;
+    const userRole = req.user!.role;
+    const result = await service.deleteThread(threadId, userId, userRole);
     res.json(result);
   } catch (err) { next(err); }
 };

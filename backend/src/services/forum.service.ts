@@ -64,15 +64,30 @@ export class ForumService {
     );
     if (!threads[0]) throw new AppError(404, 'Hilo no encontrado');
 
-    const [replies] = await pool.query<RowDataPacket[]>(
-      `SELECT fr.id, fr.body, fr.created_at, u.name AS author_name,
-              IFNULL(fr.upvotes, 0) AS upvotes
-       FROM forum_replies fr
-       JOIN users u ON fr.author_id = u.id
-       WHERE fr.thread_id = ? AND fr.is_active = TRUE
-       ORDER BY fr.created_at ASC`,
-      [threadId]
-    );
+    let replies: RowDataPacket[] = [];
+    try {
+      const [rows] = await pool.query<RowDataPacket[]>(
+        `SELECT fr.id, fr.body, fr.created_at, u.name AS author_name,
+                fr.upvotes AS upvotes
+         FROM forum_replies fr
+         JOIN users u ON fr.author_id = u.id
+         WHERE fr.thread_id = ? AND fr.is_active = TRUE
+         ORDER BY fr.created_at ASC`,
+        [threadId]
+      );
+      replies = rows;
+    } catch {
+      const [rows] = await pool.query<RowDataPacket[]>(
+        `SELECT fr.id, fr.body, fr.created_at, u.name AS author_name,
+                0 AS upvotes
+         FROM forum_replies fr
+         JOIN users u ON fr.author_id = u.id
+         WHERE fr.thread_id = ? AND fr.is_active = TRUE
+         ORDER BY fr.created_at ASC`,
+        [threadId]
+      );
+      replies = rows;
+    }
 
     return { thread: threads[0], replies };
   }
@@ -95,13 +110,49 @@ export class ForumService {
 
   // ─── Votación ─────────────────────────────────────────────────────────────
 
-  async voteReply(replyId: number) {
+  async voteReply(replyId: number, action: 'vote' | 'unvote' = 'vote') {
     try {
-      await pool.query('UPDATE forum_replies SET upvotes = upvotes + 1 WHERE id = ?', [replyId]);
+      if (action === 'unvote') {
+        await pool.query('UPDATE forum_replies SET upvotes = GREATEST(0, upvotes - 1) WHERE id = ?', [replyId]);
+      } else {
+        await pool.query('UPDATE forum_replies SET upvotes = upvotes + 1 WHERE id = ?', [replyId]);
+      }
     } catch {
       // Ignorar en caso de esquema legacy sin columna upvotes
     }
-    return { message: 'Voto registrado exitosamente' };
+    return { message: action === 'unvote' ? 'Voto retirado' : 'Voto registrado' };
+  }
+
+  // ─── Eliminación ──────────────────────────────────────────────────────────
+
+  async deleteReply(replyId: number, userId: number, userRole: string) {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      'SELECT author_id FROM forum_replies WHERE id = ?',
+      [replyId]
+    );
+    if (!rows[0]) throw new AppError(404, 'Respuesta no encontrada');
+
+    if (rows[0].author_id !== userId && userRole !== 'admin' && userRole !== 'moderator') {
+      throw new AppError(403, 'No tienes permiso para eliminar esta respuesta');
+    }
+
+    await pool.query('UPDATE forum_replies SET is_active = FALSE WHERE id = ?', [replyId]);
+    return { message: 'Respuesta eliminada correctamente' };
+  }
+
+  async deleteThread(threadId: number, userId: number, userRole: string) {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      'SELECT author_id FROM forum_threads WHERE id = ?',
+      [threadId]
+    );
+    if (!rows[0]) throw new AppError(404, 'Hilo no encontrado');
+
+    if (rows[0].author_id !== userId && userRole !== 'admin' && userRole !== 'moderator') {
+      throw new AppError(403, 'No tienes permiso para eliminar este debate');
+    }
+
+    await pool.query('UPDATE forum_threads SET is_active = FALSE WHERE id = ?', [threadId]);
+    return { message: 'Debate eliminado correctamente' };
   }
 
   // ─── Reportes ─────────────────────────────────────────────────────────────
