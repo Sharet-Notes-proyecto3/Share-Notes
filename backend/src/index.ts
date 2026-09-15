@@ -37,10 +37,13 @@ app.use(
   }),
 );
 
+const isProduction = process.env.NODE_ENV === "production";
+
+// Rate limiting listo para producción y configurable por .env
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: isProduction ? parseInt(process.env.RATE_LIMIT_MAX || "5000") : 100000,
     standardHeaders: true,
     legacyHeaders: false,
     message: { message: "Demasiadas solicitudes, intenta más tarde" },
@@ -49,7 +52,7 @@ app.use(
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: isProduction ? parseInt(process.env.AUTH_LIMIT_MAX || "200") : 100000,
   message: {
     message: "Demasiados intentos de autenticación, espera 15 minutos",
   },

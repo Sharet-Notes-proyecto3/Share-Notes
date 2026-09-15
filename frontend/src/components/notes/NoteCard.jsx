@@ -3,15 +3,39 @@
 // Responsable: Integrante 2 (Apuntes, Archivos, Visor & QR)
 // =============================================================================
 
-import { API_BASE_URL } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import { notesService } from '../../services/notes.service';
 
-export default function NoteCard({ note, onOpenQR, onOpenPreview }) {
-  // Construir la URL completa del archivo alojado en backend/uploads/
-  const fileUrl = note.file_path 
-    ? `${API_BASE_URL.replace('/api', '')}/${note.file_path}`
-    : '#';
+export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote }) {
+  const { user, token, isModerator } = useAuth();
 
-  const isPDF = note.file_path?.toLowerCase().endsWith('.pdf');
+  const isPDF =
+    note.original_name?.toLowerCase().endsWith('.pdf') ||
+    note.mimetype === 'application/pdf' ||
+    note.file_path?.toLowerCase().endsWith('.pdf');
+
+  const uploaderName = note.uploader_name || note.user_name || 'Compañero';
+
+  // Verificar permisos de eliminación: si es el dueño del apunte o es moderador/admin
+  const canDelete =
+    isModerator ||
+    (user && (user.id === note.uploader_id || user.email === uploaderName || user.name === uploaderName));
+
+  const handleDownloadDirect = async () => {
+    try {
+      const blob = await notesService.getNoteBlob(token, note.id);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = note.original_name || note.title || 'apunte';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Error al descargar el archivo protegido: ' + err.message);
+    }
+  };
 
   return (
     <div
@@ -25,6 +49,7 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview }) {
         justifyContent: 'space-between',
         transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
         boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+        position: 'relative',
       }}
     >
       <div>
@@ -41,21 +66,42 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview }) {
           >
             📖 {note.subject_name || 'Materia General'}
           </span>
-          <span
-            style={{
-              fontSize: '11px',
-              padding: '3px 8px',
-              borderRadius: '6px',
-              background: isPDF ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-              color: isPDF ? '#f87171' : '#34d399',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-            }}
-          >
-            {isPDF ? '📄 PDF' : '🖼️ Imagen'}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span
+              style={{
+                fontSize: '11px',
+                padding: '3px 8px',
+                borderRadius: '6px',
+                background: isPDF ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                color: isPDF ? '#f87171' : '#34d399',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              {isPDF ? '📄 PDF' : '🖼️ Imagen'}
+            </span>
+
+            {user && (
+              <button
+                onClick={() => onDeleteNote(note)}
+                style={{
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  color: '#f87171',
+                  borderRadius: '6px',
+                  padding: '3px 8px',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                }}
+                title="Eliminar apunte"
+              >
+                🗑️
+              </button>
+            )}
+          </div>
         </div>
 
         <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#fff', lineHeight: 1.3 }}>
@@ -80,7 +126,7 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview }) {
         )}
 
         <div style={{ fontSize: '12px', color: 'var(--text-secondary, #94a3b8)', marginBottom: '14px' }}>
-          👤 <strong>Subido por:</strong> {note.user_name || 'Compañero'}
+          👤 <strong>Subido por:</strong> {uploaderName}
         </div>
       </div>
 
@@ -111,11 +157,8 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview }) {
 
         {/* Botones Secundarios: Descarga Directa y QR */}
         <div style={{ display: 'flex', gap: '8px' }}>
-          <a
-            href={fileUrl}
-            download
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={handleDownloadDirect}
             style={{
               flex: 1,
               textAlign: 'center',
@@ -124,9 +167,9 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview }) {
               color: '#fff',
               padding: '6px 10px',
               borderRadius: '8px',
-              textDecoration: 'none',
               fontSize: '12px',
               fontWeight: '500',
+              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -134,7 +177,7 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview }) {
             }}
           >
             ⬇️ Descargar
-          </a>
+          </button>
 
           <button
             onClick={() => onOpenQR(note)}
