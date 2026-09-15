@@ -86,6 +86,18 @@ export default function NotesGrid() {
     }
   };
 
+  const handleDeleteNote = async (note) => {
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar el apunte "${note.title}"?`)) {
+      return;
+    }
+    try {
+      await notesService.deleteNote(token, note.id);
+      loadData();
+    } catch (err) {
+      alert('Error al eliminar el apunte: ' + err.message);
+    }
+  };
+
   return (
     <div style={{ padding: '24px' }}>
       {/* Header y Acciones */}
@@ -185,6 +197,7 @@ export default function NotesGrid() {
               note={note}
               onOpenQR={(n) => setSelectedNoteForQR(n)}
               onOpenPreview={(n) => setSelectedNoteForPreview(n)}
+              onDeleteNote={handleDeleteNote}
             />
           ))}
         </div>

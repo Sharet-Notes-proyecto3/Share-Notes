@@ -1,23 +1,59 @@
 // =============================================================================
 // MODIFICACIÓN 2 — COMPONENTE: VISOR / PREVISUALIZADOR INTEGRADO DE APUNTES
-// Responsable: Integrante 2 (Apuntes, Visor In-App & Multimedia)
+// Responsable: Integrante 2 (Apuntes, Visor In-App & Blobs protegidos con JWT)
 // =============================================================================
 
-import { useState } from 'react';
-import { API_BASE_URL } from '../../services/api';
+import { useState, useEffect } from 'react';
+import { notesService } from '../../services/notes.service';
+import { useAuth } from '../../context/AuthContext';
 
 export default function PreviewModal({ note, onClose }) {
+  const { token } = useAuth();
+  const [blobUrl, setBlobUrl] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
-  const [loading, setLoading] = useState(true);
+
+  const isPDF =
+    note?.original_name?.toLowerCase().endsWith('.pdf') ||
+    note?.mimetype === 'application/pdf' ||
+    note?.file_path?.toLowerCase().endsWith('.pdf');
+
+  useEffect(() => {
+    let currentUrl = null;
+    let isMounted = true;
+
+    async function loadProtectedBlob() {
+      if (!note || !token) return;
+      try {
+        setLoading(true);
+        setError('');
+        const blob = await notesService.getNoteBlob(token, note.id);
+        if (isMounted && blob) {
+          currentUrl = URL.createObjectURL(blob);
+          setBlobUrl(currentUrl);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err.message || 'Error al cargar la previsualización protegida.');
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadProtectedBlob();
+
+    return () => {
+      isMounted = false;
+      if (currentUrl) {
+        URL.revokeObjectURL(currentUrl);
+      }
+    };
+  }, [note, token]);
 
   if (!note) return null;
-
-  const fileUrl = note.file_path
-    ? `${API_BASE_URL.replace('/api', '')}/${note.file_path}`
-    : '#';
-
-  const isPDF = note.file_path?.toLowerCase().endsWith('.pdf');
 
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.25, 3));
   const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.25, 0.5));
@@ -27,12 +63,22 @@ export default function PreviewModal({ note, onClose }) {
     setRotation(0);
   };
 
+  const handleDownload = () => {
+    if (!blobUrl) return;
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = note.original_name || note.title || 'apunte';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
   return (
     <div
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        backgroundColor: 'rgba(0, 0, 0, 0.85)',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
@@ -75,67 +121,45 @@ export default function PreviewModal({ note, onClose }) {
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '2px', fontSize: '12px', color: 'var(--text-secondary, #94a3b8)' }}>
                 <span style={{ color: '#60a5fa' }}>📖 {note.subject_name || 'Materia'}</span>
                 <span>•</span>
-                <span>👤 {note.user_name || 'Compañero'}</span>
+                <span>👤 {note.uploader_name || 'Compañero'}</span>
+                <span>•</span>
+                <span style={{ color: '#34d399', fontWeight: '600' }}>🔒 Protegido JWT</span>
               </div>
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             {/* Controles de Imagen */}
-            {!isPDF && (
+            {!isPDF && blobUrl && (
               <div style={{ display: 'flex', gap: '6px', background: 'rgba(255,255,255,0.06)', padding: '4px', borderRadius: '8px' }}>
-                <button
-                  onClick={handleZoomIn}
-                  style={controlBtnStyle}
-                  title="Acercar (Zoom In)"
-                >
-                  🔍+
-                </button>
-                <button
-                  onClick={handleZoomOut}
-                  style={controlBtnStyle}
-                  title="Alejar (Zoom Out)"
-                >
-                  🔍-
-                </button>
-                <button
-                  onClick={handleRotate}
-                  style={controlBtnStyle}
-                  title="Rotar 90°"
-                >
-                  🔄
-                </button>
-                <button
-                  onClick={handleReset}
-                  style={controlBtnStyle}
-                  title="Restablecer vista"
-                >
-                  ↺
-                </button>
+                <button onClick={handleZoomIn} style={controlBtnStyle} title="Acercar (Zoom In)">🔍+</button>
+                <button onClick={handleZoomOut} style={controlBtnStyle} title="Alejar (Zoom Out)">🔍-</button>
+                <button onClick={handleRotate} style={controlBtnStyle} title="Rotar 90°">🔄</button>
+                <button onClick={handleReset} style={controlBtnStyle} title="Restablecer vista">↺</button>
               </div>
             )}
 
-            {/* Descarga directa */}
-            <a
-              href={fileUrl}
-              download
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                background: 'var(--primary-color, #3b82f6)',
-                color: '#fff',
-                padding: '8px 14px',
-                borderRadius: '8px',
-                textDecoration: 'none',
-                fontSize: '13px',
-                fontWeight: '600',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-            >
-              ⬇️ Descargar
-            </a>
+            {/* Descarga protegida */}
+            {blobUrl && (
+              <button
+                onClick={handleDownload}
+                style={{
+                  background: 'var(--primary-color, #3b82f6)',
+                  color: '#fff',
+                  padding: '8px 14px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                ⬇️ Descargar PDF/Imagen
+              </button>
+            )}
 
             {/* Cerrar modal */}
             <button
@@ -173,58 +197,74 @@ export default function PreviewModal({ note, onClose }) {
           {loading && (
             <div
               style={{
-                position: 'absolute',
                 color: '#60a5fa',
                 fontSize: '14px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '8px',
+                gap: '12px',
               }}
             >
-              <div style={{ fontSize: '28px' }}>⏳</div>
-              Cargando visor del apunte...
+              <div style={{ fontSize: '32px' }}>⏳</div>
+              <span>Solicitando archivo binario protegido con token JWT...</span>
             </div>
           )}
 
-          {isPDF ? (
-            <iframe
-              src={fileUrl}
-              title={`Visor PDF - ${note.title}`}
-              style={{
-                width: '100%',
-                height: '100%',
-                border: 'none',
-                borderRadius: '8px',
-              }}
-              onLoad={() => setLoading(false)}
-            />
-          ) : (
+          {error && (
             <div
               style={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'auto',
+                color: '#f87171',
+                background: 'rgba(239,68,68,0.1)',
+                border: '1px solid rgba(239,68,68,0.3)',
+                padding: '20px 30px',
+                borderRadius: '12px',
+                textAlign: 'center',
               }}
             >
-              <img
-                src={fileUrl}
-                alt={note.title}
-                onLoad={() => setLoading(false)}
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>⚠️</div>
+              <h4 style={{ margin: '0 0 6px', color: '#fff' }}>No se pudo cargar la vista previa</h4>
+              <p style={{ margin: 0, fontSize: '13px' }}>{error}</p>
+            </div>
+          )}
+
+          {!loading && !error && blobUrl && (
+            isPDF ? (
+              <iframe
+                src={blobUrl}
+                title={`Visor PDF - ${note.title}`}
                 style={{
-                  maxWidth: '100%',
-                  maxHeight: '100%',
-                  objectFit: 'contain',
-                  transform: `scale(${zoom}) rotate(${rotation}deg)`,
-                  transition: 'transform 0.2s ease',
-                  boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
-                  borderRadius: '6px',
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                  borderRadius: '8px',
                 }}
               />
-            </div>
+            ) : (
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'auto',
+                }}
+              >
+                <img
+                  src={blobUrl}
+                  alt={note.title}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    objectFit: 'contain',
+                    transform: `scale(${zoom}) rotate(${rotation}deg)`,
+                    transition: 'transform 0.2s ease',
+                    boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
+                    borderRadius: '6px',
+                  }}
+                />
+              </div>
+            )
           )}
         </div>
       </div>
