@@ -69,6 +69,49 @@ export const adminService = {
     }
     return await api.patch(`/admin/reports/${reportId}`, { status }, token);
   },
+
+  /**
+   * Elimina un apunte reportado por administración
+   */
+  async deleteNote(token, noteId) {
+    return await api.delete(`/admin/notes/${noteId}`, token);
+  },
+
+  /**
+   * Elimina un hilo del foro reportado por administración
+   */
+  async deleteThread(token, threadId) {
+    return await api.delete(`/admin/threads/${threadId}`, token);
+  },
+
+  /**
+   * Elimina una respuesta del foro reportada por administración
+   */
+  async deleteReply(token, replyId) {
+    return await api.delete(`/admin/replies/${replyId}`, token);
+  },
+
+  /**
+   * Aplica una sanción formal a un usuario (warning, temp_ban, perm_ban)
+   */
+  async applySanction(token, { userId, type, reason, expiresAt }) {
+    return await api.post('/admin/sanctions', { userId, type, reason, expiresAt }, token);
+  },
+
+  /**
+   * Lista el historial de sanciones por usuario o globalmente
+   */
+  async getSanctions(token, userId) {
+    const query = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+    return await api.get(`/admin/sanctions${query}`, token);
+  },
+
+  /**
+   * Consulta el estado en vivo de los microservicios de la plataforma
+   */
+  async getMicroservicesStatus(token) {
+    return await api.get('/notes/microservices/status', token);
+  },
 };
 
 export default adminService;

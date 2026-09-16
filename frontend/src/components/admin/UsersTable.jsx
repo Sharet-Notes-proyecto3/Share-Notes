@@ -6,7 +6,7 @@
 import { adminService } from '../../services/admin.service';
 import { useAuth } from '../../context/AuthContext';
 
-export default function UsersTable({ users = [], onRefresh, onToggleUser, onChangeRole }) {
+export default function UsersTable({ users = [], onRefresh, onToggleUser, onChangeRole, onOpenSanction }) {
   const { token, user: currentUser } = useAuth();
 
   const handleToggle = async (userId) => {
@@ -95,23 +95,40 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
                       </span>
                     </td>
                     <td style={{ padding: '14px 16px', textAlign: 'right' }}>
-                      <button
-                        onClick={() => handleToggle(u.id)}
-                        disabled={isSelf}
-                        style={{
-                          padding: '6px 12px',
-                          borderRadius: '6px',
-                          border: 'none',
-                          cursor: isSelf ? 'not-allowed' : 'pointer',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          background: u.is_active ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)',
-                          color: u.is_active ? '#f87171' : '#86efac',
-                          opacity: isSelf ? 0.5 : 1,
-                        }}
-                      >
-                        {u.is_active ? '🚫 Suspender' : '✅ Reactivar'}
-                      </button>
+                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                        <button
+                          onClick={() => onOpenSanction?.(u)}
+                          style={{
+                            padding: '6px 10px',
+                            borderRadius: '6px',
+                            border: '1px solid rgba(245, 158, 11, 0.6)',
+                            cursor: 'pointer',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            background: 'rgba(245, 158, 11, 0.12)',
+                            color: '#fcd34d',
+                          }}
+                        >
+                          ⚠️ Sanción
+                        </button>
+                        <button
+                          onClick={() => handleToggle(u.id)}
+                          disabled={isSelf}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            cursor: isSelf ? 'not-allowed' : 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            background: u.is_active ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+                            color: u.is_active ? '#f87171' : '#86efac',
+                            opacity: isSelf ? 0.5 : 1,
+                          }}
+                        >
+                          {u.is_active ? '🚫 Suspender' : '✅ Reactivar'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

@@ -8,6 +8,8 @@ import { adminService } from '../../services/admin.service';
 import { useAuth } from '../../context/AuthContext';
 import UsersTable from './UsersTable';
 import ReportsTable from './ReportsTable';
+import SanctionsModal from './SanctionsModal';
+import MicroservicesCard from './MicroservicesCard';
 
 export default function AdminView() {
   const { token, isModerator } = useAuth();
@@ -16,6 +18,7 @@ export default function AdminView() {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedUserForSanction, setSelectedUserForSanction] = useState(null);
 
   const loadAdminData = async () => {
     try {
@@ -163,6 +166,10 @@ export default function AdminView() {
         </div>
       </div>
 
+      <div style={{ marginBottom: '24px' }}>
+        <MicroservicesCard />
+      </div>
+
       {/* Selector de Pestañas */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid var(--border-color, #334155)', paddingBottom: '12px' }}>
         <button
@@ -209,12 +216,24 @@ export default function AdminView() {
           onRefresh={loadAdminData}
           onToggleUser={handleToggleUser}
           onChangeRole={handleChangeRole}
+          onOpenSanction={(user) => setSelectedUserForSanction(user)}
         />
       ) : (
         <ReportsTable
           reports={reports}
           onRefresh={loadAdminData}
           onResolveReport={handleResolveReport}
+        />
+      )}
+
+      {selectedUserForSanction && (
+        <SanctionsModal
+          user={selectedUserForSanction}
+          onClose={() => setSelectedUserForSanction(null)}
+          onSanctionAdded={async () => {
+            setSelectedUserForSanction(null);
+            await loadAdminData();
+          }}
         />
       )}
     </div>

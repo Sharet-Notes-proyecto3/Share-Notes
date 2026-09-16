@@ -22,6 +22,31 @@ export default function ReportsTable({ reports = [], onRefresh, onResolveReport 
     }
   };
 
+  const handleDirectDelete = async (report) => {
+    const typeLabel = (report.target_type || 'note').toLowerCase();
+    const confirmed = window.confirm(
+      `¿Deseas eliminar directamente este ${typeLabel === 'note' ? 'apunte' : typeLabel === 'thread' ? 'hilo' : 'comentario'} reportado?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      if (typeLabel === 'note') {
+        await adminService.deleteNote(token, report.target_id);
+      } else if (typeLabel === 'thread') {
+        await adminService.deleteThread(token, report.target_id);
+      } else {
+        await adminService.deleteReply(token, report.target_id);
+      }
+
+      await adminService.resolveReport(token, report.id, 'dismissed');
+      alert('Contenido eliminado y reporte cerrado.');
+      onRefresh?.();
+    } catch (err) {
+      alert('Error al eliminar contenido reportado: ' + err.message);
+    }
+  };
+
   if (reports.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '50px 20px', background: 'var(--sidebar-bg, #1e293b)', borderRadius: '12px', border: '1px dashed var(--border-color, #334155)' }}>
@@ -72,7 +97,22 @@ export default function ReportsTable({ reports = [], onRefresh, onResolveReport 
                   </span>
                 </td>
                 <td style={{ padding: '14px 16px', textAlign: 'right' }}>
-                  <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                  <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => handleDirectDelete(r)}
+                      style={{
+                        padding: '6px 10px',
+                        borderRadius: '6px',
+                        border: '1px solid rgba(239, 68, 68, 0.5)',
+                        cursor: 'pointer',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        background: 'rgba(239, 68, 68, 0.12)',
+                        color: '#fca5a5',
+                      }}
+                    >
+                      🗑️ Eliminar
+                    </button>
                     <button
                       onClick={() => handleResolve(r.id, 'resolved')}
                       style={{
