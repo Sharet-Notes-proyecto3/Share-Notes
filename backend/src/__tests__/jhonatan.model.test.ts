@@ -12,7 +12,7 @@ import bcrypt from "bcryptjs";
 // VALIDADORES
 // ==========================================================
 
-const VALID_ROLES = ["student", "teacher", "moderator", "admin"] as const;
+const VALID_ROLES = ["student", "admin"] as const;
 
 const VALID_FILE_TYPES = [
   "application/pdf",
@@ -86,9 +86,9 @@ describe("JHONATAN — Modelo: Validaciones y Seguridad", () => {
   describe("Validación de Roles", () => {
     test.each([
       ["student", true],
-      ["teacher", true],
-      ["moderator", true],
       ["admin", true],
+      ["teacher", false],
+      ["moderator", false],
       ["superadmin", false],
       ["user", false],
       ["", false],

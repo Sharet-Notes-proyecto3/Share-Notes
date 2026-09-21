@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import PaletteSwitcher from '../common/PaletteSwitcher';
 import './Auth.css';
 
 export default function AuthModal() {
@@ -9,7 +10,7 @@ export default function AuthModal() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('student');
+  const [role] = useState('student');
 
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -99,6 +100,11 @@ export default function AuthModal() {
 
   return (
     <div className="auth-page">
+      {/* Selector de Paleta de Colores en Pantalla de Login */}
+      <div style={{ position: 'absolute', top: '24px', right: '24px', zIndex: 10 }}>
+        <PaletteSwitcher />
+      </div>
+
       <div className="auth-background-glow auth-glow-one"></div>
       <div className="auth-background-glow auth-glow-two"></div>
 
@@ -331,37 +337,7 @@ export default function AuthModal() {
                 )}
               </div>
 
-              {!isLogin && (
-                <div className="auth-field">
-                  <label htmlFor="role">
-                    Perfil académico
-                  </label>
 
-                  <div className="input-wrapper select-wrapper">
-                    <span className="input-icon">◆</span>
-
-                    <select
-                      id="role"
-                      value={role}
-                      onChange={(e) =>
-                        setRole(e.target.value)
-                      }
-                    >
-                      <option value="student">
-                        Estudiante
-                      </option>
-
-                      <option value="teacher">
-                        Docente / Profesor
-                      </option>
-
-                      <option value="moderator">
-                        Moderador
-                      </option>
-                    </select>
-                  </div>
-                </div>
-              )}
 
               <button
                 type="submit"

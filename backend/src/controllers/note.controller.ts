@@ -1,5 +1,6 @@
 // src/controllers/note.controller.ts
 import { Request, Response, NextFunction } from 'express';
+import path from 'path';
 import { NoteService } from '../services/note.service';
 import { checkMicroservicesHealth } from '../utils/microservicesClient';
 
@@ -40,11 +41,15 @@ export const uploadNote = async (req: Request, res: Response, next: NextFunction
 export const listNotes = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { subjectId, semester, careerId, search } = req.query;
+    const parseNum = (val: any) => {
+      const n = parseInt(val);
+      return isNaN(n) ? undefined : n;
+    };
     const notes = await service.list({
-      subjectId: subjectId ? parseInt(subjectId as string) : undefined,
-      semester:  semester  ? parseInt(semester  as string) : undefined,
-      careerId:  careerId  ? parseInt(careerId  as string) : undefined,
-      search:    search    ? (search as string)            : undefined,
+      subjectId: parseNum(subjectId),
+      semester:  parseNum(semester),
+      careerId:  parseNum(careerId),
+      search:    search ? String(search).trim() : undefined,
     });
     res.json(notes);
   } catch (err) { next(err); }
@@ -53,10 +58,17 @@ export const listNotes = async (req: Request, res: Response, next: NextFunction)
 export const downloadNote = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { filePath, originalName, mimetype } = await service.getFilePath(parseInt(id));
-    res.setHeader('Content-Disposition', `attachment; filename="${originalName}"`);
+    const noteId = parseInt(id);
+    if (isNaN(noteId)) {
+      res.status(400).json({ message: 'ID de apunte inválido' });
+      return;
+    }
+    const { filePath, originalName, mimetype } = await service.getFilePath(noteId);
+    const absolutePath = path.resolve(filePath);
+    const safeName = encodeURIComponent(originalName);
+    res.setHeader('Content-Disposition', `attachment; filename="${safeName}"`);
     res.setHeader('Content-Type', mimetype);
-    res.sendFile(filePath, { root: '.' });
+    res.sendFile(absolutePath);
   } catch (err) { next(err); }
 };
 

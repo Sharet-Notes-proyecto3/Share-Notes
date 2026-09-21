@@ -81,11 +81,7 @@ export default function UserMenu() {
 
   const getRoleName = () => {
     if (isAdmin) return 'Administrador';
-    if (isModerator) return 'Moderador';
-    if (isTeacher) return 'Docente';
-    if (isStudent) return 'Estudiante';
-
-    return 'Usuario';
+    return 'Estudiante';
   };
 
   const getInitials = () => {

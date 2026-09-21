@@ -19,15 +19,12 @@ export default function ForumView() {
   const [loading, setLoading] = useState(true);
   const [showNewThreadModal, setShowNewThreadModal] = useState(false);
 
-  const loadForumData = useCallback(async () => {
+  const loadForumThreadsOnly = useCallback(async () => {
+    if (!token) return;
     try {
       setLoading(true);
-      const [threadsRes, subjectsRes] = await Promise.all([
-        forumService.getThreads(token, selectedSubject),
-        notesService.getSubjects(token),
-      ]);
+      const threadsRes = await forumService.getThreads(token, selectedSubject);
       setThreads(threadsRes.data || threadsRes || []);
-      setSubjects(subjectsRes.data || subjectsRes || []);
     } catch (err) {
       console.error('Error al cargar datos del foro:', err);
     } finally {
@@ -35,29 +32,32 @@ export default function ForumView() {
     }
   }, [token, selectedSubject]);
 
+  // Cargar lista de materias solo UNA vez al montar
   useEffect(() => {
+    if (!token) return;
     let isMounted = true;
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const [threadsRes, subjectsRes] = await Promise.all([
-          forumService.getThreads(token, selectedSubject),
-          notesService.getSubjects(token),
-        ]);
-        if (isMounted) {
-          setThreads(threadsRes.data || threadsRes || []);
-          setSubjects(subjectsRes.data || subjectsRes || []);
-        }
-      } catch (err) {
-        console.error('Error al cargar datos del foro:', err);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    }
+    notesService.getSubjects(token)
+      .then((subjectsRes) => {
+        if (isMounted) setSubjects(subjectsRes.data || subjectsRes || []);
+      })
+      .catch((err) => console.error('Error al cargar materias:', err));
+    return () => { isMounted = false; };
+  }, [token]);
 
-    if (token) {
-      fetchData();
-    }
+  // Cargar hilos del foro al cambiar token o filtro de materia
+  useEffect(() => {
+    if (!token) return;
+    let isMounted = true;
+    setLoading(true);
+
+    forumService.getThreads(token, selectedSubject)
+      .then((threadsRes) => {
+        if (isMounted) setThreads(threadsRes.data || threadsRes || []);
+      })
+      .catch((err) => console.error('Error al cargar datos del foro:', err))
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
 
     return () => {
       isMounted = false;
@@ -130,9 +130,10 @@ export default function ForumView() {
         </div>
 
         {/* Selector de Materia */}
-        <div style={{ width: '280px' }}>
+        <div style={{ width: '280px', display: 'flex', gap: '8px' }}>
           <select
             className="form-input"
+            style={{ flex: 1 }}
             value={selectedSubject}
             onChange={(e) => setSelectedSubject(e.target.value)}
           >
@@ -143,6 +144,29 @@ export default function ForumView() {
               </option>
             ))}
           </select>
+
+          {(searchTerm || selectedSubject) && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setSelectedSubject('');
+              }}
+              style={{
+                padding: '0 12px',
+                borderRadius: '8px',
+                border: '1px solid rgba(255,255,255,0.15)',
+                background: 'rgba(255,255,255,0.06)',
+                color: '#94a3b8',
+                fontSize: '12px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+              title="Limpiar filtros"
+            >
+              🧹 Limpiar
+            </button>
+          )}
         </div>
       </div>
 
@@ -173,7 +197,7 @@ export default function ForumView() {
       ) : (
         <div>
           {filteredThreads.map((thread) => (
-            <ThreadCard key={thread.id} thread={thread} onRefresh={loadForumData} />
+            <ThreadCard key={thread.id} thread={thread} onRefresh={loadForumThreadsOnly} />
           ))}
         </div>
       )}
@@ -183,7 +207,7 @@ export default function ForumView() {
         <NewThreadModal
           subjects={subjects}
           onClose={() => setShowNewThreadModal(false)}
-          onThreadCreated={loadForumData}
+          onThreadCreated={loadForumThreadsOnly}
         />
       )}
     </div>

@@ -1,4 +1,4 @@
-﻿// =============================================================================
+// =============================================================================
 // MODIFICACIÓN 1 — COMPONENTE: MODAL DE PERFIL DE ESTUDIANTE
 // Responsable: Integrante 1 (Anna — Autenticación, Sesión y Perfil)
 // Nuevas funciones: editar nombre + foto de perfil personalizada
@@ -45,11 +45,8 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
 
   // ─────────────────────────────────────────────────────────────────────────
   const getRoleName = () => {
-    if (isAdmin)     return 'Administrador';
-    if (isModerator) return 'Moderador';
-    if (isTeacher)   return 'Docente';
-    if (isStudent)   return 'Estudiante';
-    return 'Usuario';
+    if (isAdmin) return 'Administrador';
+    return 'Estudiante';
   };
 
   const getInitials = () => {
