@@ -4,7 +4,7 @@ import { Role } from './roles.definition';
 
 const service = new RolesService();
 
-const VALID_ROLES: Role[] = ['student', 'teacher', 'moderator', 'admin'];
+const VALID_ROLES: Role[] = ['student', 'admin'];
 
 // PATCH /api/roles/:id  — asignar rol a un usuario
 export const assignRole = async (req: Request, res: Response, next: NextFunction) => {

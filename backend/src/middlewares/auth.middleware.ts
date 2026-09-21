@@ -13,7 +13,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
   }
 
   try {
-    const secret = process.env.JWT_SECRET as string;
+    const secret = process.env.JWT_SECRET || 'secret-key-sharenotes';
     const payload = jwt.verify(token, secret) as JwtPayload;
     req.user = payload;
     next();
