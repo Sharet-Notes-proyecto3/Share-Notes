@@ -137,18 +137,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   // ---------------------------------------------------------------------------
-  // ROLES DEL USUARIO
+  // ROLES DEL USUARIO (Solo Administrador y Estudiante)
   // ---------------------------------------------------------------------------
 
   const isAdmin = user?.role === 'admin';
 
-  const isModerator =
-    user?.role === 'admin' ||
-    user?.role === 'moderator';
+  const isStudent = user?.role === 'student' || !user?.role || user?.role === 'teacher' || user?.role === 'moderator';
 
-  const isTeacher = user?.role === 'teacher';
-
-  const isStudent = user?.role === 'student';
+  // Alias para mantener compatibilidad si algún componente consulta isModerator/isTeacher
+  const isModerator = isAdmin;
+  const isTeacher = false;
 
   // ---------------------------------------------------------------------------
   // ESTADO DE AUTENTICACIÓN

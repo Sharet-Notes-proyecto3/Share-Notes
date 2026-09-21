@@ -29,16 +29,14 @@ async function generateQRCtrl(req: any, res: any) {
 }
 
 function isValidRole(role: string): boolean {
-  const valid = ["student", "teacher", "moderator", "admin"];
+  const valid = ["student", "admin"];
   return valid.indexOf(role) !== -1;
 }
 
 function isRoleAtLeast(role: string, minimum: string): boolean {
   const hierarchy: Record<string, number> = {
     student: 1,
-    teacher: 2,
-    moderator: 3,
-    admin: 4,
+    admin: 2,
   };
   return (hierarchy[role] || 0) >= (hierarchy[minimum] || 0);
 }
@@ -114,12 +112,8 @@ describe("ANA — Capa Controlador + Servicio: Foro, Admin y Roles", () => {
 
   test("ANA-05 | testDeberiaVerificarJerarquiaDeRolesCorrectamente", () => {
     expect(isRoleAtLeast("admin", "admin")).toBe(true);
-    expect(isRoleAtLeast("admin", "moderator")).toBe(true);
-    expect(isRoleAtLeast("moderator", "teacher")).toBe(true);
-    expect(isRoleAtLeast("teacher", "student")).toBe(true);
-    expect(isRoleAtLeast("student", "moderator")).toBe(false);
+    expect(isRoleAtLeast("admin", "student")).toBe(true);
     expect(isRoleAtLeast("student", "admin")).toBe(false);
-    expect(isRoleAtLeast("teacher", "admin")).toBe(false);
     expect(hasPermission("admin", "qr:generate")).toBe(true);
     expect(hasPermission("student", "qr:generate")).toBe(false);
   });

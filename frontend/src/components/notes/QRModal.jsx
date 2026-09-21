@@ -73,9 +73,40 @@ export default function QRModal({ note, onClose }) {
         )}
 
         {qrDataUrl && (
-          <div style={{ background: '#fff', padding: '16px', borderRadius: '12px', display: 'inline-block', marginBottom: '16px' }}>
-            <img src={qrDataUrl} alt="Código QR del apunte" style={{ width: '200px', height: '200px', display: 'block' }} />
-          </div>
+          <>
+            <div style={{ background: '#fff', padding: '16px', borderRadius: '12px', display: 'inline-block', marginBottom: '16px' }}>
+              <img id="qr-img-element" src={qrDataUrl} alt="Código QR del apunte" style={{ width: '200px', height: '200px', display: 'block' }} />
+            </div>
+
+            <button
+              onClick={() => {
+                const a = document.createElement('a');
+                a.href = qrDataUrl;
+                a.download = `QR_Apunte_${note.id || 'sharenotes'}.png`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+              }}
+              style={{
+                width: '100%',
+                padding: '9px',
+                background: 'rgba(56, 189, 248, 0.15)',
+                border: '1px solid rgba(56, 189, 248, 0.4)',
+                borderRadius: '8px',
+                color: '#38bdf8',
+                fontWeight: '600',
+                fontSize: '13px',
+                cursor: 'pointer',
+                marginBottom: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+              }}
+            >
+              📥 Descargar Imagen QR
+            </button>
+          </>
         )}
 
         <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0 0 16px' }}>

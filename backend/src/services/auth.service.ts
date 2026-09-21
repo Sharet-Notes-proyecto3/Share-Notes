@@ -59,7 +59,8 @@ export class AuthService {
     }
 
     const payload: JwtPayload = { userId: user.id, email: user.email, role: user.role };
-    const token = jwt.sign(payload, process.env.JWT_SECRET as string, {
+    const secret = process.env.JWT_SECRET || 'secret-key-sharenotes';
+    const token = jwt.sign(payload, secret, {
       expiresIn: process.env.JWT_EXPIRES_IN || '7d',
     } as jwt.SignOptions);
 

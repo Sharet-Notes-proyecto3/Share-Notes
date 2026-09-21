@@ -25,15 +25,12 @@ export default function NotesGrid() {
   const [selectedNoteForQR, setSelectedNoteForQR] = useState(null);
   const [selectedNoteForPreview, setSelectedNoteForPreview] = useState(null);
 
-  const loadData = useCallback(async () => {
+  const fetchNotesOnly = useCallback(async () => {
+    if (!token) return;
     try {
       setLoading(true);
-      const [notesRes, subjectsRes] = await Promise.all([
-        notesService.getNotes(token, selectedSubject, searchTerm),
-        notesService.getSubjects(token),
-      ]);
+      const notesRes = await notesService.getNotes(token, selectedSubject, searchTerm);
       setNotes(notesRes.data || notesRes || []);
-      setSubjects(subjectsRes.data || subjectsRes || []);
     } catch (err) {
       console.error('Error al cargar apuntes:', err);
     } finally {
@@ -41,29 +38,32 @@ export default function NotesGrid() {
     }
   }, [token, selectedSubject, searchTerm]);
 
+  // Cargar lista de materias solo UNA vez al montar
   useEffect(() => {
+    if (!token) return;
     let isMounted = true;
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const [notesRes, subjectsRes] = await Promise.all([
-          notesService.getNotes(token, selectedSubject, searchTerm),
-          notesService.getSubjects(token),
-        ]);
-        if (isMounted) {
-          setNotes(notesRes.data || notesRes || []);
-          setSubjects(subjectsRes.data || subjectsRes || []);
-        }
-      } catch (err) {
-        console.error('Error al cargar apuntes:', err);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    }
+    notesService.getSubjects(token)
+      .then((subjectsRes) => {
+        if (isMounted) setSubjects(subjectsRes.data || subjectsRes || []);
+      })
+      .catch((err) => console.error('Error al cargar materias:', err));
+    return () => { isMounted = false; };
+  }, [token]);
 
-    if (token) {
-      fetchData();
-    }
+  // Cargar apuntes cuando cambie el filtro de materias o término de búsqueda
+  useEffect(() => {
+    if (!token) return;
+    let isMounted = true;
+    setLoading(true);
+
+    notesService.getNotes(token, selectedSubject, searchTerm)
+      .then((notesRes) => {
+        if (isMounted) setNotes(notesRes.data || notesRes || []);
+      })
+      .catch((err) => console.error('Error al cargar apuntes:', err))
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
 
     return () => {
       isMounted = false;
@@ -72,7 +72,7 @@ export default function NotesGrid() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    loadData();
+    fetchNotesOnly();
   };
 
   const handleDownloadReport = async () => {
@@ -92,7 +92,7 @@ export default function NotesGrid() {
     }
     try {
       await notesService.deleteNote(token, note.id);
-      loadData();
+      fetchNotesOnly();
     } catch (err) {
       alert('Error al eliminar el apunte: ' + err.message);
     }
@@ -141,7 +141,7 @@ export default function NotesGrid() {
       </div>
 
       {/* Barra de Filtros y Búsqueda */}
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '24px' }}>
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px', flex: '1 1 300px' }}>
           <input
             type="text"
@@ -168,7 +168,37 @@ export default function NotesGrid() {
             </option>
           ))}
         </select>
+
+        {(searchTerm || selectedSubject) && (
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setSelectedSubject('');
+            }}
+            style={{
+              padding: '9px 14px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.15)',
+              background: 'rgba(255,255,255,0.06)',
+              color: '#94a3b8',
+              fontSize: '12px',
+              fontWeight: '600',
+              cursor: 'pointer',
+            }}
+          >
+            🧹 Limpiar filtros
+          </button>
+        )}
       </div>
+
+      {/* Contador de resultados */}
+      {!loading && (
+        <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '16px', fontWeight: '500' }}>
+          📄 Mostrando <strong>{notes.length}</strong> {notes.length === 1 ? 'apunte' : 'apuntes'}
+          {selectedSubject ? ' para la materia seleccionada' : ''}
+          {searchTerm ? ` que coinciden con "${searchTerm}"` : ''}
+        </div>
+      )}
 
       {/* Grid de Apuntes */}
       {loading ? (

@@ -75,8 +75,6 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
                         style={{ padding: '4px 8px', fontSize: '12px', width: 'auto' }}
                       >
                         <option value="student">🎓 Estudiante</option>
-                        <option value="teacher">👨‍🏫 Docente</option>
-                        <option value="moderator">🛡️ Moderador</option>
                         <option value="admin">👑 Administrador</option>
                       </select>
                     </td>
