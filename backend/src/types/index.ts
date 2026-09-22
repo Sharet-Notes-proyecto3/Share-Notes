@@ -1,4 +1,4 @@
-export type UserRole = 'student' | 'admin';
+export type UserRole = 'student' | 'teacher' | 'moderator' | 'admin';
 
 export interface JwtPayload {
   userId: number;
@@ -18,3 +18,4 @@ declare global {
     }
   }
 }
+
