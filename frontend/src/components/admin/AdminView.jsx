@@ -10,6 +10,7 @@ import UsersTable from './UsersTable';
 import ReportsTable from './ReportsTable';
 import SanctionsModal from './SanctionsModal';
 import MicroservicesCard from './MicroservicesCard';
+import AcademicCatalog from './AcademicCatalog';
 
 export default function AdminView() {
   const { token, isModerator } = useAuth();
@@ -73,10 +74,12 @@ export default function AdminView() {
 
   const metrics = useMemo(() => {
     const activeUsers = users.filter((u) => u.is_active).length;
+    const suspendedUsers = users.filter((u) => !u.is_active).length;
     const pendingReports = reports.filter((r) => r.status === 'pending').length;
 
     return {
       activeUsers,
+      suspendedUsers,
       pendingReports,
       totalUsers: users.length,
       totalReports: reports.length,
@@ -125,7 +128,7 @@ export default function AdminView() {
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ margin: '0 0 4px', color: '#fff', fontSize: '24px' }}>🛡️ Panel de Administración y Moderación</h2>
         <p style={{ margin: 0, color: 'var(--text-secondary, #94a3b8)', fontSize: '14px' }}>
-          Gestión de usuarios, asignación de roles académicos y resolución de reportes
+          Gestión de usuarios, asignación de roles académicos, catálogo y resolución de reportes
         </p>
       </div>
 
@@ -154,6 +157,12 @@ export default function AdminView() {
         </div>
 
         <div style={{ background: 'var(--sidebar-bg, #1e293b)', border: '1px solid var(--border-color, #334155)', borderRadius: '12px', padding: '16px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary, #94a3b8)' }}>🚫 Usuarios Suspendidos</div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#fca5a5', marginTop: '4px' }}>{metrics.suspendedUsers}</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary, #94a3b8)', marginTop: '4px' }}>Cuentas inactivas</div>
+        </div>
+
+        <div style={{ background: 'var(--sidebar-bg, #1e293b)', border: '1px solid var(--border-color, #334155)', borderRadius: '12px', padding: '16px' }}>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary, #94a3b8)' }}>👥 Total Usuarios</div>
           <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#60a5fa', marginTop: '4px' }}>{metrics.totalUsers}</div>
           <div style={{ fontSize: '11px', color: '#60a5fa', marginTop: '4px' }}>Plataforma ShareNotes</div>
@@ -171,7 +180,7 @@ export default function AdminView() {
       </div>
 
       {/* Selector de Pestañas */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid var(--border-color, #334155)', paddingBottom: '12px' }}>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid var(--border-color, #334155)', paddingBottom: '12px', flexWrap: 'wrap' }}>
         <button
           onClick={() => setActiveTab('users')}
           style={{
@@ -186,6 +195,22 @@ export default function AdminView() {
           }}
         >
           👥 Gestión de Usuarios ({users.length})
+        </button>
+
+        <button
+          onClick={() => setActiveTab('catalog')}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '8px',
+            border: 'none',
+            cursor: 'pointer',
+            fontWeight: '600',
+            fontSize: '13px',
+            background: activeTab === 'catalog' ? 'var(--primary-color, #3b82f6)' : 'transparent',
+            color: activeTab === 'catalog' ? '#fff' : 'var(--text-secondary, #94a3b8)',
+          }}
+        >
+          📚 Catálogo Académico
         </button>
 
         <button
@@ -218,6 +243,8 @@ export default function AdminView() {
           onChangeRole={handleChangeRole}
           onOpenSanction={(user) => setSelectedUserForSanction(user)}
         />
+      ) : activeTab === 'catalog' ? (
+        <AcademicCatalog />
       ) : (
         <ReportsTable
           reports={reports}
@@ -239,3 +266,4 @@ export default function AdminView() {
     </div>
   );
 }
+

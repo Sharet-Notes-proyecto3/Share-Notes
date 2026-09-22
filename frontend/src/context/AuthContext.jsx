@@ -1,6 +1,6 @@
 // =============================================================================
 // CONTEXTO GLOBAL DE AUTENTICACIÓN, SESIÓN Y ROLES
-// Responsable: Integrante 1 - Autenticación y Sesión
+// Integración con AccountService, AccountStore y JWT Pattern
 // =============================================================================
 
 import {
@@ -10,22 +10,19 @@ import {
   useState,
 } from 'react';
 
+import { accountService } from '../services/account.service';
+import accountStore from '../store/account-store';
 import { authService } from '../services/auth.service';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   // ---------------------------------------------------------------------------
-  // ESTADO DE SESIÓN
+  // ESTADO DE SESIÓN DESDE ACCOUNT SERVICE / STORE
   // ---------------------------------------------------------------------------
 
-  const [token, setToken] = useState(
-    () => localStorage.getItem('token') || null
-  );
-
-  const [user, setUser] = useState(null);
-
-  // Indica si todavía estamos comprobando la sesión almacenada.
+  const [token, setToken] = useState(() => accountService.getToken());
+  const [user, setUser] = useState(() => accountStore.getters.account());
   const [loading, setLoading] = useState(true);
 
   // ---------------------------------------------------------------------------
@@ -33,7 +30,7 @@ export const AuthProvider = ({ children }) => {
   // ---------------------------------------------------------------------------
 
   const logout = () => {
-    localStorage.removeItem('token');
+    accountService.logout();
     setToken(null);
     setUser(null);
   };
@@ -45,38 +42,37 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let isActive = true;
 
-    const loadUser = async () => {
+    const loadSession = async () => {
       setLoading(true);
 
-      // No existe token guardado.
-      if (!token) {
+      const currentToken = accountService.getToken();
+
+      if (!currentToken) {
         if (isActive) {
           setUser(null);
+          setToken(null);
           setLoading(false);
         }
-
         return;
       }
 
       try {
-        // Consultamos el perfil utilizando el token almacenado.
-        const profileData = await authService.getProfile(token);
-
+        const success = await accountService.loadAccount();
         if (!isActive) return;
 
-        setUser(profileData);
+        if (success) {
+          setUser(accountStore.getters.account());
+          setToken(accountService.getToken());
+        } else {
+          setUser(null);
+          setToken(null);
+        }
       } catch (error) {
-        console.error(
-          'La sesión almacenada no es válida:',
-          error
-        );
-
+        console.error('La sesión almacenada no es válida:', error);
         if (!isActive) return;
-
-        // Si el token ya no es válido, limpiamos la sesión.
-        localStorage.removeItem('token');
-        setToken(null);
+        accountService.logout();
         setUser(null);
+        setToken(null);
       } finally {
         if (isActive) {
           setLoading(false);
@@ -84,36 +80,24 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
-    loadUser();
+    loadSession();
 
-    // Evita actualizar estados si el componente deja de estar activo.
     return () => {
       isActive = false;
     };
-  }, [token]);
+  }, []);
 
   // ---------------------------------------------------------------------------
   // INICIAR SESIÓN
   // ---------------------------------------------------------------------------
 
-  const login = async (email, password) => {
-    const data = await authService.login(email, password);
+  const login = async (email, password, rememberMe = true) => {
+    const data = await accountService.login(email, password, rememberMe);
+    const storedToken = accountService.getToken();
+    const currentUser = accountStore.getters.account();
 
-    if (!data?.token) {
-      throw new Error(
-        'El servidor no devolvió un token de autenticación.'
-      );
-    }
-
-    // Guardamos el token para mantener la sesión.
-    localStorage.setItem('token', data.token);
-
-    setToken(data.token);
-
-    // Si el backend ya devuelve el usuario, lo mostramos inmediatamente.
-    if (data.user) {
-      setUser(data.user);
-    }
+    setToken(storedToken);
+    setUser(currentUser);
 
     return data;
   };
@@ -122,38 +106,30 @@ export const AuthProvider = ({ children }) => {
   // REGISTRO
   // ---------------------------------------------------------------------------
 
-  const register = async (
-    name,
-    email,
-    password,
-    role = 'student'
-  ) => {
-    return await authService.register(
-      name,
-      email,
-      password,
-      role
-    );
+  const register = async (name, email, password, role = 'student') => {
+    return await authService.register(name, email, password, role);
   };
 
   // ---------------------------------------------------------------------------
-  // ROLES DEL USUARIO (Solo Administrador y Estudiante)
+  // EVALUACIÓN DE ROLES CON PRIORIDAD Y AUTORIDADES
+  // Roles unificados con backend: admin | moderator | teacher | student
   // ---------------------------------------------------------------------------
 
-  const isAdmin = user?.role === 'admin';
+  const userRole = (accountStore.getters.userRole() || user?.role || 'student').toString().toLowerCase();
+  const isAdmin = userRole === 'admin';
+  const isModerator = isAdmin || userRole === 'moderator' || userRole === 'front_desk_cs';
+  const isTeacher = userRole === 'teacher' || userRole === 'functionary';
+  const isStudent = userRole === 'student' || userRole === 'user' || (!isAdmin && !isModerator && !isTeacher);
 
-  const isStudent = user?.role === 'student' || !user?.role || user?.role === 'teacher' || user?.role === 'moderator';
-
-  // Alias para mantener compatibilidad si algún componente consulta isModerator/isTeacher
-  const isModerator = isAdmin;
-  const isTeacher = false;
+  const hasAnyAuthority = (authorities) => {
+    return accountService.checkAuthorities(authorities);
+  };
 
   // ---------------------------------------------------------------------------
   // ESTADO DE AUTENTICACIÓN
   // ---------------------------------------------------------------------------
 
-  const isAuthenticated =
-    Boolean(token) && Boolean(user);
+  const isAuthenticated = Boolean(token) && Boolean(user) && accountStore.getters.isAuthenticated();
 
   // ---------------------------------------------------------------------------
   // CONTEXTO GLOBAL
@@ -171,6 +147,8 @@ export const AuthProvider = ({ children }) => {
         logout,
 
         isAuthenticated,
+        userRole,
+        hasAnyAuthority,
 
         isAdmin,
         isModerator,
@@ -192,9 +170,7 @@ export const useAuth = () => {
   const context = useContext(AuthContext);
 
   if (!context) {
-    throw new Error(
-      'useAuth debe ser utilizado dentro de un AuthProvider'
-    );
+    throw new Error('useAuth debe ser utilizado dentro de un AuthProvider');
   }
 
   return context;

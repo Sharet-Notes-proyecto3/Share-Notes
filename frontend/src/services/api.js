@@ -5,15 +5,36 @@
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-export const getStoredToken = () => localStorage.getItem('token') || '';
+export const AUTH_TOKEN_KEY = 'jhi-authenticationToken';
 
-export const setStoredToken = (token) => {
+export const getStoredToken = () => {
+  return (
+    localStorage.getItem(AUTH_TOKEN_KEY) ||
+    sessionStorage.getItem(AUTH_TOKEN_KEY) ||
+    localStorage.getItem('token') ||
+    sessionStorage.getItem('token') ||
+    ''
+  );
+};
+
+export const setStoredToken = (token, rememberMe = true) => {
   if (token) {
-    localStorage.setItem('token', token);
+    if (rememberMe) {
+      localStorage.setItem(AUTH_TOKEN_KEY, token);
+      localStorage.setItem('token', token);
+    } else {
+      sessionStorage.setItem(AUTH_TOKEN_KEY, token);
+      sessionStorage.setItem('token', token);
+    }
   }
 };
 
-export const clearStoredToken = () => localStorage.removeItem('token');
+export const clearStoredToken = () => {
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  sessionStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem('token');
+  sessionStorage.removeItem('token');
+};
 
 /**
  * Helper para realizar peticiones fetch estandarizadas al backend

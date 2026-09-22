@@ -15,7 +15,8 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       res.status(400).json({ message: 'La contraseña debe tener mínimo 8 caracteres' });
       return;
     }
-    const user = await service.register(name, email, password, role || 'student');
+    // Forzar rol 'student' en registro público para evitar escalada de privilegios
+    const user = await service.register(name, email, password, 'student');
     res.status(201).json({ message: 'Registro exitoso', user });
   } catch (err) { next(err); }
 };

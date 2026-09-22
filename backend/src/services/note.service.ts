@@ -4,7 +4,9 @@ import { AppError } from '../middlewares/error.middleware';
 import { RowDataPacket } from 'mysql2';
 import fs from 'fs';
 import path from 'path';
+import 'multer';
 import { sendEmailNotification, generatePdfReport } from '../utils/microservicesClient';
+import { logAuditAction } from './audit.service';
 
 interface NoteRow extends RowDataPacket {
   id: number;
@@ -126,18 +128,31 @@ export class NoteService {
 
   async delete(noteId: number, requesterId: number, requesterRole: string) {
     const [rows] = await pool.query<NoteRow[]>(
-      'SELECT uploader_id FROM notes WHERE id = ? AND is_active = TRUE',
+      'SELECT id, title, uploader_id FROM notes WHERE id = ? AND is_active = TRUE',
       [noteId]
     );
     const note = rows[0];
     if (!note) throw new AppError(404, 'Apunte no encontrado');
 
-    // Solo el dueño o un admin pueden eliminar
-    if (requesterRole !== 'admin' && note.uploader_id !== requesterId) {
+    // Regla transversal ABAC: Permitido <=> (usuario.id = recurso.autor_id) OR (usuario.rol in {admin, moderator})
+    if (requesterRole !== 'admin' && requesterRole !== 'moderator' && note.uploader_id !== requesterId) {
       throw new AppError(403, 'No tienes permiso para eliminar este apunte');
     }
 
     await pool.query('UPDATE notes SET is_active = FALSE WHERE id = ?', [noteId]);
+
+    // Registrar en auditoría si fue eliminado por moderador o administrador
+    if (requesterRole === 'admin' || requesterRole === 'moderator') {
+      await logAuditAction({
+        userId: requesterId,
+        userRole: requesterRole,
+        action: requesterRole === 'admin' ? 'ADMIN_DELETE_NOTE' : 'MODERATE_DELETE_NOTE',
+        targetResource: 'note',
+        targetId: noteId,
+        details: { title: note.title, uploaderId: note.uploader_id },
+      });
+    }
+
     return { message: 'Apunte eliminado' };
   }
 

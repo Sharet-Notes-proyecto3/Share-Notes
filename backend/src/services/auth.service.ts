@@ -59,7 +59,10 @@ export class AuthService {
     }
 
     const payload: JwtPayload = { userId: user.id, email: user.email, role: user.role };
-    const secret = process.env.JWT_SECRET || 'secret-key-sharenotes';
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new AppError(500, 'Error interno: configuración de seguridad incompleta (JWT_SECRET no definido)');
+    }
     const token = jwt.sign(payload, secret, {
       expiresIn: process.env.JWT_EXPIRES_IN || '7d',
     } as jwt.SignOptions);

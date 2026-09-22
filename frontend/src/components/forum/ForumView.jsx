@@ -48,6 +48,7 @@ export default function ForumView() {
   useEffect(() => {
     if (!token) return;
     let isMounted = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
 
     forumService.getThreads(token, selectedSubject)

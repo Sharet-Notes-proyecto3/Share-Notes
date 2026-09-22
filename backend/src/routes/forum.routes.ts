@@ -1,7 +1,9 @@
 // src/routes/forum.routes.ts
 import { Router } from 'express';
 import * as ctrl from '../controllers/forum.controller';
-import { authMiddleware } from '../middlewares/auth.middleware';
+import * as teacherCtrl from '../controllers/teacher.controller';
+import { authMiddleware, roleGuard } from '../middlewares/auth.middleware';
+import { isTeacherOfCourse } from '../middlewares/teacher.middleware';
 
 const router = Router();
 
@@ -25,6 +27,12 @@ router.post('/:id/reply', ctrl.createReply);
 // POST /api/forum/replies/:id/vote — votar respuesta
 router.post('/replies/:id/vote', ctrl.voteReply);
 
+// PUT  /api/forum/answers/:id/mark-solution — marcar respuesta como solución (docente asignado o admin)
+router.put('/answers/:id/mark-solution', roleGuard('teacher', 'admin'), isTeacherOfCourse, teacherCtrl.markSolution);
+
+// POST /api/forum/posts/:id/close — cerrar hilo de discusión (docente asignado o admin)
+router.post('/posts/:id/close', roleGuard('teacher', 'admin'), isTeacherOfCourse, teacherCtrl.closeThread);
+
 // DELETE /api/forum/replies/:id — eliminar un comentario/respuesta
 router.delete('/replies/:id', ctrl.deleteReply);
 
@@ -36,3 +44,4 @@ router.delete('/:id', ctrl.deleteThread);
 router.post('/report', ctrl.reportContent);
 
 export default router;
+
