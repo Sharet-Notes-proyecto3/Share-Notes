@@ -11,8 +11,8 @@ router.post('/register', ctrl.register);
 // POST /api/auth/login
 router.post('/login', ctrl.login);
 
-// GET  /api/auth/profile/related-topic?tema=...
-router.get('/profile/related-topic', ctrl.getRelatedTopic);
+// GET  /api/auth/profile/related-topic?tema=... (requiere token)
+router.get('/profile/related-topic', authMiddleware, ctrl.getRelatedTopic);
 
 // GET  /api/auth/profile  (requiere token)
 router.get('/profile', authMiddleware, ctrl.getProfile);

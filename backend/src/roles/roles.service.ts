@@ -2,6 +2,7 @@ import pool from '../config/database';
 import { AppError } from '../middlewares/error.middleware';
 import { Role, ROLE_HIERARCHY } from './roles.definition';
 import { RowDataPacket } from 'mysql2';
+import { logAuditAction } from '../services/audit.service';
 
 interface UserRow extends RowDataPacket {
   id: number;
@@ -29,6 +30,15 @@ export class RolesService {
     }
 
     await pool.query('UPDATE users SET role = ? WHERE id = ?', [newRole, targetUserId]);
+
+    await logAuditAction({
+      userId: requesterId,
+      userRole: 'admin',
+      action: 'ASSIGN_ROLE',
+      targetResource: 'user',
+      targetId: targetUserId,
+      details: { previousRole: user.role, newRole, targetName: user.name },
+    });
 
     return {
       message: `Rol actualizado: ${user.name} ahora es "${newRole}"`,
