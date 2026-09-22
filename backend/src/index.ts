@@ -14,6 +14,8 @@ import authRoutes from "./routes/auth.routes";
 import noteRoutes from "./routes/note.routes";
 import forumRoutes from "./routes/forum.routes";
 import adminRoutes from "./routes/admin.routes";
+import teacherRoutes from "./routes/teacher.routes";
+import moderatorRoutes from "./routes/moderator.routes";
 import { rolesRouter } from "./roles";
 
 // Importar middleware de errores
@@ -87,7 +89,11 @@ app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/notes", noteRoutes);
 app.use("/api/forum", forumRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api", teacherRoutes);
+app.use("/api", moderatorRoutes);
 app.use("/api/roles", rolesRouter);
+
+
 
 //Ruta no encontrada
 app.use((_req, res) => {

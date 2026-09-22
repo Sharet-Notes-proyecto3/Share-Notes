@@ -1,7 +1,9 @@
 // src/routes/note.routes.ts
 import { Router } from 'express';
 import * as ctrl from '../controllers/note.controller';
-import { authMiddleware } from '../middlewares/auth.middleware';
+import * as teacherCtrl from '../controllers/teacher.controller';
+import { authMiddleware, roleGuard } from '../middlewares/auth.middleware';
+import { isTeacherOfCourse } from '../middlewares/teacher.middleware';
 import { uploadNote } from '../middlewares/upload.middleware';
 
 const router = Router();
@@ -29,8 +31,12 @@ router.post('/', uploadNote, ctrl.uploadNote);
 // GET  /api/notes/:id/download  — descargar archivo
 router.get('/:id/download', ctrl.downloadNote);
 
+// PUT  /api/notes/:id/verify    — verificar apunte (docente asignado o admin)
+router.put('/:id/verify', roleGuard('teacher', 'admin'), isTeacherOfCourse, teacherCtrl.verifyNote);
+
 // DELETE /api/notes/:id     — eliminar (dueño o admin)
 router.delete('/:id', ctrl.deleteNote);
 
 export default router;
+
 

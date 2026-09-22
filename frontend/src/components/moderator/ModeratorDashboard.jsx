@@ -1,0 +1,264 @@
+// src/components/moderator/ModeratorDashboard.jsx
+import { useState } from 'react';
+import RoleGate from '../../directives/RoleGate';
+import ReportsQueueTable from './ReportsQueueTable';
+import ModerationLogsTable from './ModerationLogsTable';
+import UserRestrictModal from './UserRestrictModal';
+import useReportsQueue from '../../composables/useReportsQueue';
+import useModeration from '../../composables/useModeration';
+
+export function ModeratorDashboard({ defaultTab = 'reports' }) {
+  const [activeTab, setActiveTab] = useState(defaultTab); // 'reports' | 'logs' | 'users'
+  const { reports, pendingCount, loading: loadingQueue, error: queueError, refetch: refetchQueue, removeReportOptimistically } = useReportsQueue();
+  const { resolveReport, dismissReport } = useModeration();
+
+  // Restrict User Modal state
+  const [restrictUserId, setRestrictUserId] = useState(null);
+  const [isRestrictModalOpen, setIsRestrictModalOpen] = useState(false);
+  const [manualUserId, setManualUserId] = useState('');
+
+  const handleResolve = async (reportId) => {
+    const res = await resolveReport(reportId);
+    if (res.success) {
+      removeReportOptimistically(reportId);
+    }
+  };
+
+  const handleDismiss = async (reportId) => {
+    const res = await dismissReport(reportId);
+    if (res.success) {
+      removeReportOptimistically(reportId);
+    }
+  };
+
+  const handleOpenRestrictModal = (userId) => {
+    setRestrictUserId(userId);
+    setIsRestrictModalOpen(true);
+  };
+
+  return (
+    <RoleGate
+      allow={['MODERATOR', 'FRONT_DESK_CS', 'ADMIN']}
+      fallback={
+        <div style={{ padding: '32px', textAlign: 'center', backgroundColor: '#FEE2E2', border: '1px solid #FCA5A5', color: '#991B1B', borderRadius: '8px', margin: '24px' }}>
+          <h2>403 Prohibido</h2>
+          <p>No posees los permisos necesarios del rol MODERATOR para acceder a este panel.</p>
+        </div>
+      }
+    >
+      <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+        {/* Banner Superior Header */}
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #1E293B 0%, #334155 100%)',
+            color: 'white',
+            padding: '24px',
+            borderRadius: '12px',
+            marginBottom: '24px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '16px',
+          }}
+        >
+          <div>
+            <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              🛡️ Panel de Moderación de Contenidos
+            </h1>
+            <p style={{ margin: '6px 0 0 0', opacity: 0.85, fontSize: '14px' }}>
+              Gestión centralizada de denuncias, moderación de publicaciones/apuntes y sanciones de usuarios.
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <div
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(4px)',
+                padding: '10px 16px',
+                borderRadius: '8px',
+                textAlign: 'center',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}
+            >
+              <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.8 }}>
+                Denuncias Pendientes
+              </div>
+              <div style={{ fontSize: '22px', fontWeight: 'bold', color: pendingCount > 0 ? '#FBBF24' : '#34D399' }}>
+                {pendingCount}
+              </div>
+            </div>
+
+            <button
+              onClick={refetchQueue}
+              disabled={loadingQueue}
+              style={{
+                padding: '10px 16px',
+                fontSize: '13px',
+                fontWeight: 'bold',
+                color: '#1E293B',
+                backgroundColor: '#FFFFFF',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              }}
+            >
+              🔄 Actualizar Cola
+            </button>
+          </div>
+        </div>
+
+        {/* Pestañas de Navegación del Panel */}
+        <div style={{ display: 'flex', gap: '8px', borderBottom: '2px solid #E2E8F0', marginBottom: '24px' }}>
+          <button
+            onClick={() => setActiveTab('reports')}
+            style={{
+              padding: '12px 20px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              color: activeTab === 'reports' ? '#2563EB' : '#64748B',
+              backgroundColor: 'transparent',
+              border: 'none',
+              borderBottom: activeTab === 'reports' ? '3px solid #2563EB' : '3px solid transparent',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: '-2px',
+            }}
+          >
+            🚨 Cola de Denuncias
+            {pendingCount > 0 && (
+              <span style={{ backgroundColor: '#EF4444', color: 'white', fontSize: '11px', borderRadius: '10px', padding: '2px 8px' }}>
+                {pendingCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('logs')}
+            style={{
+              padding: '12px 20px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              color: activeTab === 'logs' ? '#2563EB' : '#64748B',
+              backgroundColor: 'transparent',
+              border: 'none',
+              borderBottom: activeTab === 'logs' ? '3px solid #2563EB' : '3px solid transparent',
+              cursor: 'pointer',
+              marginBottom: '-2px',
+            }}
+          >
+            📋 Historial de Moderación
+          </button>
+
+          <button
+            onClick={() => setActiveTab('users')}
+            style={{
+              padding: '12px 20px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              color: activeTab === 'users' ? '#2563EB' : '#64748B',
+              backgroundColor: 'transparent',
+              border: 'none',
+              borderBottom: activeTab === 'users' ? '3px solid #2563EB' : '3px solid transparent',
+              cursor: 'pointer',
+              marginBottom: '-2px',
+            }}
+          >
+            🚫 Restricción de Usuarios
+          </button>
+        </div>
+
+        {/* Contenido de la Pestaña Activa */}
+        {activeTab === 'reports' && (
+          <div>
+            <h2 style={{ fontSize: '18px', margin: '0 0 16px 0', color: '#1E293B' }}>
+              Denuncias Pendientes de Revisión
+            </h2>
+            <ReportsQueueTable
+              reports={reports}
+              onResolve={handleResolve}
+              onDismiss={handleDismiss}
+              loading={loadingQueue}
+              error={queueError}
+              onOpenRestrictUser={handleOpenRestrictModal}
+            />
+          </div>
+        )}
+
+        {activeTab === 'logs' && (
+          <div>
+            <ModerationLogsTable />
+          </div>
+        )}
+
+        {activeTab === 'users' && (
+          <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ fontSize: '18px', margin: '0 0 12px 0', color: '#1E293B' }}>
+              Sancionar / Restringir Usuario por ID
+            </h2>
+            <p style={{ fontSize: '14px', color: '#64748B', marginBottom: '16px' }}>
+              Aplica una restricción temporal de participación en foros a cualquier usuario infractor ingresando su ID directamente.
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px', maxWidth: '400px' }}>
+              <input
+                type="number"
+                value={manualUserId}
+                onChange={(e) => setManualUserId(e.target.value)}
+                placeholder="ID del usuario (ej: 42)"
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  fontSize: '14px',
+                  borderRadius: '4px',
+                  border: '1px solid #CBD5E1',
+                }}
+              />
+              <button
+                onClick={() => {
+                  if (manualUserId) {
+                    handleOpenRestrictModal(manualUserId);
+                  }
+                }}
+                disabled={!manualUserId}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#DC2626',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: manualUserId ? 'pointer' : 'not-allowed',
+                  opacity: manualUserId ? 1 : 0.6,
+                }}
+              >
+                🚫 Restringir
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Restricción */}
+        <UserRestrictModal
+          userId={restrictUserId}
+          isOpen={isRestrictModalOpen}
+          onClose={() => {
+            setIsRestrictModalOpen(false);
+            setRestrictUserId(null);
+          }}
+          onSuccess={() => {
+            alert('Restricción aplicada exitosamente');
+          }}
+        />
+      </div>
+    </RoleGate>
+  );
+}
+
+export default ModeratorDashboard;

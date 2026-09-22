@@ -12,7 +12,7 @@ import QRModal from './QRModal';
 import PreviewModal from './PreviewModal';
 
 export default function NotesGrid() {
-  const { token } = useAuth();
+  const { token, isAdmin } = useAuth();
   const [notes, setNotes] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState('');
@@ -54,6 +54,7 @@ export default function NotesGrid() {
   useEffect(() => {
     if (!token) return;
     let isMounted = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
 
     notesService.getNotes(token, selectedSubject, searchTerm)
@@ -110,33 +111,37 @@ export default function NotesGrid() {
         </div>
 
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            onClick={handleDownloadReport}
-            disabled={downloadingReport}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              background: 'rgba(239, 68, 68, 0.15)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              color: '#f87171',
-              padding: '10px 16px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: '600',
-              fontSize: '13px',
-            }}
-          >
-            {downloadingReport ? '⏳ Generando PDF...' : '📑 Reporte PDF (MS-PDF)'}
-          </button>
+          {!isAdmin && (
+            <>
+              <button
+                onClick={handleDownloadReport}
+                disabled={downloadingReport}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  color: '#f87171',
+                  padding: '10px 16px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '13px',
+                }}
+              >
+                {downloadingReport ? '⏳ Generando PDF...' : '📑 Reporte PDF (MS-PDF)'}
+              </button>
 
-          <button
-            onClick={() => setShowUpload(true)}
-            className="primary-btn"
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', fontSize: '13px' }}
-          >
-            ➕ Subir Apunte
-          </button>
+              <button
+                onClick={() => setShowUpload(true)}
+                className="primary-btn"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', fontSize: '13px' }}
+              >
+                ➕ Subir Apunte
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -238,6 +243,7 @@ export default function NotesGrid() {
         <UploadModal
           subjects={subjects}
           onClose={() => setShowUpload(false)}
+          // eslint-disable-next-line no-undef
           onNoteUploaded={loadData}
         />
       )}
