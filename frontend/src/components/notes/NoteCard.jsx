@@ -9,7 +9,7 @@ import VerifiedBadge from '../teacher/VerifiedBadge';
 import NoteVerifyButton from '../teacher/NoteVerifyButton';
 import ContentModerateButton from '../moderator/ContentModerateButton';
 
-export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, onVerifiedNote }) {
+export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, onVerifiedNote = () => {} }) {
   const { user, token, isModerator } = useAuth();
 
   const isPDF =
@@ -18,6 +18,10 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
     note.file_path?.toLowerCase().endsWith('.pdf');
 
   const uploaderName = note.uploader_name || note.user_name || 'Compañero';
+  const publishedAt = note.created_at || note.createdAt;
+  const publishedDate = publishedAt
+    ? new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium' }).format(new Date(publishedAt))
+    : 'Fecha no disponible';
 
   // Verificar permisos de eliminación: si es el dueño del apunte o es moderador/admin
   const canDelete =
@@ -135,6 +139,8 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
 
         <div style={{ fontSize: '12px', color: 'var(--text-secondary, #94a3b8)', marginBottom: '14px' }}>
           👤 <strong>Subido por:</strong> {uploaderName}
+          <br />
+          📅 <strong>Publicado:</strong> {publishedDate}
         </div>
       </div>
 
