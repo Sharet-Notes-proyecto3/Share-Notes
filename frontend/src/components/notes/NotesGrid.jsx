@@ -238,7 +238,7 @@ export default function NotesGrid() {
         <UploadModal
           subjects={subjects}
           onClose={() => setShowUpload(false)}
-          onNoteUploaded={loadData}
+          onNoteUploaded={fetchNotesOnly}
         />
       )}
 
