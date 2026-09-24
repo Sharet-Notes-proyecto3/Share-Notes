@@ -4,30 +4,57 @@
 // Se dispara automáticamente en el primer inicio de sesión del estudiante.
 // =============================================================================
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { authService } from '../../services/auth.service';
 
-const NIVELES = ['Tecnológico', 'Ingeniería'];
 const SEMESTRES = Array.from({ length: 10 }, (_, i) => i + 1);
 
 export default function OnboardingModal() {
-  const { user, completeOnboarding } = useAuth();
+  const { user, token, completeOnboarding } = useAuth();
 
-  const [career, setCareer] = useState('');
+  const [careers, setCareers] = useState([]);
+  const [loadingCareers, setLoadingCareers] = useState(true);
+  const [careerId, setCareerId] = useState('');
   const [semester, setSemester] = useState('');
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let isActive = true;
+    authService.getCareers(token)
+      .then((res) => {
+        if (isActive) setCareers(Array.isArray(res) ? res : res.data || []);
+      })
+      .catch((err) => {
+        console.error('Error al cargar carreras:', err);
+        if (isActive) setError('No se pudieron cargar las carreras disponibles.');
+      })
+      .finally(() => {
+        if (isActive) setLoadingCareers(false);
+      });
+    return () => { isActive = false; };
+  }, [token]);
 
   if (!user) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
 
-    if (!career || !semester) {
-      setError('Selecciona tu nivel académico y tu semestre para continuar.');
+    if (!careerId || !semester) {
+      setError('Selecciona tu carrera y tu semestre para continuar.');
       return;
     }
 
-    completeOnboarding({ career, semester: Number(semester) });
+    try {
+      setSaving(true);
+      await completeOnboarding({ careerId: Number(careerId), semester: Number(semester) });
+    } catch (err) {
+      setError('No se pudo guardar tu información: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -63,38 +90,36 @@ export default function OnboardingModal() {
             ¡Bienvenido/a, {user.name || 'Estudiante'}!
           </h2>
           <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'var(--text-secondary, #94a3b8)' }}>
-            Cuéntanos un poco sobre ti para personalizar tus apuntes y foros.
+            Cuéntanos tu carrera y semestre para personalizar tus apuntes y foros.
           </p>
         </div>
 
-        {/* Nivel académico */}
+        {/* Carrera */}
         <div style={{ marginBottom: '16px' }}>
           <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary, #94a3b8)', marginBottom: '8px', fontWeight: '600' }}>
-            Nivel académico
+            Carrera
           </label>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {NIVELES.map((nivel) => (
-              <button
-                type="button"
-                key={nivel}
-                onClick={() => setCareer(nivel)}
-                style={{
-                  flex: 1,
-                  padding: '10px 8px',
-                  borderRadius: '10px',
-                  border: `1px solid ${career === nivel ? '#3b82f6' : 'var(--border-color, #334155)'}`,
-                  background: career === nivel ? 'rgba(59,130,246,0.18)' : 'rgba(255,255,255,0.03)',
-                  color: career === nivel ? '#60a5fa' : 'var(--text-primary, #fff)',
-                  fontWeight: '600',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-              >
-                {nivel}
-              </button>
+          <select
+            value={careerId}
+            onChange={(e) => setCareerId(e.target.value)}
+            disabled={loadingCareers}
+            style={{
+              width: '100%',
+              padding: '10px 8px',
+              borderRadius: '10px',
+              border: '1px solid var(--border-color, #334155)',
+              background: 'rgba(255,255,255,0.03)',
+              color: 'var(--text-primary, #fff)',
+              fontSize: '13px',
+            }}
+          >
+            <option value="">
+              {loadingCareers ? 'Cargando carreras...' : 'Selecciona tu carrera...'}
+            </option>
+            {careers.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
             ))}
-          </div>
+          </select>
         </div>
 
         {/* Semestre */}
@@ -128,6 +153,7 @@ export default function OnboardingModal() {
 
         <button
           type="submit"
+          disabled={saving}
           style={{
             width: '100%',
             marginTop: '18px',
@@ -138,10 +164,11 @@ export default function OnboardingModal() {
             color: '#fff',
             fontWeight: '700',
             fontSize: '13.5px',
-            cursor: 'pointer',
+            cursor: saving ? 'default' : 'pointer',
+            opacity: saving ? 0.7 : 1,
           }}
         >
-          Guardar y continuar
+          {saving ? 'Guardando...' : 'Guardar y continuar'}
         </button>
       </form>
     </div>
