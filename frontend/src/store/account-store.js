@@ -3,12 +3,23 @@
 // Roles unificados con backend: student | teacher | moderator | admin
 // =============================================================================
 
-export const createAccountState = () => ({
-  userIdentity: null,
-  authenticated: false,
-  logon: false,
-  profilesLoaded: false,
-});
+import {
+  getStoredToken,
+  getStoredUser,
+  setStoredUser,
+  clearStoredUser,
+} from '../services/api';
+
+export const createAccountState = () => {
+  const initialUser = getStoredUser();
+  const initialToken = getStoredToken();
+  return {
+    userIdentity: initialUser,
+    authenticated: Boolean(initialUser && initialToken),
+    logon: false,
+    profilesLoaded: false,
+  };
+};
 
 export const accountStore = {
   state: createAccountState(),
@@ -51,10 +62,26 @@ export const accountStore = {
       if (authorities.some((a) => a === 'ADMIN' || a === 'ROLE_ADMIN')) {
         return 'admin';
       }
-      if (authorities.some((a) => a === 'MODERATOR' || a === 'ROLE_MODERATOR' || a === 'FRONT_DESK_CS' || a === 'ROLE_FRONT_DESK_CS')) {
+      if (
+        authorities.some(
+          (a) =>
+            a === 'MODERATOR' ||
+            a === 'ROLE_MODERATOR' ||
+            a === 'FRONT_DESK_CS' ||
+            a === 'ROLE_FRONT_DESK_CS',
+        )
+      ) {
         return 'moderator';
       }
-      if (authorities.some((a) => a === 'TEACHER' || a === 'ROLE_TEACHER' || a === 'FUNCTIONARY' || a === 'ROLE_FUNCTIONARY')) {
+      if (
+        authorities.some(
+          (a) =>
+            a === 'TEACHER' ||
+            a === 'ROLE_TEACHER' ||
+            a === 'FUNCTIONARY' ||
+            a === 'ROLE_FUNCTIONARY',
+        )
+      ) {
         return 'teacher';
       }
       return 'student';
@@ -79,6 +106,11 @@ export const accountStore = {
       accountStore.state.userIdentity = identity || null;
       accountStore.state.authenticated = Boolean(identity);
       accountStore.state.logon = false;
+      if (identity) {
+        setStoredUser(identity);
+      } else {
+        clearStoredUser();
+      }
     },
 
     /**
@@ -90,6 +122,7 @@ export const accountStore = {
       accountStore.state.authenticated = false;
       accountStore.state.logon = false;
       accountStore.state.profilesLoaded = false;
+      clearStoredUser();
     },
 
     /**
