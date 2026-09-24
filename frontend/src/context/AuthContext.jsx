@@ -3,12 +3,7 @@
 // Integración con AccountService, AccountStore y JWT Pattern
 // =============================================================================
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 import { accountService } from '../services/account.service';
 import accountStore from '../store/account-store';
@@ -23,7 +18,11 @@ export const AuthProvider = ({ children }) => {
 
   const [token, setToken] = useState(() => accountService.getToken());
   const [user, setUser] = useState(() => accountStore.getters.account());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(
+    () =>
+      !accountStore.getters.isAuthenticated() &&
+      Boolean(accountService.getToken()),
+  );
 
   // ---------------------------------------------------------------------------
   // CERRAR SESIÓN
@@ -43,8 +42,6 @@ export const AuthProvider = ({ children }) => {
     let isActive = true;
 
     const loadSession = async () => {
-      setLoading(true);
-
       const currentToken = accountService.getToken();
 
       if (!currentToken) {
@@ -54,6 +51,10 @@ export const AuthProvider = ({ children }) => {
           setLoading(false);
         }
         return;
+      }
+
+      if (!accountStore.getters.isAuthenticated()) {
+        setLoading(true);
       }
 
       try {
@@ -115,11 +116,17 @@ export const AuthProvider = ({ children }) => {
   // Roles unificados con backend: admin | moderator | teacher | student
   // ---------------------------------------------------------------------------
 
-  const userRole = (accountStore.getters.userRole() || user?.role || 'student').toString().toLowerCase();
+  const userRole = (accountStore.getters.userRole() || user?.role || 'student')
+    .toString()
+    .toLowerCase();
   const isAdmin = userRole === 'admin';
-  const isModerator = isAdmin || userRole === 'moderator' || userRole === 'front_desk_cs';
+  const isModerator =
+    isAdmin || userRole === 'moderator' || userRole === 'front_desk_cs';
   const isTeacher = userRole === 'teacher' || userRole === 'functionary';
-  const isStudent = userRole === 'student' || userRole === 'user' || (!isAdmin && !isModerator && !isTeacher);
+  const isStudent =
+    userRole === 'student' ||
+    userRole === 'user' ||
+    (!isAdmin && !isModerator && !isTeacher);
 
   const hasAnyAuthority = (authorities) => {
     return accountService.checkAuthorities(authorities);
@@ -129,7 +136,8 @@ export const AuthProvider = ({ children }) => {
   // ESTADO DE AUTENTICACIÓN
   // ---------------------------------------------------------------------------
 
-  const isAuthenticated = Boolean(token) && Boolean(user) && accountStore.getters.isAuthenticated();
+  const isAuthenticated =
+    Boolean(token) && Boolean(user) && accountStore.getters.isAuthenticated();
 
   // ---------------------------------------------------------------------------
   // CONTEXTO GLOBAL
