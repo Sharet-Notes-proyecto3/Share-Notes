@@ -112,6 +112,55 @@ export const adminService = {
   async getMicroservicesStatus(token) {
     return await api.get('/notes/microservices/status', token);
   },
+
+  /**
+   * Obtiene el catálogo académico (carreras y materias asociadas)
+   */
+  async getCatalog(token) {
+    try {
+      return await api.get('/admin/catalog', token);
+    } catch {
+      // Fallback a materias públicas si la ruta admin aún no responde
+      const subjects = await api.get('/notes/subjects', token);
+      const list = subjects.data || (Array.isArray(subjects) ? subjects : []);
+      const careersMap = {};
+      list.forEach((s) => {
+        if (s.career_name && !careersMap[s.career_name]) {
+          careersMap[s.career_name] = { id: s.career_id || Object.keys(careersMap).length + 1, name: s.career_name };
+        }
+      });
+      return { careers: Object.values(careersMap), subjects: list };
+    }
+  },
+
+  /**
+   * Crea una nueva carrera académica
+   */
+  async createCareer(token, name) {
+    return await api.post('/admin/catalog/careers', { name }, token);
+  },
+
+  /**
+   * Crea una nueva materia en el catálogo
+   */
+  async createSubject(token, { name, semester, careerId }) {
+    return await api.post('/admin/catalog/subjects', { name, semester, careerId }, token);
+  },
+
+  /**
+   * Elimina una materia por su ID
+   */
+  async deleteSubject(token, subjectId) {
+    return await api.delete(`/admin/catalog/subjects/${subjectId}`, token);
+  },
+
+  /**
+   * Elimina una carrera y sus materias asociadas por su ID
+   */
+  async deleteCareer(token, careerId) {
+    return await api.delete(`/admin/catalog/careers/${careerId}`, token);
+  },
 };
 
 export default adminService;
+

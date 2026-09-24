@@ -3,11 +3,24 @@
 // Responsable: Integrante 4 (Administración & Control de Acceso)
 // =============================================================================
 
+import { useState, useMemo } from 'react';
 import { adminService } from '../../services/admin.service';
 import { useAuth } from '../../context/AuthContext';
 
 export default function UsersTable({ users = [], onRefresh, onToggleUser, onChangeRole, onOpenSanction }) {
   const { token, user: currentUser } = useAuth();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredUsers = useMemo(() => {
+    if (!searchTerm.trim()) return users;
+    const term = searchTerm.toLowerCase();
+    return users.filter(
+      (u) =>
+        (u.name && u.name.toLowerCase().includes(term)) ||
+        (u.email && u.email.toLowerCase().includes(term)) ||
+        (u.role && u.role.toLowerCase().includes(term))
+    );
+  }, [users, searchTerm]);
 
   const handleToggle = async (userId) => {
     if (onToggleUser) {
@@ -37,6 +50,29 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
 
   return (
     <div style={{ background: 'var(--sidebar-bg, #1e293b)', borderRadius: '12px', border: '1px solid var(--border-color, #334155)', overflow: 'hidden' }}>
+      {/* Barra de Filtro */}
+      <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color, #334155)', display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
+        <input
+          type="text"
+          placeholder="🔍 Buscar por nombre, correo o rol..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{
+            flex: 1,
+            maxWidth: '400px',
+            padding: '8px 14px',
+            borderRadius: '8px',
+            border: '1px solid #334155',
+            background: '#0f172a',
+            color: '#fff',
+            fontSize: '13px',
+          }}
+        />
+        <span style={{ fontSize: '12px', color: 'var(--text-secondary, #94a3b8)' }}>
+          Mostrando <strong style={{ color: '#60a5fa' }}>{filteredUsers.length}</strong> de {users.length} usuarios
+        </span>
+      </div>
+
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
           <thead>
@@ -50,14 +86,15 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
             </tr>
           </thead>
           <tbody>
-            {users.length === 0 ? (
+            {filteredUsers.length === 0 ? (
               <tr>
                 <td colSpan="6" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary, #94a3b8)' }}>
-                  No hay usuarios registrados.
+                  No se encontraron usuarios que coincidan con la búsqueda.
                 </td>
               </tr>
             ) : (
-              users.map((u) => {
+              filteredUsers.map((u) => {
+
                 const isSelf = u.id === currentUser?.id;
                 return (
                   <tr key={u.id} style={{ borderBottom: '1px solid var(--border-color, #334155)' }}>
@@ -75,6 +112,8 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
                         style={{ padding: '4px 8px', fontSize: '12px', width: 'auto' }}
                       >
                         <option value="student">🎓 Estudiante</option>
+                        <option value="teacher">👩‍🏫 Docente</option>
+                        <option value="moderator">🛡️ Moderador</option>
                         <option value="admin">👑 Administrador</option>
                       </select>
                     </td>

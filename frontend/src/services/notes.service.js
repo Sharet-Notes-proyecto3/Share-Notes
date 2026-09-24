@@ -9,10 +9,12 @@ export const notesService = {
   /**
    * Obtiene la lista de apuntes con filtros opcionales de materia y búsqueda
    */
-  async getNotes(token, subjectId = '', search = '') {
+  async getNotes(token, subjectId = '', search = '', semester = '', careerId = '') {
     const params = new URLSearchParams();
     if (subjectId) params.append('subjectId', subjectId);
     if (search) params.append('search', search);
+    if (semester) params.append('semester', semester);
+    if (careerId) params.append('careerId', careerId);
     const queryString = params.toString() ? `?${params.toString()}` : '';
     return await api.get(`/notes${queryString}`, token);
   },
@@ -27,11 +29,13 @@ export const notesService = {
   /**
    * Sube un nuevo apunte con archivo adjunto (PDF / JPG / PNG)
    */
-  async uploadNote(token, { title, description, subjectId, file }) {
+  async uploadNote(token, { title, description, subjectId, careerId, semester, file }) {
     const formData = new FormData();
     formData.append('title', title);
     formData.append('description', description || '');
     formData.append('subjectId', subjectId);
+    if (careerId) formData.append('careerId', careerId);
+    if (semester) formData.append('semester', semester);
     formData.append('file', file);
 
     return await api.post('/notes', formData, token, true);

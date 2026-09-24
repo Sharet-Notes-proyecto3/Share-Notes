@@ -4,7 +4,12 @@ import { AppError } from '../middlewares/error.middleware';
 import { RowDataPacket } from 'mysql2';
 import fs from 'fs';
 import path from 'path';
-import { sendEmailNotification, generatePdfReport } from '../utils/microservicesClient';
+import 'multer';
+import {
+  sendEmailNotification,
+  generatePdfReport,
+} from '../utils/microservicesClient';
+import { logAuditAction } from './audit.service';
 
 interface NoteRow extends RowDataPacket {
   id: number;
@@ -25,7 +30,6 @@ interface NoteRow extends RowDataPacket {
 }
 
 export class NoteService {
-
   async upload(data: {
     title: string;
     description?: string;
@@ -36,7 +40,7 @@ export class NoteService {
     // Verificar que la materia existe
     const [subj] = await pool.query<RowDataPacket[]>(
       'SELECT id FROM subjects WHERE id = ?',
-      [data.subjectId]
+      [data.subjectId],
     );
     if (!subj[0]) throw new AppError(404, 'Materia no encontrada');
 
@@ -52,7 +56,7 @@ export class NoteService {
         data.file.size,
         data.subjectId,
         data.uploaderId,
-      ]
+      ],
     );
 
     return { message: 'Apunte subido correctamente' };
@@ -75,11 +79,19 @@ export class NoteService {
       noteTitle: data.noteTitle,
       subjectName: data.subjectName,
     }).catch((err) => {
-      console.error('[NoteService] Error al notificar por email (no bloqueante):', err);
+      console.error(
+        '[NoteService] Error al notificar por email (no bloqueante):',
+        err,
+      );
     });
   }
 
-  async list(filters: { subjectId?: number; semester?: number; careerId?: number; search?: string }) {
+  async list(filters: {
+    subjectId?: number;
+    semester?: number;
+    careerId?: number;
+    search?: string;
+  }) {
     let query = `
       SELECT n.id, n.title, n.description, n.original_name, n.mimetype,
              n.file_size, n.created_at, n.uploader_id,
@@ -94,9 +106,18 @@ export class NoteService {
     `;
     const params: (string | number)[] = [];
 
-    if (filters.subjectId) { query += ' AND n.subject_id = ?'; params.push(filters.subjectId); }
-    if (filters.semester)  { query += ' AND s.semester = ?';   params.push(filters.semester);  }
-    if (filters.careerId)  { query += ' AND s.career_id = ?';  params.push(filters.careerId);  }
+    if (filters.subjectId) {
+      query += ' AND n.subject_id = ?';
+      params.push(filters.subjectId);
+    }
+    if (filters.semester) {
+      query += ' AND s.semester = ?';
+      params.push(filters.semester);
+    }
+    if (filters.careerId) {
+      query += ' AND s.career_id = ?';
+      params.push(filters.careerId);
+    }
     if (filters.search) {
       query += ' AND (n.title LIKE ? OR n.description LIKE ?)';
       const like = `%${filters.search}%`;
@@ -108,36 +129,65 @@ export class NoteService {
     return rows;
   }
 
-  async getFilePath(noteId: number): Promise<{ filePath: string; originalName: string; mimetype: string }> {
+  async getFilePath(
+    noteId: number,
+  ): Promise<{ filePath: string; originalName: string; mimetype: string }> {
     const [rows] = await pool.query<NoteRow[]>(
       'SELECT filename, original_name, mimetype FROM notes WHERE id = ? AND is_active = TRUE',
-      [noteId]
+      [noteId],
     );
     const note = rows[0];
     if (!note) throw new AppError(404, 'Apunte no encontrado');
 
     const uploadDir = process.env.UPLOAD_DIR || 'uploads';
-    const filePath  = path.join(uploadDir, note.filename);
+    const filePath = path.join(uploadDir, note.filename);
 
-    if (!fs.existsSync(filePath)) throw new AppError(404, 'Archivo no disponible');
+    if (!fs.existsSync(filePath))
+      throw new AppError(404, 'Archivo no disponible');
 
-    return { filePath, originalName: note.original_name, mimetype: note.mimetype };
+    return {
+      filePath,
+      originalName: note.original_name,
+      mimetype: note.mimetype,
+    };
   }
 
   async delete(noteId: number, requesterId: number, requesterRole: string) {
     const [rows] = await pool.query<NoteRow[]>(
-      'SELECT uploader_id FROM notes WHERE id = ? AND is_active = TRUE',
-      [noteId]
+      'SELECT id, title, uploader_id FROM notes WHERE id = ? AND is_active = TRUE',
+      [noteId],
     );
     const note = rows[0];
     if (!note) throw new AppError(404, 'Apunte no encontrado');
 
-    // Solo el dueño o un admin pueden eliminar
-    if (requesterRole !== 'admin' && note.uploader_id !== requesterId) {
+    // Regla transversal ABAC: Permitido <=> (usuario.id = recurso.autor_id) OR (usuario.rol in {admin, moderator})
+    if (
+      requesterRole !== 'admin' &&
+      requesterRole !== 'moderator' &&
+      note.uploader_id !== requesterId
+    ) {
       throw new AppError(403, 'No tienes permiso para eliminar este apunte');
     }
 
-    await pool.query('UPDATE notes SET is_active = FALSE WHERE id = ?', [noteId]);
+    await pool.query('UPDATE notes SET is_active = FALSE WHERE id = ?', [
+      noteId,
+    ]);
+
+    // Registrar en auditoría si fue eliminado por moderador o administrador
+    if (requesterRole === 'admin' || requesterRole === 'moderator') {
+      await logAuditAction({
+        userId: requesterId,
+        userRole: requesterRole,
+        action:
+          requesterRole === 'admin'
+            ? 'ADMIN_DELETE_NOTE'
+            : 'MODERATE_DELETE_NOTE',
+        targetResource: 'note',
+        targetId: noteId,
+        details: { title: note.title, uploaderId: note.uploader_id },
+      });
+    }
+
     return { message: 'Apunte eliminado' };
   }
 
@@ -145,7 +195,7 @@ export class NoteService {
     const [rows] = await pool.query<RowDataPacket[]>(
       `SELECT s.id, s.name, s.semester, c.name AS career_name
        FROM subjects s JOIN careers c ON s.career_id = c.id
-       ORDER BY s.semester, s.name`
+       ORDER BY s.semester, s.name`,
     );
     return rows;
   }
@@ -157,7 +207,7 @@ export class NoteService {
     // Obtener nombre del usuario
     const [userRows] = await pool.query<RowDataPacket[]>(
       'SELECT name, email FROM users WHERE id = ?',
-      [userId]
+      [userId],
     );
     const user = userRows[0];
     if (!user) throw new AppError(404, 'Usuario no encontrado');
@@ -169,7 +219,7 @@ export class NoteService {
        JOIN subjects s ON n.subject_id = s.id
        WHERE n.uploader_id = ? AND n.is_active = TRUE
        ORDER BY n.created_at DESC`,
-      [userId]
+      [userId],
     );
 
     return {
@@ -192,7 +242,10 @@ export class NoteService {
     const pdfBuffer = await generatePdfReport(reportData);
 
     if (!pdfBuffer) {
-      throw new AppError(503, 'El servicio de generación de PDFs no está disponible en este momento. Intenta más tarde.');
+      throw new AppError(
+        503,
+        'El servicio de generación de PDFs no está disponible en este momento. Intenta más tarde.',
+      );
     }
 
     return pdfBuffer;

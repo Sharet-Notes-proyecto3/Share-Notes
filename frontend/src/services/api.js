@@ -3,17 +3,73 @@
 // Responsable: Integrante 4 (Admin / Arquitectura de Conexión)
 // =============================================================================
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-export const getStoredToken = () => localStorage.getItem('token') || '';
+export const AUTH_TOKEN_KEY = 'jhi-authenticationToken';
+export const USER_ACCOUNT_KEY = 'jhi-userAccount';
 
-export const setStoredToken = (token) => {
+export const getStoredToken = () => {
+  return (
+    localStorage.getItem(AUTH_TOKEN_KEY) ||
+    sessionStorage.getItem(AUTH_TOKEN_KEY) ||
+    localStorage.getItem('token') ||
+    sessionStorage.getItem('token') ||
+    ''
+  );
+};
+
+export const setStoredToken = (token, rememberMe = true) => {
   if (token) {
-    localStorage.setItem('token', token);
+    if (rememberMe) {
+      localStorage.setItem(AUTH_TOKEN_KEY, token);
+      localStorage.setItem('token', token);
+    } else {
+      sessionStorage.setItem(AUTH_TOKEN_KEY, token);
+      sessionStorage.setItem('token', token);
+    }
   }
 };
 
-export const clearStoredToken = () => localStorage.removeItem('token');
+export const clearStoredToken = () => {
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  sessionStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem('token');
+  sessionStorage.removeItem('token');
+};
+
+export const getStoredUser = () => {
+  try {
+    const raw =
+      localStorage.getItem(USER_ACCOUNT_KEY) ||
+      sessionStorage.getItem(USER_ACCOUNT_KEY) ||
+      localStorage.getItem('user') ||
+      sessionStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+export const setStoredUser = (user, rememberMe = true) => {
+  if (user) {
+    const val = JSON.stringify(user);
+    if (rememberMe) {
+      localStorage.setItem(USER_ACCOUNT_KEY, val);
+      localStorage.setItem('user', val);
+    } else {
+      sessionStorage.setItem(USER_ACCOUNT_KEY, val);
+      sessionStorage.setItem('user', val);
+    }
+  }
+};
+
+export const clearStoredUser = () => {
+  localStorage.removeItem(USER_ACCOUNT_KEY);
+  sessionStorage.removeItem(USER_ACCOUNT_KEY);
+  localStorage.removeItem('user');
+  sessionStorage.removeItem('user');
+};
 
 // =============================================================================
 // INTERCEPTOR DE SESIÓN — 401 → logout automático + reapertura del login
@@ -38,11 +94,24 @@ export const setUnauthorizedHandler = (handler) => {
  * Helper para realizar peticiones fetch estandarizadas al backend
  */
 export async function apiRequest(endpoint, options = {}) {
-  const { method = 'GET', body, token, isFormData: customIsFormData, headers = {}, ...restOptions } = options;
-  const isFormData = customIsFormData || (typeof FormData !== 'undefined' && body instanceof FormData);
+  const {
+    method = 'GET',
+    body,
+    token,
+    isFormData: customIsFormData,
+    headers = {},
+    ...restOptions
+  } = options;
+  const isFormData =
+    customIsFormData ||
+    (typeof FormData !== 'undefined' && body instanceof FormData);
 
   const nextHeaders = { ...headers };
-  if (!isFormData && !nextHeaders['Content-Type'] && !nextHeaders['content-type']) {
+  if (
+    !isFormData &&
+    !nextHeaders['Content-Type'] &&
+    !nextHeaders['content-type']
+  ) {
     nextHeaders['Content-Type'] = 'application/json';
   }
 
@@ -58,7 +127,11 @@ export async function apiRequest(endpoint, options = {}) {
   };
 
   if (body !== undefined) {
-    config.body = isFormData ? body : (typeof body === 'string' ? body : JSON.stringify(body));
+    config.body = isFormData
+      ? body
+      : typeof body === 'string'
+        ? body
+        : JSON.stringify(body);
   }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
@@ -73,7 +146,9 @@ export async function apiRequest(endpoint, options = {}) {
   }
 
   const contentType = response.headers.get('content-type') || '';
-  const isBinary = contentType.includes('application/pdf') || /application\/octet-stream|image\//i.test(contentType);
+  const isBinary =
+    contentType.includes('application/pdf') ||
+    /application\/octet-stream|image\//i.test(contentType);
 
   if (isBinary) {
     if (!response.ok) throw new Error('Error al descargar archivo binario');
@@ -88,7 +163,10 @@ export async function apiRequest(endpoint, options = {}) {
   }
 
   if (!response.ok) {
-    const errorMsg = (data && data.message) || (data && data.error) || `Error HTTP ${response.status}`;
+    const errorMsg =
+      (data && data.message) ||
+      (data && data.error) ||
+      `Error HTTP ${response.status}`;
     throw new Error(errorMsg);
   }
 
@@ -97,7 +175,10 @@ export async function apiRequest(endpoint, options = {}) {
 
 export const api = {
   get: (endpoint, tokenOrOptions) => {
-    const options = typeof tokenOrOptions === 'string' ? { token: tokenOrOptions } : (tokenOrOptions || {});
+    const options =
+      typeof tokenOrOptions === 'string'
+        ? { token: tokenOrOptions }
+        : tokenOrOptions || {};
     return apiRequest(endpoint, { ...options, method: 'GET' });
   },
   post: (endpoint, body, tokenOrOptions, isFormData = false) => {
@@ -107,18 +188,32 @@ export const api = {
     } else if (tokenOrOptions && typeof tokenOrOptions === 'object') {
       options = tokenOrOptions;
     }
-    return apiRequest(endpoint, { ...options, method: 'POST', body, isFormData: isFormData || options.isFormData });
+    return apiRequest(endpoint, {
+      ...options,
+      method: 'POST',
+      body,
+      isFormData: isFormData || options.isFormData,
+    });
   },
   patch: (endpoint, body, tokenOrOptions) => {
-    const options = typeof tokenOrOptions === 'string' ? { token: tokenOrOptions } : (tokenOrOptions || {});
+    const options =
+      typeof tokenOrOptions === 'string'
+        ? { token: tokenOrOptions }
+        : tokenOrOptions || {};
     return apiRequest(endpoint, { ...options, method: 'PATCH', body });
   },
   put: (endpoint, body, tokenOrOptions) => {
-    const options = typeof tokenOrOptions === 'string' ? { token: tokenOrOptions } : (tokenOrOptions || {});
+    const options =
+      typeof tokenOrOptions === 'string'
+        ? { token: tokenOrOptions }
+        : tokenOrOptions || {};
     return apiRequest(endpoint, { ...options, method: 'PUT', body });
   },
   delete: (endpoint, tokenOrOptions) => {
-    const options = typeof tokenOrOptions === 'string' ? { token: tokenOrOptions } : (tokenOrOptions || {});
+    const options =
+      typeof tokenOrOptions === 'string'
+        ? { token: tokenOrOptions }
+        : tokenOrOptions || {};
     return apiRequest(endpoint, { ...options, method: 'DELETE' });
   },
 };

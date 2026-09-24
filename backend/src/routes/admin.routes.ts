@@ -48,4 +48,21 @@ router.post('/sanctions', ctrl.applySanction);
 // GET    /api/admin/qr               — generar código QR de la plataforma
 router.get('/qr', ctrl.generateQR);
 
+// ─── Catálogo Académico ───────────────────────────────────────────────────
+// GET    /api/admin/catalog           — obtener catálogo completo (carreras y materias)
+router.get('/catalog', ctrl.getCatalog);
+
+// POST   /api/admin/catalog/careers   — crear carrera
+router.post('/catalog/careers', ctrl.createCareer);
+
+// POST   /api/admin/catalog/subjects  — crear materia
+router.post('/catalog/subjects', ctrl.createSubject);
+
+// DELETE /api/admin/catalog/subjects/:id — eliminar materia
+router.delete('/catalog/subjects/:id', ctrl.deleteSubject);
+
+// DELETE /api/admin/catalog/careers/:id  — eliminar carrera
+router.delete('/catalog/careers/:id', ctrl.deleteCareer);
+
 export default router;
+
