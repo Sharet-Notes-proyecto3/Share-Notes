@@ -1,8 +1,3 @@
-// =============================================================================
-// CONTEXTO GLOBAL DE AUTENTICACIÓN, SESIÓN Y ROLES
-// Responsable: Integrante 1 - Autenticación y Sesión
-// =============================================================================
-
 import {
   createContext,
   useContext,
@@ -11,6 +6,8 @@ import {
 } from 'react';
 
 import { authService } from '../services/auth.service';
+import { setUnauthorizedHandler } from '../services/api';
+import OnboardingModal from '../components/auth/OnboardingModal';
 
 const AuthContext = createContext(null);
 
@@ -36,6 +33,52 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
+  };
+
+  // ---------------------------------------------------------------------------
+  // INTERCEPTOR GLOBAL DE SESIÓN EXPIRADA
+  // ---------------------------------------------------------------------------
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      alert('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
+      logout();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ---------------------------------------------------------------------------
+  // ONBOARDING ACADÉMICO (Carrera y Semestre) — primer inicio de sesión
+  // ---------------------------------------------------------------------------
+
+  const getOnboardingKey = (userId) => `sharenotes-onboarding-${userId}`;
+  const getAcademicKey = (userId) => `sharenotes-academic-${userId}`;
+
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+
+  const checkOnboarding = (u) => {
+    if (!u || u.role === 'admin') {
+      setNeedsOnboarding(false);
+      return;
+    }
+    const done = localStorage.getItem(getOnboardingKey(u.id));
+    setNeedsOnboarding(!done);
+  };
+
+  const completeOnboarding = ({ career, semester }) => {
+    if (!user) return;
+    localStorage.setItem(
+      getAcademicKey(user.id),
+      JSON.stringify({ career, semester })
+    );
+    localStorage.setItem(getOnboardingKey(user.id), '1');
+    setNeedsOnboarding(false);
+  };
+
+  const getAcademicProfile = () => {
+    if (!user) return null;
+    const raw = localStorage.getItem(getAcademicKey(user.id));
+    return raw ? JSON.parse(raw) : null;
   };
 
   // ---------------------------------------------------------------------------
@@ -65,6 +108,7 @@ export const AuthProvider = ({ children }) => {
         if (!isActive) return;
 
         setUser(profileData);
+        checkOnboarding(profileData);
       } catch (error) {
         console.error(
           'La sesión almacenada no es válida:',
@@ -176,9 +220,14 @@ export const AuthProvider = ({ children }) => {
         isModerator,
         isTeacher,
         isStudent,
+
+        needsOnboarding,
+        completeOnboarding,
+        getAcademicProfile,
       }}
     >
       {children}
+      {isAuthenticated && needsOnboarding && <OnboardingModal />}
     </AuthContext.Provider>
   );
 };
