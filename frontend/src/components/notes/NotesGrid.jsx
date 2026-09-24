@@ -12,7 +12,7 @@ import QRModal from './QRModal';
 import PreviewModal from './PreviewModal';
 
 export default function NotesGrid() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [notes, setNotes] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState('');
@@ -25,54 +25,51 @@ export default function NotesGrid() {
   const [selectedNoteForQR, setSelectedNoteForQR] = useState(null);
   const [selectedNoteForPreview, setSelectedNoteForPreview] = useState(null);
 
-  const fetchNotesOnly = useCallback(async () => {
+  const careerId = user?.career_id || user?.careerId || user?.career?.id || '';
+  const semester = user?.semester || user?.semestre || '';
+
+  const refreshNotes = useCallback(async () => {
     if (!token) return;
     try {
       setLoading(true);
-      const notesRes = await notesService.getNotes(token, selectedSubject, searchTerm);
-      setNotes(notesRes.data || notesRes || []);
+      const notesRes = await notesService.getNotes(token, selectedSubject, searchTerm, semester, careerId);
+      setNotes(Array.isArray(notesRes) ? notesRes : notesRes.data || []);
     } catch (err) {
       console.error('Error al cargar apuntes:', err);
+      setNotes([]);
     } finally {
       setLoading(false);
     }
-  }, [token, selectedSubject, searchTerm]);
+  }, [token, selectedSubject, searchTerm, semester, careerId]);
 
-  // Cargar lista de materias solo UNA vez al montar
   useEffect(() => {
     if (!token) return;
     let isMounted = true;
     notesService.getSubjects(token)
       .then((subjectsRes) => {
-        if (isMounted) setSubjects(subjectsRes.data || subjectsRes || []);
+        if (isMounted) {
+          const availableSubjects = Array.isArray(subjectsRes) ? subjectsRes : subjectsRes.data || [];
+          setSubjects(availableSubjects.filter((subject) => {
+            const sameCareer = !careerId || String(subject.career_id || subject.careerId || '') === String(careerId);
+            const sameSemester = !semester || String(subject.semester || '') === String(semester);
+            return sameCareer && sameSemester;
+          }));
+        }
       })
       .catch((err) => console.error('Error al cargar materias:', err));
     return () => { isMounted = false; };
-  }, [token]);
+  }, [token, careerId, semester]);
 
   // Cargar apuntes cuando cambie el filtro de materias o término de búsqueda
   useEffect(() => {
     if (!token) return;
-    let isMounted = true;
-    setLoading(true);
-
-    notesService.getNotes(token, selectedSubject, searchTerm)
-      .then((notesRes) => {
-        if (isMounted) setNotes(notesRes.data || notesRes || []);
-      })
-      .catch((err) => console.error('Error al cargar apuntes:', err))
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [token, selectedSubject, searchTerm]);
+    const timeoutId = window.setTimeout(refreshNotes, searchTerm ? 250 : 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [refreshNotes, searchTerm, token]);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchNotesOnly();
+    refreshNotes();
   };
 
   const handleDownloadReport = async () => {
@@ -92,7 +89,7 @@ export default function NotesGrid() {
     }
     try {
       await notesService.deleteNote(token, note.id);
-      fetchNotesOnly();
+      refreshNotes();
     } catch (err) {
       alert('Error al eliminar el apunte: ' + err.message);
     }
@@ -110,33 +107,35 @@ export default function NotesGrid() {
         </div>
 
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            onClick={handleDownloadReport}
-            disabled={downloadingReport}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              background: 'rgba(239, 68, 68, 0.15)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              color: '#f87171',
-              padding: '10px 16px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: '600',
-              fontSize: '13px',
-            }}
-          >
-            {downloadingReport ? '⏳ Generando PDF...' : '📑 Reporte PDF (MS-PDF)'}
-          </button>
+          <>
+              <button
+                onClick={handleDownloadReport}
+                disabled={downloadingReport}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  color: '#f87171',
+                  padding: '10px 16px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '13px',
+                }}
+              >
+                {downloadingReport ? '⏳ Generando PDF...' : '📑 Reporte PDF (MS-PDF)'}
+              </button>
 
-          <button
-            onClick={() => setShowUpload(true)}
-            className="primary-btn"
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', fontSize: '13px' }}
-          >
-            ➕ Subir Apunte
-          </button>
+              <button
+                onClick={() => setShowUpload(true)}
+                className="primary-btn"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', fontSize: '13px' }}
+              >
+                ➕ Subir Apunte
+              </button>
+          </>
         </div>
       </div>
 
@@ -238,7 +237,8 @@ export default function NotesGrid() {
         <UploadModal
           subjects={subjects}
           onClose={() => setShowUpload(false)}
-          onNoteUploaded={fetchNotesOnly}
+ onNoteUploaded={refreshNotes}
+
         />
       )}
 

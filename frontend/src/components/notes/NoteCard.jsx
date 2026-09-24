@@ -5,8 +5,11 @@
 
 import { useAuth } from '../../context/AuthContext';
 import { notesService } from '../../services/notes.service';
+import VerifiedBadge from '../teacher/VerifiedBadge';
+import NoteVerifyButton from '../teacher/NoteVerifyButton';
+import ContentModerateButton from '../moderator/ContentModerateButton';
 
-export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote }) {
+export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, onVerifiedNote = () => {} }) {
   const { user, token, isModerator } = useAuth();
 
   const isPDF =
@@ -15,6 +18,10 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote }
     note.file_path?.toLowerCase().endsWith('.pdf');
 
   const uploaderName = note.uploader_name || note.user_name || 'Compañero';
+  const publishedAt = note.created_at || note.createdAt;
+  const publishedDate = publishedAt
+    ? new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium' }).format(new Date(publishedAt))
+    : 'Fecha no disponible';
 
   // Verificar permisos de eliminación: si es el dueño del apunte o es moderador/admin
   const canDelete =
@@ -53,19 +60,23 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote }
       }}
     >
       <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-          <span
-            style={{
-              fontSize: '11px',
-              padding: '4px 10px',
-              borderRadius: '6px',
-              background: 'rgba(96, 165, 250, 0.15)',
-              color: '#60a5fa',
-              fontWeight: '600',
-            }}
-          >
-            📖 {note.subject_name || 'Materia General'}
-          </span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            <span
+              style={{
+                fontSize: '11px',
+                padding: '4px 10px',
+                borderRadius: '6px',
+                background: 'rgba(96, 165, 250, 0.15)',
+                color: '#60a5fa',
+                fontWeight: '600',
+              }}
+            >
+              📖 {note.subject_name || 'Materia General'}
+            </span>
+            {Boolean(note.verified) && <VerifiedBadge />}
+          </div>
+
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span
               style={{
@@ -83,7 +94,7 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote }
               {isPDF ? '📄 PDF' : '🖼️ Imagen'}
             </span>
 
-            {user && (
+            {canDelete && (
               <button
                 onClick={() => onDeleteNote(note)}
                 style={{
@@ -108,6 +119,7 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote }
           {note.title}
         </h3>
 
+
         {note.description && (
           <p
             style={{
@@ -127,6 +139,8 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote }
 
         <div style={{ fontSize: '12px', color: 'var(--text-secondary, #94a3b8)', marginBottom: '14px' }}>
           👤 <strong>Subido por:</strong> {uploaderName}
+          <br />
+          📅 <strong>Publicado:</strong> {publishedDate}
         </div>
       </div>
 
@@ -154,6 +168,12 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote }
         >
           👁️ Vista Previa
         </button>
+
+        {/* Botón de verificación para docente asignado */}
+        <NoteVerifyButton note={note} onVerified={onVerifiedNote} />
+
+        {/* Botón de moderación para moderadores y administradores */}
+        <ContentModerateButton contentType="note" contentId={note.id} currentStatus={note.moderation_status || 'visible'} />
 
         {/* Botones Secundarios: Descarga Directa y QR */}
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -203,3 +223,4 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote }
     </div>
   );
 }
+

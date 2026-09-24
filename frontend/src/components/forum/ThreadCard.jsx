@@ -7,6 +7,10 @@ import { useState } from 'react';
 import { forumService } from '../../services/forum.service';
 import { useAuth } from '../../context/AuthContext';
 import ReportModal from './ReportModal';
+import CloseThreadButton from '../teacher/CloseThreadButton';
+import MarkSolutionButton from '../teacher/MarkSolutionButton';
+import ContentModerateButton from '../moderator/ContentModerateButton';
+
 
 export default function ThreadCard({ thread, onRefresh }) {
   const { token, user, isAdmin, isModerator } = useAuth();
@@ -210,7 +214,7 @@ export default function ThreadCard({ thread, onRefresh }) {
            (thread.author_name && user.name && thread.author_name.trim().toLowerCase() === user.name.trim().toLowerCase()) ||
            (thread.user_name && user.name && thread.user_name.trim().toLowerCase() === user.name.trim().toLowerCase()))
         );
-        const canDeleteThread = isThreadCreator || isAdmin;
+        const canDeleteThread = isThreadCreator || isAdmin || isModerator;
 
         return (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -233,6 +237,9 @@ export default function ThreadCard({ thread, onRefresh }) {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <CloseThreadButton thread={thread} onClosed={onRefresh} />
+              <ContentModerateButton contentType="post" contentId={thread.id} onSuccess={onRefresh} />
+
               {canDeleteThread && (
                 <button
                   onClick={handleDeleteThread}
@@ -271,6 +278,7 @@ export default function ThreadCard({ thread, onRefresh }) {
                 🚩 Reportar
               </button>
             </div>
+
           </div>
         );
       })()}
@@ -319,19 +327,14 @@ export default function ThreadCard({ thread, onRefresh }) {
                 // 1. El creador del debate ve "Borrar" en su debate y en todas sus respuestas
                 // 2. Cada usuario ve "Borrar" únicamente en sus propias respuestas
                 // 3. Un usuario NO ve "Borrar" en respuestas ajenas si no es el creador del debate
-                const isThreadCreator = Boolean(
-                  user &&
-                  ((thread.author_id && user.id && Number(thread.author_id) === Number(user.id)) ||
-                   (thread.author_name && user.name && thread.author_name.trim().toLowerCase() === user.name.trim().toLowerCase()) ||
-                   (thread.user_name && user.name && thread.user_name.trim().toLowerCase() === user.name.trim().toLowerCase()))
-                );
+                
                 const isReplyCreator = Boolean(
                   user &&
                   ((reply.author_id && user.id && Number(reply.author_id) === Number(user.id)) ||
                    (reply.author_name && user.name && reply.author_name.trim().toLowerCase() === user.name.trim().toLowerCase()) ||
                    (reply.user_name && user.name && reply.user_name.trim().toLowerCase() === user.name.trim().toLowerCase()))
                 );
-                const canDeleteReply = isThreadCreator || isReplyCreator || isAdmin;
+                const canDeleteReply = isReplyCreator || isAdmin || isModerator;
 
                 return (
                   <div
@@ -349,6 +352,24 @@ export default function ThreadCard({ thread, onRefresh }) {
                       </span>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {Boolean(reply.is_solution) && (
+                          <span
+                            style={{
+                              fontSize: '11px',
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                              background: 'rgba(167, 139, 250, 0.2)',
+                              color: '#c4b5fd',
+                              fontWeight: '700',
+                              border: '1px solid rgba(167, 139, 250, 0.4)',
+                            }}
+                          >
+                            ⭐ Solución Docente
+                          </span>
+                        )}
+
+                        <MarkSolutionButton thread={thread} reply={reply} onMarked={() => toggleExpand()} />
+
                         {/* Botón Responder al Compañero (Estilo Facebook) */}
                         <button
                           onClick={() => handleStartReplyToUser(authorName)}
@@ -368,6 +389,7 @@ export default function ThreadCard({ thread, onRefresh }) {
                         >
                           ↩️ Responder
                         </button>
+
 
                         {/* Botón "Útil" con Toggle (Dar / Quitar Me Gusta) */}
                         <button

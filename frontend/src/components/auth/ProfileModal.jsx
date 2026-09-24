@@ -46,6 +46,8 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
   // ─────────────────────────────────────────────────────────────────────────
   const getRoleName = () => {
     if (isAdmin) return 'Administrador';
+    if (isModerator) return 'Moderador';
+    if (isTeacher) return 'Docente';
     return 'Estudiante';
   };
 
