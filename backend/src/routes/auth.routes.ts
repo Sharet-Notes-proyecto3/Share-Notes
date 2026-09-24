@@ -17,4 +17,10 @@ router.get('/profile/related-topic', authMiddleware, ctrl.getRelatedTopic);
 // GET  /api/auth/profile  (requiere token)
 router.get('/profile', authMiddleware, ctrl.getProfile);
 
+// GET   /api/auth/careers          (requiere token)
+router.get('/careers', authMiddleware, ctrl.getCareers);
+
+// PATCH /api/auth/profile/academic (requiere token) — guarda carrera y semestre del onboarding
+router.patch('/profile/academic', authMiddleware, ctrl.updateAcademicProfile);
+
 export default router;

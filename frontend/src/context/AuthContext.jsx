@@ -52,8 +52,9 @@ export const AuthProvider = ({ children }) => {
   // ONBOARDING ACADÉMICO (Carrera y Semestre) — primer inicio de sesión
   // ---------------------------------------------------------------------------
 
-  const getOnboardingKey = (userId) => `sharenotes-onboarding-${userId}`;
-  const getAcademicKey = (userId) => `sharenotes-academic-${userId}`;
+    // ---------------------------------------------------------------------------
+  // ONBOARDING ACADÉMICO (Carrera y Semestre) — primer inicio de sesión
+  // ---------------------------------------------------------------------------
 
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
@@ -63,26 +64,24 @@ export const AuthProvider = ({ children }) => {
       setNeedsOnboarding(false);
       return;
     }
-    const done = localStorage.getItem(getOnboardingKey(u.id));
-    setNeedsOnboarding(!done);
+    setNeedsOnboarding(!u.career_id || !u.semester);
   };
 
-  const completeOnboarding = ({ career, semester }) => {
+  const completeOnboarding = async ({ careerId, semester }) => {
     if (!user) return;
-    localStorage.setItem(
-      getAcademicKey(user.id),
-      JSON.stringify({ career, semester })
+    const updatedProfile = await authService.updateAcademicProfile(
+      accountService.getToken(),
+      careerId,
+      semester
     );
-    localStorage.setItem(getOnboardingKey(user.id), '1');
+    setUser(updatedProfile);
     setNeedsOnboarding(false);
   };
 
   const getAcademicProfile = () => {
     if (!user) return null;
-    const raw = localStorage.getItem(getAcademicKey(user.id));
-    return raw ? JSON.parse(raw) : null;
+    return { career_id: user.career_id, semester: user.semester };
   };
-
   // ---------------------------------------------------------------------------
   // RECUPERAR SESIÓN AL INICIAR LA APLICACIÓN
   // ---------------------------------------------------------------------------

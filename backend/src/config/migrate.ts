@@ -169,6 +169,8 @@ const ALTER_QUERIES = [
   `ALTER TABLE reports MODIFY COLUMN status ENUM('pending','reviewed','resolved','dismissed') NOT NULL DEFAULT 'pending'`,
   `ALTER TABLE reports ADD COLUMN resolved_by INT UNSIGNED NULL DEFAULT NULL`,
   `ALTER TABLE reports ADD COLUMN resolved_at TIMESTAMP NULL DEFAULT NULL`,
+    `ALTER TABLE users ADD COLUMN career_id INT UNSIGNED NULL DEFAULT NULL`,
+  `ALTER TABLE users ADD COLUMN semester TINYINT UNSIGNED NULL DEFAULT NULL`,
 ];
 
 async function migrate() {
