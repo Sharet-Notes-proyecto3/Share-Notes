@@ -47,3 +47,21 @@ export const getRelatedTopic = async (req: Request, res: Response, next: NextFun
     res.json(result);
   } catch (err) { next(err); }
 };
+export const getCareers = async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const careers = await service.getCareers();
+    res.json(careers);
+  } catch (err) { next(err); }
+};
+
+export const updateAcademicProfile = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { careerId, semester } = req.body;
+    if (!careerId || !semester) {
+      res.status(400).json({ message: 'careerId y semester son requeridos' });
+      return;
+    }
+    const profile = await service.updateAcademicProfile(req.user!.userId, careerId, semester);
+    res.json(profile);
+  } catch (err) { next(err); }
+};

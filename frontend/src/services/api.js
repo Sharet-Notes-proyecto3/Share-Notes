@@ -71,6 +71,25 @@ export const clearStoredUser = () => {
   sessionStorage.removeItem('user');
 };
 
+// =============================================================================
+// INTERCEPTOR DE SESIÓN — 401 → logout automático + reapertura del login
+// =============================================================================
+
+// Endpoints donde un 401 es una respuesta NORMAL (credenciales inválidas),
+// no una sesión expirada. Aquí NO debe dispararse el logout automático.
+const PUBLIC_AUTH_ENDPOINTS = ['/auth/login', '/auth/register'];
+
+let unauthorizedHandler = null;
+
+/**
+ * Registra la función que se ejecuta cuando el backend responde 401
+ * fuera de login/register (token inválido o expirado). La registra
+ * AuthContext, que es quien sabe cómo cerrar sesión.
+ */
+export const setUnauthorizedHandler = (handler) => {
+  unauthorizedHandler = handler;
+};
+
 /**
  * Helper para realizar peticiones fetch estandarizadas al backend
  */
@@ -116,6 +135,15 @@ export async function apiRequest(endpoint, options = {}) {
   }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+
+  const isPublicAuthEndpoint = PUBLIC_AUTH_ENDPOINTS.some((p) => endpoint.startsWith(p));
+
+  if (response.status === 401 && !isPublicAuthEndpoint) {
+    clearStoredToken();
+    if (unauthorizedHandler) {
+      unauthorizedHandler();
+    }
+  }
 
   const contentType = response.headers.get('content-type') || '';
   const isBinary =

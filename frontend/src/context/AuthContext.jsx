@@ -8,6 +8,8 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { accountService } from '../services/account.service';
 import accountStore from '../store/account-store';
 import { authService } from '../services/auth.service';
+import { setUnauthorizedHandler } from '../services/api';
+import OnboardingModal from '../components/auth/OnboardingModal';
 
 const AuthContext = createContext(null);
 
@@ -34,6 +36,52 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // ---------------------------------------------------------------------------
+  // INTERCEPTOR GLOBAL DE SESIÓN EXPIRADA
+  // ---------------------------------------------------------------------------
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      alert('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
+      logout();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ---------------------------------------------------------------------------
+  // ONBOARDING ACADÉMICO (Carrera y Semestre) — primer inicio de sesión
+  // ---------------------------------------------------------------------------
+
+    // ---------------------------------------------------------------------------
+  // ONBOARDING ACADÉMICO (Carrera y Semestre) — primer inicio de sesión
+  // ---------------------------------------------------------------------------
+
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+
+  const checkOnboarding = (u) => {
+    const role = (u?.role || '').toString().toLowerCase();
+    if (!u || role !== 'student') {
+      setNeedsOnboarding(false);
+      return;
+    }
+    setNeedsOnboarding(!u.career_id || !u.semester);
+  };
+
+  const completeOnboarding = async ({ careerId, semester }) => {
+    if (!user) return;
+    const updatedProfile = await authService.updateAcademicProfile(
+      accountService.getToken(),
+      careerId,
+      semester
+    );
+    setUser(updatedProfile);
+    setNeedsOnboarding(false);
+  };
+
+  const getAcademicProfile = () => {
+    if (!user) return null;
+    return { career_id: user.career_id, semester: user.semester };
+  };
   // ---------------------------------------------------------------------------
   // RECUPERAR SESIÓN AL INICIAR LA APLICACIÓN
   // ---------------------------------------------------------------------------
@@ -62,8 +110,10 @@ export const AuthProvider = ({ children }) => {
         if (!isActive) return;
 
         if (success) {
-          setUser(accountStore.getters.account());
+          const currentUser = accountStore.getters.account();
+          setUser(currentUser);
           setToken(accountService.getToken());
+          checkOnboarding(currentUser);
         } else {
           setUser(null);
           setToken(null);
@@ -99,6 +149,7 @@ export const AuthProvider = ({ children }) => {
 
     setToken(storedToken);
     setUser(currentUser);
+    checkOnboarding(currentUser);
 
     return data;
   };
@@ -162,9 +213,14 @@ export const AuthProvider = ({ children }) => {
         isModerator,
         isTeacher,
         isStudent,
+
+        needsOnboarding,
+        completeOnboarding,
+        getAcademicProfile,
       }}
     >
       {children}
+      {isAuthenticated && needsOnboarding && <OnboardingModal />}
     </AuthContext.Provider>
   );
 };
