@@ -35,55 +35,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  // ---------------------------------------------------------------------------
-<<<<<<< Updated upstream
-=======
-  // INTERCEPTOR GLOBAL DE SESIÓN EXPIRADA
-  // ---------------------------------------------------------------------------
 
-  useEffect(() => {
-    setUnauthorizedHandler(() => {
-      alert('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
-      logout();
-    });
-  }, []);
-
-  // ---------------------------------------------------------------------------
-  // ONBOARDING ACADÉMICO (Carrera y Semestre) — primer inicio de sesión
-  // ---------------------------------------------------------------------------
-
-    // ---------------------------------------------------------------------------
-  // ONBOARDING ACADÉMICO (Carrera y Semestre) — primer inicio de sesión
-  // ---------------------------------------------------------------------------
-
-  const [needsOnboarding, setNeedsOnboarding] = useState(false);
-
-  const checkOnboarding = (u) => {
-    const role = (u?.role || '').toString().toLowerCase();
-    if (!u || role !== 'student') {
-      setNeedsOnboarding(false);
-      return;
-    }
-    setNeedsOnboarding(!u.career_id || !u.semester);
-  };
-
-  const completeOnboarding = async ({ careerId, semester }) => {
-    if (!user) return;
-    const updatedProfile = await authService.updateAcademicProfile(
-      accountService.getToken(),
-      careerId,
-      semester
-    );
-    setUser(updatedProfile);
-    setNeedsOnboarding(false);
-  };
-
-  const getAcademicProfile = () => {
-    if (!user) return null;
-    return { career_id: user.career_id, semester: user.semester };
-  };
-  // ---------------------------------------------------------------------------
->>>>>>> Stashed changes
   // RECUPERAR SESIÓN AL INICIAR LA APLICACIÓN
   // ---------------------------------------------------------------------------
 
