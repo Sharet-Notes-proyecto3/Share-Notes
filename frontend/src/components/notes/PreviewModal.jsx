@@ -159,25 +159,7 @@ export default function PreviewModal({ note, onClose }) {
               </button>
             )}
 
-<<<<<<< Updated upstream
-=======
-            <button
-              onClick={handleDownloadReport}
-              disabled={downloadingReport}
-              style={{
-                ...controlBtnStyle,
-                padding: '8px 10px',
-                border: '1px solid var(--border-color)',
-                background: 'var(--bg-elevated)',
-                borderRadius: '8px',
-                fontWeight: '600',
-              }}
-              title="Generar reporte PDF consolidado mediante MS-PDF"
-            >
-              {downloadingReport ? '⏳ Reporte...' : '📑 Reporte PDF'}
-            </button>
 
->>>>>>> Stashed changes
             {/* Cerrar modal */}
             <button
               onClick={onClose}

@@ -243,12 +243,7 @@ export default function NotesGrid() {
         <UploadModal
           subjects={subjects}
           onClose={() => setShowUpload(false)}
-<<<<<<< Updated upstream
-          // eslint-disable-next-line no-undef
-          onNoteUploaded={loadData}
-=======
-          onNoteUploaded={refreshNotes}
->>>>>>> Stashed changes
+          onNoteUploaded={fetchNotesOnly}
         />
       )}
 
