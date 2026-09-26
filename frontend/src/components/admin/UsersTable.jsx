@@ -49,60 +49,53 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
   };
 
   return (
-    <div style={{ background: 'var(--sidebar-bg, #1e293b)', borderRadius: '12px', border: '1px solid var(--border-color, #334155)', overflow: 'hidden' }}>
+    <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: 'var(--card-shadow)' }}>
       {/* Barra de Filtro */}
-      <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color, #334155)', display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
         <input
           type="text"
           placeholder="🔍 Buscar por nombre, correo o rol..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          className="form-input"
           style={{
-            flex: 1,
             maxWidth: '400px',
-            padding: '8px 14px',
-            borderRadius: '8px',
-            border: '1px solid #334155',
-            background: '#0f172a',
-            color: '#fff',
-            fontSize: '13px',
           }}
         />
-        <span style={{ fontSize: '12px', color: 'var(--text-secondary, #94a3b8)' }}>
-          Mostrando <strong style={{ color: '#60a5fa' }}>{filteredUsers.length}</strong> de {users.length} usuarios
+        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+          Mostrando <strong style={{ color: 'var(--primary-color)' }}>{filteredUsers.length}</strong> de {users.length} usuarios
         </span>
       </div>
 
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
           <thead>
-            <tr style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid var(--border-color, #334155)' }}>
-              <th style={{ padding: '14px 16px', color: 'var(--text-secondary, #94a3b8)' }}>ID</th>
-              <th style={{ padding: '14px 16px', color: 'var(--text-secondary, #94a3b8)' }}>Usuario</th>
-              <th style={{ padding: '14px 16px', color: 'var(--text-secondary, #94a3b8)' }}>Correo</th>
-              <th style={{ padding: '14px 16px', color: 'var(--text-secondary, #94a3b8)' }}>Rol Actual</th>
-              <th style={{ padding: '14px 16px', color: 'var(--text-secondary, #94a3b8)' }}>Estado</th>
-              <th style={{ padding: '14px 16px', color: 'var(--text-secondary, #94a3b8)', textAlign: 'right' }}>Acciones</th>
+            <tr style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border-color)' }}>
+              <th style={{ padding: '14px 16px', color: 'var(--text-secondary)' }}>ID</th>
+              <th style={{ padding: '14px 16px', color: 'var(--text-secondary)' }}>Usuario</th>
+              <th style={{ padding: '14px 16px', color: 'var(--text-secondary)' }}>Correo</th>
+              <th style={{ padding: '14px 16px', color: 'var(--text-secondary)' }}>Rol Actual</th>
+              <th style={{ padding: '14px 16px', color: 'var(--text-secondary)' }}>Estado</th>
+              <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', textAlign: 'right' }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {filteredUsers.length === 0 ? (
               <tr>
-                <td colSpan="6" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary, #94a3b8)' }}>
+                <td colSpan="6" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                   No se encontraron usuarios que coincidan con la búsqueda.
                 </td>
               </tr>
             ) : (
               filteredUsers.map((u) => {
-
                 const isSelf = u.id === currentUser?.id;
                 return (
-                  <tr key={u.id} style={{ borderBottom: '1px solid var(--border-color, #334155)' }}>
-                    <td style={{ padding: '14px 16px', color: 'var(--text-secondary, #94a3b8)' }}>#{u.id}</td>
-                    <td style={{ padding: '14px 16px', fontWeight: '600', color: '#fff' }}>
-                      {u.name} {isSelf && <span style={{ fontSize: '10px', color: '#60a5fa' }}>(Tú)</span>}
+                  <tr key={u.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <td style={{ padding: '14px 16px', color: 'var(--text-secondary)' }}>#{u.id}</td>
+                    <td style={{ padding: '14px 16px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                      {u.name} {isSelf && <span style={{ fontSize: '10px', color: 'var(--primary-color)' }}>(Tú)</span>}
                     </td>
-                    <td style={{ padding: '14px 16px', color: 'var(--text-secondary, #94a3b8)' }}>{u.email}</td>
+                    <td style={{ padding: '14px 16px', color: 'var(--text-secondary)' }}>{u.email}</td>
                     <td style={{ padding: '14px 16px' }}>
                       <select
                         value={u.role || 'student'}
@@ -124,8 +117,9 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
                           borderRadius: '6px',
                           fontSize: '11px',
                           fontWeight: '600',
-                          background: u.is_active ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                          color: u.is_active ? '#86efac' : '#fca5a5',
+                          background: u.is_active ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
+                          border: `1px solid ${u.is_active ? 'var(--color-success-border)' : 'var(--color-danger-border)'}`,
+                          color: u.is_active ? 'var(--color-success-text)' : 'var(--color-danger-text)',
                         }}
                       >
                         {u.is_active ? '● Activo' : '● Suspendido'}
@@ -138,12 +132,12 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
                           style={{
                             padding: '6px 10px',
                             borderRadius: '6px',
-                            border: '1px solid rgba(245, 158, 11, 0.6)',
+                            border: '1px solid var(--color-warning-border)',
                             cursor: 'pointer',
                             fontSize: '11px',
                             fontWeight: '600',
-                            background: 'rgba(245, 158, 11, 0.12)',
-                            color: '#fcd34d',
+                            background: 'var(--color-warning-bg)',
+                            color: 'var(--color-warning-text)',
                           }}
                         >
                           ⚠️ Sanción
@@ -154,12 +148,12 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
                           style={{
                             padding: '6px 12px',
                             borderRadius: '6px',
-                            border: 'none',
+                            border: `1px solid ${u.is_active ? 'var(--color-danger-border)' : 'var(--color-success-border)'}`,
                             cursor: isSelf ? 'not-allowed' : 'pointer',
                             fontSize: '12px',
                             fontWeight: '600',
-                            background: u.is_active ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)',
-                            color: u.is_active ? '#f87171' : '#86efac',
+                            background: u.is_active ? 'var(--color-danger-bg)' : 'var(--color-success-bg)',
+                            color: u.is_active ? 'var(--color-danger-text)' : 'var(--color-success-text)',
                             opacity: isSelf ? 0.5 : 1,
                           }}
                         >

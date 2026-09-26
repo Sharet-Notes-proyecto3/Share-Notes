@@ -42,16 +42,17 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
 
   return (
     <div
+      className="note-card"
       style={{
-        background: 'var(--sidebar-bg, #1e293b)',
-        border: '1px solid var(--border-color, #334155)',
+        background: 'var(--card-bg)',
+        border: '1px solid var(--border-color)',
         borderRadius: '14px',
         padding: '18px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
         transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+        boxShadow: 'var(--card-shadow)',
         position: 'relative',
       }}
     >
@@ -63,8 +64,9 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
                 fontSize: '11px',
                 padding: '4px 10px',
                 borderRadius: '6px',
-                background: 'rgba(96, 165, 250, 0.15)',
-                color: '#60a5fa',
+                background: 'var(--primary-bg)',
+                border: '1px solid var(--primary-border)',
+                color: 'var(--color-info-text)',
                 fontWeight: '600',
               }}
             >
@@ -79,8 +81,9 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
                 fontSize: '11px',
                 padding: '3px 8px',
                 borderRadius: '6px',
-                background: isPDF ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                color: isPDF ? '#f87171' : '#34d399',
+                background: isPDF ? 'var(--color-danger-bg)' : 'var(--color-success-bg)',
+                border: `1px solid ${isPDF ? 'var(--color-danger-border)' : 'var(--color-success-border)'}`,
+                color: isPDF ? 'var(--color-danger-text)' : 'var(--color-success-text)',
                 fontWeight: '600',
                 display: 'flex',
                 alignItems: 'center',
@@ -94,9 +97,9 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
               <button
                 onClick={() => onDeleteNote(note)}
                 style={{
-                  background: 'rgba(239, 68, 68, 0.15)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  color: '#f87171',
+                  background: 'var(--color-danger-bg)',
+                  border: '1px solid var(--color-danger-border)',
+                  color: 'var(--color-danger-text)',
                   borderRadius: '6px',
                   padding: '3px 8px',
                   fontSize: '12px',
@@ -111,17 +114,16 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
           </div>
         </div>
 
-        <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#fff', lineHeight: 1.3 }}>
+        <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', color: 'var(--text-primary)', lineHeight: 1.3 }}>
           {note.title}
         </h3>
-
 
         {note.description && (
           <p
             style={{
               margin: '0 0 12px 0',
               fontSize: '13px',
-              color: 'var(--text-secondary, #94a3b8)',
+              color: 'var(--text-secondary)',
               lineHeight: 1.4,
               display: '-webkit-box',
               WebkitLineClamp: 3,
@@ -133,23 +135,21 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
           </p>
         )}
 
-        <div style={{ fontSize: '12px', color: 'var(--text-secondary, #94a3b8)', marginBottom: '14px' }}>
+        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '14px' }}>
           👤 <strong>Subido por:</strong> {uploaderName}
         </div>
       </div>
 
       {/* Botones de Acción */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid var(--border-color, #334155)', paddingTop: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
         {/* Botón Principal: Vista Previa Integrada */}
         <button
           onClick={() => onOpenPreview(note)}
+          className="primary-btn"
           style={{
             width: '100%',
-            background: 'var(--primary-color, #3b82f6)',
-            color: '#fff',
             padding: '8px 12px',
             borderRadius: '8px',
-            border: 'none',
             fontSize: '13px',
             fontWeight: '600',
             cursor: 'pointer',
@@ -157,7 +157,6 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
             alignItems: 'center',
             justifyContent: 'center',
             gap: '6px',
-            transition: 'background 0.2s ease',
           }}
         >
           👁️ Vista Previa
@@ -176,9 +175,9 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
             style={{
               flex: 1,
               textAlign: 'center',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid var(--border-color, #334155)',
-              color: '#fff',
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-color)',
+              color: 'var(--text-primary)',
               padding: '6px 10px',
               borderRadius: '8px',
               fontSize: '12px',
@@ -188,6 +187,7 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
               alignItems: 'center',
               justifyContent: 'center',
               gap: '4px',
+              transition: 'background 0.2s',
             }}
           >
             ⬇️ Descargar
@@ -196,9 +196,9 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
           <button
             onClick={() => onOpenQR(note)}
             style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid var(--border-color, #334155)',
-              color: '#fff',
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-color)',
+              color: 'var(--text-primary)',
               padding: '6px 12px',
               borderRadius: '8px',
               cursor: 'pointer',
@@ -207,6 +207,7 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
+              transition: 'background 0.2s',
             }}
             title="Ver código QR para móvil"
           >
@@ -217,4 +218,3 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
     </div>
   );
 }
-

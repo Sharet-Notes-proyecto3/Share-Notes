@@ -15,7 +15,7 @@ const getPhotoKey = (userId) => `sharenotes-avatar-${userId}`;
 const getNameKey  = (userId) => `sharenotes-name-${userId}`;
 
 export default function ProfileModal({ onClose }) {
-  const { user, isAdmin, isModerator, isTeacher, isStudent } = useAuth();
+  const { user, isAdmin, isModerator, isTeacher } = useAuth();
   if (!user) return null;
   return (
     <ProfileModalInner
@@ -23,13 +23,12 @@ export default function ProfileModal({ onClose }) {
       isAdmin={isAdmin}
       isModerator={isModerator}
       isTeacher={isTeacher}
-      isStudent={isStudent}
       onClose={onClose}
     />
   );
 }
 
-function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, onClose }) {
+function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, onClose }) {
   // ── Nombre editable ────────────────────────────────────────────────────────
   const savedName = localStorage.getItem(getNameKey(user.id)) || user.name || '';
   const [editingName, setEditingName] = useState(false);
@@ -116,13 +115,13 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
   const cardStyle = {
     display: 'flex', alignItems: 'center', gap: '12px',
     padding: '10px 12px', borderRadius: '10px',
-    background: 'rgba(255,255,255,0.03)',
-    border: '1px solid var(--border-color, #2b2b3d)',
+    background: 'var(--bg-elevated)',
+    border: '1px solid var(--border-color)',
   };
 
   const iconStyle = {
     width: '30px', height: '30px', borderRadius: '8px',
-    background: 'rgba(56,189,248,0.1)', color: '#38bdf8',
+    background: 'var(--primary-bg)', color: 'var(--primary-color)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     fontSize: '13px', flexShrink: 0,
   };
@@ -131,7 +130,7 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
     <div
       style={{
         position: 'fixed', inset: 0,
-        backgroundColor: 'rgba(0,0,0,0.75)',
+        backgroundColor: 'var(--modal-backdrop)',
         backdropFilter: 'blur(4px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         zIndex: 1100, padding: '20px',
@@ -141,8 +140,8 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: 'var(--sidebar-bg, #1e293b)',
-          border: '1px solid var(--border-color, #2b2b3d)',
+          background: 'var(--card-bg)',
+          border: '1px solid var(--border-color)',
           borderRadius: '18px', padding: '0',
           maxWidth: '430px', width: '100%',
           boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
@@ -154,8 +153,8 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
         <div
           style={{
             padding: '28px 24px 20px',
-            background: 'linear-gradient(135deg, rgba(59,130,246,0.18), rgba(139,92,246,0.14))',
-            borderBottom: '1px solid var(--border-color, #2b2b3d)',
+            background: 'linear-gradient(135deg, var(--primary-bg), var(--secondary-bg))',
+            borderBottom: '1px solid var(--border-color)',
             position: 'relative',
           }}
         >
@@ -165,9 +164,9 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
             aria-label="Cerrar perfil"
             style={{
               position: 'absolute', top: '16px', right: '16px',
-              background: 'rgba(255,255,255,0.08)', border: 'none',
+              background: 'transparent', border: '1px solid var(--border-color)',
               borderRadius: '8px', width: '28px', height: '28px',
-              color: 'var(--text-secondary, #94a3b8)', fontSize: '15px', cursor: 'pointer',
+              color: 'var(--text-secondary)', fontSize: '15px', cursor: 'pointer',
             }}
           >✕</button>
 
@@ -177,11 +176,11 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
               <div
                 style={{
                   width: '64px', height: '64px', borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                  background: 'linear-gradient(135deg, var(--primary-color), var(--secondary-color))',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: '700', fontSize: '20px', color: '#fff',
+                  fontWeight: '700', fontSize: '20px', color: 'var(--primary-contrast)',
                   overflow: 'hidden',
-                  boxShadow: '0 0 0 3px rgba(139,92,246,0.35)',
+                  boxShadow: '0 0 0 3px var(--primary-border)',
                 }}
               >
                 {avatar
@@ -198,9 +197,9 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
                 style={{
                   position: 'absolute', bottom: '-2px', right: '-4px',
                   width: '22px', height: '22px', borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
-                  border: '2px solid var(--sidebar-bg, #1e293b)',
-                  color: '#fff', fontSize: '10px', cursor: 'pointer',
+                  background: 'var(--primary-color)',
+                  border: '2px solid var(--card-bg)',
+                  color: 'var(--text-inverse)', fontSize: '10px', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'transform 0.2s',
                 }}
@@ -234,10 +233,10 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
                     maxLength={60}
                     placeholder="Tu nombre..."
                     style={{
-                      background: 'rgba(255,255,255,0.1)',
-                      border: '1px solid rgba(59,130,246,0.6)',
+                      background: 'var(--bg-elevated)',
+                      border: '1px solid var(--border-color)',
                       borderRadius: '8px', padding: '5px 10px',
-                      color: 'var(--text-primary, #fff)', fontSize: '15px', fontWeight: '600',
+                      color: 'var(--text-primary)', fontSize: '15px', fontWeight: '600',
                       outline: 'none', width: '100%',
                     }}
                   />
@@ -246,23 +245,23 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
                       onClick={handleSaveName}
                       style={{
                         flex: 1, padding: '4px 0', borderRadius: '6px',
-                        background: 'rgba(34,197,94,0.2)', border: '1px solid rgba(34,197,94,0.4)',
-                        color: '#4ade80', fontSize: '11px', fontWeight: '700', cursor: 'pointer',
+                        background: 'var(--color-success-bg)', border: '1px solid var(--color-success-border)',
+                        color: 'var(--color-success-text)', fontSize: '11px', fontWeight: '700', cursor: 'pointer',
                       }}
                     >✓ Guardar</button>
                     <button
                       onClick={handleCancelName}
                       style={{
                         flex: 1, padding: '4px 0', borderRadius: '6px',
-                        background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)',
-                        color: '#f87171', fontSize: '11px', fontWeight: '700', cursor: 'pointer',
+                        background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger-border)',
+                        color: 'var(--color-danger-text)', fontSize: '11px', fontWeight: '700', cursor: 'pointer',
                       }}
                     >✕ Cancelar</button>
                   </div>
                 </div>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
-                  <h3 style={{ margin: 0, color: 'var(--text-primary, #fff)', fontSize: '17px', fontWeight: '700' }}>
+                  <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '17px', fontWeight: '700' }}>
                     {displayName || 'Usuario'}
                   </h3>
                   <button
@@ -270,20 +269,18 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
                     aria-label="Editar nombre"
                     title="Editar nombre"
                     style={{
-                      background: 'rgba(255,255,255,0.08)', border: 'none',
+                      background: 'transparent', border: '1px solid var(--border-color)',
                       borderRadius: '5px', padding: '2px 7px',
-                      color: '#94a3b8', fontSize: '12px', cursor: 'pointer',
+                      color: 'var(--text-secondary)', fontSize: '12px', cursor: 'pointer',
                       transition: 'all 0.2s',
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.2)'; e.currentTarget.style.color = '#60a5fa'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#94a3b8'; }}
                   >✏️</button>
                   {nameSaved && (
-                    <span style={{ fontSize: '11px', color: '#4ade80' }}>✓ Guardado</span>
+                    <span style={{ fontSize: '11px', color: 'var(--color-success-text)' }}>✓ Guardado</span>
                   )}
                 </div>
               )}
-              <p style={{ margin: '3px 0 0', fontSize: '13px', color: 'var(--text-secondary, #94a3b8)' }}>
+              <p style={{ margin: '3px 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
                 {getRoleName()}
               </p>
             </div>
@@ -295,12 +292,12 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
               display: 'inline-flex', alignItems: 'center', gap: '6px',
               marginTop: '14px', padding: '4px 10px', borderRadius: '999px',
               fontSize: '11px', fontWeight: '600',
-              background: isAccountActive ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
-              color:      isAccountActive ? '#4ade80' : '#f87171',
-              border: `1px solid ${isAccountActive ? 'rgba(34,197,94,0.35)' : 'rgba(239,68,68,0.35)'}`,
+              background: isAccountActive ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
+              color:      isAccountActive ? 'var(--color-success-text)' : 'var(--color-danger-text)',
+              border: `1px solid ${isAccountActive ? 'var(--color-success-border)' : 'var(--color-danger-border)'}`,
             }}
           >
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: isAccountActive ? '#4ade80' : '#f87171' }} />
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: isAccountActive ? 'var(--color-success)' : 'var(--color-danger)' }} />
             {isAccountActive ? 'Cuenta activa' : 'Cuenta suspendida'}
           </div>
         </div>
@@ -309,15 +306,15 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
         <div style={{ padding: '20px 24px 24px' }}>
 
           {/* Campo nombre completo */}
-          <div style={{ ...cardStyle, marginBottom: '10px', border: '1px solid rgba(59,130,246,0.25)' }}>
+          <div style={{ ...cardStyle, marginBottom: '10px', border: '1px solid var(--border-color)' }}>
             <span style={iconStyle}>◉</span>
             <div style={{ overflow: 'hidden', flex: 1 }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary, #94a3b8)' }}>Nombre completo</div>
-              <div style={{ fontSize: '13.5px', color: 'var(--text-primary, #fff)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Nombre completo</div>
+              <div style={{ fontSize: '13.5px', color: 'var(--text-primary)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {displayName || '—'}
                 </span>
-                <span style={{ fontSize: '10px', color: 'var(--text-secondary, #64748b)', flexShrink: 0 }}>
+                <span style={{ fontSize: '10px', color: 'var(--text-muted)', flexShrink: 0 }}>
                   (toca ✏️ para editar)
                 </span>
               </div>
@@ -330,8 +327,8 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
               <div key={field.label} style={cardStyle}>
                 <span style={iconStyle}>{field.icon}</span>
                 <div style={{ overflow: 'hidden' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--text-secondary, #94a3b8)' }}>{field.label}</div>
-                  <div style={{ fontSize: '13.5px', color: 'var(--text-primary, #fff)', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{field.label}</div>
+                  <div style={{ fontSize: '13.5px', color: 'var(--text-primary)', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {field.value}
                   </div>
                 </div>
@@ -345,13 +342,11 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
               onClick={() => fileInputRef.current?.click()}
               style={{
                 flex: 1, padding: '8px 0', borderRadius: '8px',
-                background: 'rgba(59,130,246,0.12)',
-                border: '1px solid rgba(59,130,246,0.3)',
-                color: '#60a5fa', fontSize: '12px', fontWeight: '600', cursor: 'pointer',
+                background: 'var(--primary-bg)',
+                border: '1px solid var(--primary-border)',
+                color: 'var(--primary-color)', fontSize: '12px', fontWeight: '600', cursor: 'pointer',
                 transition: 'background 0.2s',
               }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(59,130,246,0.22)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(59,130,246,0.12)'}
             >
               📷 {avatar ? 'Cambiar foto' : 'Subir foto de perfil'}
             </button>
@@ -360,18 +355,16 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
                 onClick={handleRemovePhoto}
                 style={{
                   padding: '8px 14px', borderRadius: '8px',
-                  background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)',
-                  color: '#f87171', fontSize: '12px', fontWeight: '600', cursor: 'pointer',
+                  background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger-border)',
+                  color: 'var(--color-danger-text)', fontSize: '12px', fontWeight: '600', cursor: 'pointer',
                   transition: 'background 0.2s',
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.2)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
               >🗑 Quitar</button>
             )}
           </div>
 
           {joinDate && (
-            <p style={{ margin: '14px 0 0', fontSize: '12px', color: 'var(--text-secondary, #94a3b8)', textAlign: 'center' }}>
+            <p style={{ margin: '14px 0 0', fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center' }}>
               Miembro desde {joinDate}
             </p>
           )}
@@ -380,13 +373,11 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
             onClick={onClose}
             style={{
               width: '100%', marginTop: '16px', padding: '11px',
-              background: 'var(--primary-color, #3b82f6)',
+              background: 'var(--primary-color)',
               border: 'none', borderRadius: '10px',
-              color: '#fff', fontWeight: '600', fontSize: '13.5px', cursor: 'pointer',
+              color: 'var(--text-inverse)', fontWeight: '600', fontSize: '13.5px', cursor: 'pointer',
               transition: 'opacity 0.2s',
             }}
-            onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
           >
             Cerrar
           </button>
