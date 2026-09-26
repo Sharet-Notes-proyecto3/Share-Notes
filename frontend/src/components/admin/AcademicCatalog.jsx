@@ -143,7 +143,7 @@ export default function AcademicCatalog() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '50px', color: 'var(--text-secondary, #94a3b8)' }}>
+      <div style={{ textAlign: 'center', padding: '50px', color: 'var(--text-secondary)' }}>
         ⏳ Cargando catálogo académico...
       </div>
     );
@@ -155,9 +155,9 @@ export default function AcademicCatalog() {
       {error && (
         <div
           style={{
-            background: 'rgba(239, 68, 68, 0.12)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            color: '#fca5a5',
+            background: 'var(--color-danger-bg)',
+            border: '1px solid var(--color-danger-border)',
+            color: 'var(--color-danger-text)',
             borderRadius: '10px',
             padding: '12px 16px',
             fontSize: '13px',
@@ -169,9 +169,9 @@ export default function AcademicCatalog() {
       {success && (
         <div
           style={{
-            background: 'rgba(34, 197, 94, 0.12)',
-            border: '1px solid rgba(34, 197, 94, 0.3)',
-            color: '#86efac',
+            background: 'var(--color-success-bg)',
+            border: '1px solid var(--color-success-border)',
+            color: 'var(--color-success-text)',
             borderRadius: '10px',
             padding: '12px 16px',
             fontSize: '13px',
@@ -186,18 +186,19 @@ export default function AcademicCatalog() {
         {/* Formulario 1: Nueva Carrera */}
         <div
           style={{
-            background: 'var(--sidebar-bg, #1e293b)',
-            border: '1px solid var(--border-color, #334155)',
+            background: 'var(--card-bg)',
+            border: '1px solid var(--border-color)',
             borderRadius: '12px',
             padding: '20px',
+            boxShadow: 'var(--card-shadow)',
           }}
         >
-          <h3 style={{ margin: '0 0 12px', color: '#fff', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h3 style={{ margin: '0 0 12px', color: 'var(--text-primary)', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             🎓 Registrar Nueva Carrera
           </h3>
           <form onSubmit={handleCreateCareer} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div>
-              <label style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '4px', display: 'block' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>
                 Nombre de la Carrera (Ej: Tecnológico o Ingeniería)
               </label>
               <input
@@ -206,27 +207,15 @@ export default function AcademicCatalog() {
                 value={newCareerName}
                 onChange={(e) => setNewCareerName(e.target.value)}
                 required
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #334155',
-                  background: '#0f172a',
-                  color: '#fff',
-                  fontSize: '13px',
-                  boxSizing: 'border-box',
-                }}
+                className="form-input"
               />
             </div>
             <button
               type="submit"
+              className="primary-btn"
               style={{
+                width: '100%',
                 padding: '10px 16px',
-                borderRadius: '8px',
-                border: 'none',
-                background: 'var(--primary-color, #3b82f6)',
-                color: '#fff',
-                fontWeight: '600',
                 fontSize: '13px',
                 cursor: 'pointer',
               }}
@@ -239,52 +228,36 @@ export default function AcademicCatalog() {
         {/* Formulario 2: Nueva Materia */}
         <div
           style={{
-            background: 'var(--sidebar-bg, #1e293b)',
-            border: '1px solid var(--border-color, #334155)',
+            background: 'var(--card-bg)',
+            border: '1px solid var(--border-color)',
             borderRadius: '12px',
             padding: '20px',
+            boxShadow: 'var(--card-shadow)',
           }}
         >
-          <h3 style={{ margin: '0 0 12px', color: '#fff', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h3 style={{ margin: '0 0 12px', color: 'var(--text-primary)', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             📖 Asignar Nueva Materia
           </h3>
           <form onSubmit={handleCreateSubject} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div>
-              <label style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '4px', display: 'block' }}>Nombre de la Materia</label>
+              <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>Nombre de la Materia</label>
               <input
                 type="text"
                 placeholder="Ej: Estructura de Datos"
                 value={subjectForm.name}
                 onChange={(e) => setSubjectForm({ ...subjectForm, name: e.target.value })}
                 required
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #334155',
-                  background: '#0f172a',
-                  color: '#fff',
-                  fontSize: '13px',
-                  boxSizing: 'border-box',
-                }}
+                className="form-input"
               />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <div>
-                <label style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '4px', display: 'block' }}>Semestre (1° - 10°)</label>
+                <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>Semestre (1° - 10°)</label>
                 <select
                   value={subjectForm.semester}
                   onChange={(e) => setSubjectForm({ ...subjectForm, semester: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    borderRadius: '8px',
-                    border: '1px solid #334155',
-                    background: '#0f172a',
-                    color: '#fff',
-                    fontSize: '13px',
-                  }}
+                  className="form-input"
                 >
                   {[...Array(10)].map((_, i) => (
                     <option key={i + 1} value={i + 1}>
@@ -295,20 +268,12 @@ export default function AcademicCatalog() {
               </div>
 
               <div>
-                <label style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '4px', display: 'block' }}>Carrera</label>
+                <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>Carrera</label>
                 <select
                   value={subjectForm.careerId}
                   onChange={(e) => setSubjectForm({ ...subjectForm, careerId: e.target.value })}
                   required
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    borderRadius: '8px',
-                    border: '1px solid #334155',
-                    background: '#0f172a',
-                    color: '#fff',
-                    fontSize: '13px',
-                  }}
+                  className="form-input"
                 >
                   {careers.length === 0 ? (
                     <option value="">Crea una carrera primero</option>
@@ -330,11 +295,12 @@ export default function AcademicCatalog() {
                 padding: '10px 16px',
                 borderRadius: '8px',
                 border: 'none',
-                background: careers.length > 0 ? '#10b981' : '#475569',
-                color: '#fff',
+                background: careers.length > 0 ? 'var(--color-success)' : 'var(--bg-elevated)',
+                color: careers.length > 0 ? 'var(--text-inverse)' : 'var(--text-muted)',
                 fontWeight: '600',
                 fontSize: '13px',
                 cursor: careers.length > 0 ? 'pointer' : 'not-allowed',
+                transition: 'background 0.2s',
               }}
             >
               + Registrar Materia
@@ -346,8 +312,8 @@ export default function AcademicCatalog() {
       {/* Buscador y Filtro del Catálogo */}
       <div
         style={{
-          background: 'var(--sidebar-bg, #1e293b)',
-          border: '1px solid var(--border-color, #334155)',
+          background: 'var(--card-bg)',
+          border: '1px solid var(--border-color)',
           borderRadius: '12px',
           padding: '16px 20px',
           display: 'flex',
@@ -355,6 +321,7 @@ export default function AcademicCatalog() {
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'space-between',
+          boxShadow: 'var(--card-shadow)',
         }}
       >
         <div style={{ display: 'flex', gap: '10px', flex: 1, minWidth: '260px' }}>
@@ -363,27 +330,14 @@ export default function AcademicCatalog() {
             placeholder="🔍 Buscar materia o carrera..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              flex: 1,
-              padding: '8px 14px',
-              borderRadius: '8px',
-              border: '1px solid #334155',
-              background: '#0f172a',
-              color: '#fff',
-              fontSize: '13px',
-            }}
+            className="form-input"
+            style={{ flex: 1 }}
           />
           <select
             value={selectedCareerFilter}
             onChange={(e) => setSelectedCareerFilter(e.target.value)}
-            style={{
-              padding: '8px 12px',
-              borderRadius: '8px',
-              border: '1px solid #334155',
-              background: '#0f172a',
-              color: '#fff',
-              fontSize: '13px',
-            }}
+            className="form-input"
+            style={{ width: 'auto', minWidth: '180px' }}
           >
             <option value="">Todas las carreras</option>
             {careers.map((c) => (
@@ -394,16 +348,16 @@ export default function AcademicCatalog() {
           </select>
         </div>
 
-        <div style={{ fontSize: '12px', color: '#94a3b8' }}>
-          Total Materias: <strong style={{ color: '#60a5fa' }}>{filteredSubjects.length}</strong> | Total Carreras:{' '}
-          <strong style={{ color: '#86efac' }}>{careers.length}</strong>
+        <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+          Total Materias: <strong style={{ color: 'var(--primary-color)' }}>{filteredSubjects.length}</strong> | Total Carreras:{' '}
+          <strong style={{ color: 'var(--color-success-text)' }}>{careers.length}</strong>
         </div>
       </div>
 
       {/* Listado de Carreras Registradas */}
       {careers.length > 0 && (
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <span style={{ fontSize: '12px', color: '#94a3b8' }}>Carreras activas:</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Carreras activas:</span>
           {careers.map((c) => (
             <span
               key={c.id}
@@ -413,9 +367,9 @@ export default function AcademicCatalog() {
                 gap: '6px',
                 padding: '4px 10px',
                 borderRadius: '999px',
-                background: 'rgba(59, 130, 246, 0.15)',
-                border: '1px solid rgba(59, 130, 246, 0.3)',
-                color: '#93c5fd',
+                background: 'var(--primary-bg)',
+                border: '1px solid var(--primary-border)',
+                color: 'var(--color-info-text)',
                 fontSize: '12px',
                 fontWeight: '600',
               }}
@@ -427,7 +381,7 @@ export default function AcademicCatalog() {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#f87171',
+                  color: 'var(--color-danger-text)',
                   cursor: 'pointer',
                   fontSize: '12px',
                   lineHeight: 1,
@@ -451,10 +405,11 @@ export default function AcademicCatalog() {
             <div
               key={semNum}
               style={{
-                background: 'var(--sidebar-bg, #1e293b)',
-                border: '1px solid var(--border-color, #334155)',
+                background: 'var(--card-bg)',
+                border: '1px solid var(--border-color)',
                 borderRadius: '12px',
                 padding: '16px',
+                boxShadow: 'var(--card-shadow)',
               }}
             >
               <div
@@ -463,18 +418,19 @@ export default function AcademicCatalog() {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   marginBottom: '12px',
-                  borderBottom: '1px solid rgba(255,255,255,0.06)',
+                  borderBottom: '1px solid var(--border-subtle)',
                   paddingBottom: '8px',
                 }}
               >
-                <h4 style={{ margin: 0, color: '#fff', fontSize: '14px' }}>📌 Semestre {semNum}°</h4>
+                <h4 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '14px' }}>📌 Semestre {semNum}°</h4>
                 <span
                   style={{
                     fontSize: '11px',
                     padding: '2px 8px',
                     borderRadius: '6px',
-                    background: semSubjects.length > 0 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(148, 163, 184, 0.12)',
-                    color: semSubjects.length > 0 ? '#86efac' : '#94a3b8',
+                    background: semSubjects.length > 0 ? 'var(--color-success-bg)' : 'var(--bg-elevated)',
+                    border: `1px solid ${semSubjects.length > 0 ? 'var(--color-success-border)' : 'var(--border-color)'}`,
+                    color: semSubjects.length > 0 ? 'var(--color-success-text)' : 'var(--text-muted)',
                     fontWeight: '600',
                   }}
                 >
@@ -483,7 +439,7 @@ export default function AcademicCatalog() {
               </div>
 
               {semSubjects.length === 0 ? (
-                <div style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic', padding: '8px 0' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic', padding: '8px 0' }}>
                   Sin materias asignadas.
                 </div>
               ) : (
@@ -495,24 +451,24 @@ export default function AcademicCatalog() {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        background: '#0f172a',
-                        border: '1px solid #334155',
+                        background: 'var(--bg-elevated)',
+                        border: '1px solid var(--border-color)',
                         borderRadius: '8px',
                         padding: '8px 12px',
                       }}
                     >
                       <div>
-                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#e2e8f0' }}>{sub.name}</div>
+                        <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{sub.name}</div>
                         {sub.career_name && (
-                          <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>{sub.career_name}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>{sub.career_name}</div>
                         )}
                       </div>
                       <button
                         onClick={() => handleDeleteSubject(sub.id, sub.name)}
                         style={{
-                          background: 'rgba(239, 68, 68, 0.15)',
-                          border: 'none',
-                          color: '#fca5a5',
+                          background: 'var(--color-danger-bg)',
+                          border: '1px solid var(--color-danger-border)',
+                          color: 'var(--color-danger-text)',
                           borderRadius: '6px',
                           padding: '4px 8px',
                           fontSize: '11px',

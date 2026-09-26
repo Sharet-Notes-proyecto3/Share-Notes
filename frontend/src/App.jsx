@@ -180,6 +180,7 @@ function MainLayout() {
     );
   }
 
+
   if (!isAuthenticated) {
     return <AuthModal />;
   }
@@ -203,7 +204,7 @@ function MainLayout() {
               width: '36px',
               height: '36px',
               borderRadius: '8px',
-              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+              background: 'var(--theme-gradient)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -247,7 +248,7 @@ function MainLayout() {
                 {pendingCount > 0 && (
                   <span
                     style={{
-                      backgroundColor: '#EF4444',
+                      backgroundColor: 'var(--color-danger)',
                       color: 'white',
                       fontSize: '11px',
                       fontWeight: 'bold',
@@ -298,7 +299,7 @@ function MainLayout() {
           }}
         >
           <div
-            style={{ fontWeight: '600', color: '#fff', marginBottom: '4px' }}
+            style={{ fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px' }}
           >
             ShareNotes v1.0
           </div>

@@ -43,7 +43,7 @@ export function UserRestrictModal({ userId, userName = 'Usuario', isOpen, onClos
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'var(--modal-backdrop)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -52,7 +52,8 @@ export function UserRestrictModal({ userId, userName = 'Usuario', isOpen, onClos
     >
       <div
         style={{
-          backgroundColor: 'white',
+          backgroundColor: 'var(--card-bg)',
+          border: '1px solid var(--border-color)',
           borderRadius: '8px',
           padding: '24px',
           maxWidth: '460px',
@@ -60,24 +61,24 @@ export function UserRestrictModal({ userId, userName = 'Usuario', isOpen, onClos
           boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
         }}
       >
-        <h3 style={{ margin: '0 0 12px 0', fontSize: '18px', color: '#991B1B' }}>
+        <h3 style={{ margin: '0 0 12px 0', fontSize: '18px', color: 'var(--color-danger-text)' }}>
           🚫 Restringir Usuario Temporalmente
         </h3>
 
-        <p style={{ fontSize: '14px', color: '#4B5563', marginBottom: '16px' }}>
+        <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
           Aplicar suspensión temporal de participación en foros y comentarios para{' '}
           <strong>{userName}</strong> (ID #{userId}).
         </p>
 
         {error && (
-          <div style={{ padding: '10px', backgroundColor: '#FEE2E2', color: '#991B1B', borderRadius: '4px', fontSize: '13px', marginBottom: '12px' }}>
+          <div style={{ padding: '10px', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger-text)', border: '1px solid var(--color-danger-border)', borderRadius: '4px', fontSize: '13px', marginBottom: '12px' }}>
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px', color: '#374151' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px', color: 'var(--text-secondary)' }}>
               Duración de la restricción:
             </label>
             <select
@@ -87,7 +88,9 @@ export function UserRestrictModal({ userId, userName = 'Usuario', isOpen, onClos
                 width: '100%',
                 padding: '8px',
                 borderRadius: '4px',
-                border: '1px solid #D1D5DB',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--bg-elevated)',
+                color: 'var(--text-primary)',
                 fontSize: '14px',
               }}
             >
@@ -101,7 +104,7 @@ export function UserRestrictModal({ userId, userName = 'Usuario', isOpen, onClos
 
           {durationDays === 'custom' && (
             <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px', color: '#374151' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px', color: 'var(--text-secondary)' }}>
                 Restringido hasta:
               </label>
               <input
@@ -112,7 +115,9 @@ export function UserRestrictModal({ userId, userName = 'Usuario', isOpen, onClos
                   width: '100%',
                   padding: '8px',
                   borderRadius: '4px',
-                  border: '1px solid #D1D5DB',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--bg-elevated)',
+                  color: 'var(--text-primary)',
                   fontSize: '14px',
                   boxSizing: 'border-box',
                 }}
@@ -122,7 +127,7 @@ export function UserRestrictModal({ userId, userName = 'Usuario', isOpen, onClos
           )}
 
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px', color: '#374151' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px', color: 'var(--text-secondary)' }}>
               Motivo de la sanción:
             </label>
             <textarea
@@ -134,7 +139,9 @@ export function UserRestrictModal({ userId, userName = 'Usuario', isOpen, onClos
                 width: '100%',
                 padding: '8px',
                 borderRadius: '4px',
-                border: '1px solid #D1D5DB',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--bg-elevated)',
+                color: 'var(--text-primary)',
                 fontSize: '13px',
                 boxSizing: 'border-box',
               }}
@@ -150,9 +157,9 @@ export function UserRestrictModal({ userId, userName = 'Usuario', isOpen, onClos
               style={{
                 padding: '8px 16px',
                 fontSize: '14px',
-                backgroundColor: '#E5E7EB',
-                color: '#374151',
-                border: 'none',
+                backgroundColor: 'var(--bg-elevated)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border-color)',
                 borderRadius: '4px',
                 cursor: 'pointer',
               }}
@@ -166,8 +173,8 @@ export function UserRestrictModal({ userId, userName = 'Usuario', isOpen, onClos
                 padding: '8px 16px',
                 fontSize: '14px',
                 fontWeight: 'bold',
-                backgroundColor: '#DC2626',
-                color: 'white',
+                backgroundColor: 'var(--color-danger)',
+                color: 'var(--text-inverse)',
                 border: 'none',
                 borderRadius: '4px',
                 cursor: loading ? 'not-allowed' : 'pointer',

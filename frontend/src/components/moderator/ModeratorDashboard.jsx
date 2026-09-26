@@ -40,7 +40,7 @@ export function ModeratorDashboard({ defaultTab = 'reports' }) {
     <RoleGate
       allow={['MODERATOR', 'FRONT_DESK_CS', 'ADMIN']}
       fallback={
-        <div style={{ padding: '32px', textAlign: 'center', backgroundColor: '#FEE2E2', border: '1px solid #FCA5A5', color: '#991B1B', borderRadius: '8px', margin: '24px' }}>
+        <div style={{ padding: '32px', textAlign: 'center', backgroundColor: 'var(--color-danger-bg)', border: '1px solid var(--color-danger-border)', color: 'var(--color-danger-text)', borderRadius: '8px', margin: '24px' }}>
           <h2>403 Prohibido</h2>
           <p>No posees los permisos necesarios del rol MODERATOR para acceder a este panel.</p>
         </div>
@@ -50,8 +50,9 @@ export function ModeratorDashboard({ defaultTab = 'reports' }) {
         {/* Banner Superior Header */}
         <div
           style={{
-            background: 'linear-gradient(135deg, #1E293B 0%, #334155 100%)',
-            color: 'white',
+            background: 'linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-elevated) 100%)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--border-color)',
             padding: '24px',
             borderRadius: '12px',
             marginBottom: '24px',
@@ -67,7 +68,7 @@ export function ModeratorDashboard({ defaultTab = 'reports' }) {
             <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
               🛡️ Panel de Moderación de Contenidos
             </h1>
-            <p style={{ margin: '6px 0 0 0', opacity: 0.85, fontSize: '14px' }}>
+            <p style={{ margin: '6px 0 0 0', color: 'var(--text-secondary)', fontSize: '14px' }}>
               Gestión centralizada de denuncias, moderación de publicaciones/apuntes y sanciones de usuarios.
             </p>
           </div>
@@ -75,18 +76,17 @@ export function ModeratorDashboard({ defaultTab = 'reports' }) {
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             <div
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                backdropFilter: 'blur(4px)',
+                backgroundColor: 'var(--bg-elevated)',
                 padding: '10px 16px',
                 borderRadius: '8px',
                 textAlign: 'center',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                border: '1px solid var(--border-color)',
               }}
             >
-              <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.8 }}>
+              <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)' }}>
                 Denuncias Pendientes
               </div>
-              <div style={{ fontSize: '22px', fontWeight: 'bold', color: pendingCount > 0 ? '#FBBF24' : '#34D399' }}>
+              <div style={{ fontSize: '22px', fontWeight: 'bold', color: pendingCount > 0 ? 'var(--color-warning-text)' : 'var(--color-success-text)' }}>
                 {pendingCount}
               </div>
             </div>
@@ -98,9 +98,9 @@ export function ModeratorDashboard({ defaultTab = 'reports' }) {
                 padding: '10px 16px',
                 fontSize: '13px',
                 fontWeight: 'bold',
-                color: '#1E293B',
-                backgroundColor: '#FFFFFF',
-                border: 'none',
+                color: 'var(--text-primary)',
+                backgroundColor: 'var(--bg-elevated)',
+                border: '1px solid var(--border-color)',
                 borderRadius: '8px',
                 cursor: 'pointer',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
@@ -112,17 +112,17 @@ export function ModeratorDashboard({ defaultTab = 'reports' }) {
         </div>
 
         {/* Pestañas de Navegación del Panel */}
-        <div style={{ display: 'flex', gap: '8px', borderBottom: '2px solid #E2E8F0', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', gap: '8px', borderBottom: '2px solid var(--border-color)', marginBottom: '24px' }}>
           <button
             onClick={() => setActiveTab('reports')}
             style={{
               padding: '12px 20px',
               fontSize: '14px',
               fontWeight: 'bold',
-              color: activeTab === 'reports' ? '#2563EB' : '#64748B',
+              color: activeTab === 'reports' ? 'var(--primary-color)' : 'var(--text-muted)',
               backgroundColor: 'transparent',
               border: 'none',
-              borderBottom: activeTab === 'reports' ? '3px solid #2563EB' : '3px solid transparent',
+              borderBottom: activeTab === 'reports' ? '3px solid var(--primary-color)' : '3px solid transparent',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -132,7 +132,7 @@ export function ModeratorDashboard({ defaultTab = 'reports' }) {
           >
             🚨 Cola de Denuncias
             {pendingCount > 0 && (
-              <span style={{ backgroundColor: '#EF4444', color: 'white', fontSize: '11px', borderRadius: '10px', padding: '2px 8px' }}>
+              <span style={{ backgroundColor: 'var(--color-danger)', color: 'var(--text-inverse)', fontSize: '11px', borderRadius: '10px', padding: '2px 8px' }}>
                 {pendingCount}
               </span>
             )}
@@ -144,10 +144,10 @@ export function ModeratorDashboard({ defaultTab = 'reports' }) {
               padding: '12px 20px',
               fontSize: '14px',
               fontWeight: 'bold',
-              color: activeTab === 'logs' ? '#2563EB' : '#64748B',
+              color: activeTab === 'logs' ? 'var(--primary-color)' : 'var(--text-muted)',
               backgroundColor: 'transparent',
               border: 'none',
-              borderBottom: activeTab === 'logs' ? '3px solid #2563EB' : '3px solid transparent',
+              borderBottom: activeTab === 'logs' ? '3px solid var(--primary-color)' : '3px solid transparent',
               cursor: 'pointer',
               marginBottom: '-2px',
             }}
@@ -161,10 +161,10 @@ export function ModeratorDashboard({ defaultTab = 'reports' }) {
               padding: '12px 20px',
               fontSize: '14px',
               fontWeight: 'bold',
-              color: activeTab === 'users' ? '#2563EB' : '#64748B',
+              color: activeTab === 'users' ? 'var(--primary-color)' : 'var(--text-muted)',
               backgroundColor: 'transparent',
               border: 'none',
-              borderBottom: activeTab === 'users' ? '3px solid #2563EB' : '3px solid transparent',
+              borderBottom: activeTab === 'users' ? '3px solid var(--primary-color)' : '3px solid transparent',
               cursor: 'pointer',
               marginBottom: '-2px',
             }}
@@ -176,7 +176,7 @@ export function ModeratorDashboard({ defaultTab = 'reports' }) {
         {/* Contenido de la Pestaña Activa */}
         {activeTab === 'reports' && (
           <div>
-            <h2 style={{ fontSize: '18px', margin: '0 0 16px 0', color: '#1E293B' }}>
+            <h2 style={{ fontSize: '18px', margin: '0 0 16px 0', color: 'var(--text-primary)' }}>
               Denuncias Pendientes de Revisión
             </h2>
             <ReportsQueueTable
@@ -197,11 +197,11 @@ export function ModeratorDashboard({ defaultTab = 'reports' }) {
         )}
 
         {activeTab === 'users' && (
-          <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <h2 style={{ fontSize: '18px', margin: '0 0 12px 0', color: '#1E293B' }}>
+          <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ fontSize: '18px', margin: '0 0 12px 0', color: 'var(--text-primary)' }}>
               Sancionar / Restringir Usuario por ID
             </h2>
-            <p style={{ fontSize: '14px', color: '#64748B', marginBottom: '16px' }}>
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
               Aplica una restricción temporal de participación en foros a cualquier usuario infractor ingresando su ID directamente.
             </p>
 
@@ -216,7 +216,9 @@ export function ModeratorDashboard({ defaultTab = 'reports' }) {
                   padding: '8px 12px',
                   fontSize: '14px',
                   borderRadius: '4px',
-                  border: '1px solid #CBD5E1',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--bg-elevated)',
+                  color: 'var(--text-primary)',
                 }}
               />
               <button
@@ -230,8 +232,8 @@ export function ModeratorDashboard({ defaultTab = 'reports' }) {
                   padding: '8px 16px',
                   fontSize: '14px',
                   fontWeight: 'bold',
-                  backgroundColor: '#DC2626',
-                  color: 'white',
+                  backgroundColor: 'var(--color-danger)',
+                  color: 'var(--text-inverse)',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: manualUserId ? 'pointer' : 'not-allowed',

@@ -59,7 +59,7 @@ export default function QRModal({ note, onClose }) {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0,0,0,0.7)',
+        backgroundColor: 'var(--modal-backdrop)',
         backdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'center',
@@ -70,23 +70,23 @@ export default function QRModal({ note, onClose }) {
     >
       <div
         style={{
-          background: 'var(--sidebar-bg)',
+          background: 'var(--card-bg)',
           border: '1px solid var(--border-color)',
           borderRadius: '16px',
           padding: '24px',
           maxWidth: '360px',
           width: '100%',
           textAlign: 'center',
-          boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
+          boxShadow: 'var(--card-shadow)',
         }}
       >
-        <h3 style={{ margin: '0 0 4px', color: '#fff', fontSize: '18px' }}>📱 Código QR del Apunte</h3>
+        <h3 style={{ margin: '0 0 4px', color: 'var(--text-primary)', fontSize: '18px' }}>📱 Código QR del Apunte</h3>
         <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--text-secondary)' }}>{note.title}</p>
 
-        {loading && <p style={{ color: '#60a5fa', margin: '30px 0' }}>⏳ Generando código QR...</p>}
+        {loading && <p style={{ color: 'var(--primary-color)', margin: '30px 0' }}>⏳ Generando código QR...</p>}
 
         {error && (
-          <div style={{ color: '#f87171', background: 'rgba(239,68,68,0.1)', padding: '10px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px' }}>
+          <div style={{ color: 'var(--color-danger-text)', background: 'var(--color-danger-bg)', padding: '10px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px' }}>
             ⚠️ {error}
           </div>
         )}
@@ -102,10 +102,10 @@ export default function QRModal({ note, onClose }) {
               style={{
                 width: '100%',
                 padding: '9px',
-                background: 'rgba(56, 189, 248, 0.15)',
-                border: '1px solid rgba(56, 189, 248, 0.4)',
+                background: 'var(--primary-bg)',
+                border: '1px solid var(--primary-border)',
                 borderRadius: '8px',
-                color: '#38bdf8',
+                color: 'var(--color-info-text)',
                 fontWeight: '600',
                 fontSize: '13px',
                 cursor: 'pointer',
@@ -127,13 +127,12 @@ export default function QRModal({ note, onClose }) {
 
         <button
           onClick={onClose}
+          className="primary-btn"
           style={{
             width: '100%',
             padding: '10px',
-            background: 'var(--primary-color, #3b82f6)',
-            border: 'none',
             borderRadius: '8px',
-            color: '#fff',
+            fontSize: '13px',
             fontWeight: '600',
             cursor: 'pointer',
           }}

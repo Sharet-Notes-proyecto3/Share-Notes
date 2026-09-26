@@ -73,7 +73,7 @@ export default function UploadModal({ subjects, onClose, onNoteUploaded }) {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0,0,0,0.7)',
+        backgroundColor: 'var(--modal-backdrop)',
         backdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'center',
@@ -84,17 +84,17 @@ export default function UploadModal({ subjects, onClose, onNoteUploaded }) {
     >
       <div
         style={{
-          background: 'var(--sidebar-bg)',
+          background: 'var(--card-bg)',
           border: '1px solid var(--border-color)',
           borderRadius: '16px',
           padding: '28px',
           maxWidth: '500px',
           width: '100%',
-          boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
+          boxShadow: 'var(--card-shadow)',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h3 style={{ margin: 0, color: '#fff', fontSize: '20px' }}>📤 Subir Nuevo Apunte</h3>
+          <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '20px' }}>📤 Subir Nuevo Apunte</h3>
           <button
             onClick={onClose}
             style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '20px', cursor: 'pointer' }}
@@ -104,7 +104,7 @@ export default function UploadModal({ subjects, onClose, onNoteUploaded }) {
         </div>
 
         {error && (
-          <div style={{ color: '#f87171', background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', padding: '10px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px' }}>
+          <div style={{ color: 'var(--color-danger-text)', background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger-border)', padding: '10px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px' }}>
             ⚠️ {error}
           </div>
         )}
@@ -161,7 +161,7 @@ export default function UploadModal({ subjects, onClose, onNoteUploaded }) {
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
               onChange={handleFileChange}
-              style={{ color: '#fff', fontSize: '13px' }}
+              style={{ color: 'var(--text-primary)', fontSize: '13px' }}
               required
             />
           </div>
@@ -170,7 +170,7 @@ export default function UploadModal({ subjects, onClose, onNoteUploaded }) {
             <button
               type="button"
               onClick={onClose}
-              style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff', cursor: 'pointer' }}
+              style={{ flex: 1, padding: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', cursor: 'pointer' }}
             >
               Cancelar
             </button>

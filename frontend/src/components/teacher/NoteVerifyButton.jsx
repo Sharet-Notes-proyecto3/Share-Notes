@@ -37,9 +37,9 @@ export default function NoteVerifyButton({ note, onVerified }) {
       onClick={handleVerify}
       disabled={loading}
       style={{
-        background: 'rgba(16, 185, 129, 0.15)',
-        border: '1px solid rgba(16, 185, 129, 0.35)',
-        color: '#34d399',
+        background: 'var(--color-success-bg)',
+        border: '1px solid var(--color-success-border)',
+        color: 'var(--color-success-text)',
         padding: '6px 12px',
         borderRadius: '8px',
         fontSize: '12px',
