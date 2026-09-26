@@ -84,4 +84,18 @@ export const authService = {
     const query = tema ? `?tema=${encodeURIComponent(tema)}` : '';
     return await api.get(`/auth/profile/related-topic${query}`);
   },
+
+    /**
+   * Lista las carreras disponibles del catálogo (para el Onboarding).
+   */
+  async getCareers(token) {
+    return await api.get('/auth/careers', token);
+  },
+
+  /**
+   * Guarda la carrera y semestre elegidos por el estudiante.
+   */
+  async updateAcademicProfile(token, careerId, semester) {
+    return await api.patch('/auth/profile/academic', { careerId, semester }, token);
+  },
 };

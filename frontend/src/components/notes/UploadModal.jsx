@@ -8,13 +8,14 @@ import { notesService } from '../../services/notes.service';
 import { useAuth } from '../../context/AuthContext';
 
 export default function UploadModal({ subjects, onClose, onNoteUploaded }) {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [subjectId, setSubjectId] = useState(subjects[0]?.id || '');
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const selectedSubject = subjects.find((subject) => String(subject.id) === String(subjectId));
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -53,6 +54,8 @@ export default function UploadModal({ subjects, onClose, onNoteUploaded }) {
         title,
         description,
         subjectId,
+        careerId: selectedSubject?.career_id || selectedSubject?.careerId || user?.career_id || user?.careerId,
+        semester: selectedSubject?.semester || user?.semester || user?.semestre,
         file,
       });
 
@@ -134,6 +137,11 @@ export default function UploadModal({ subjects, onClose, onNoteUploaded }) {
                 </option>
               ))}
             </select>
+            {selectedSubject && (
+              <small style={{ display: 'block', marginTop: '5px', color: 'var(--text-secondary)' }}>
+                Carrera: {selectedSubject.career_name || selectedSubject.career?.name || 'Asignada'} · Semestre {selectedSubject.semester}
+              </small>
+            )}
           </div>
 
           <div>

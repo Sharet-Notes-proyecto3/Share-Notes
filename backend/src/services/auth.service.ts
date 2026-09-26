@@ -15,6 +15,7 @@ interface UserRow extends RowDataPacket {
   role: UserRole;
   is_active: boolean;
   created_at?: string;
+  career_id?: number; semester?: number;
 }
 
 export class AuthService {
@@ -45,7 +46,9 @@ export class AuthService {
       [email]
     );
 
+    
     const user = rows[0];
+    
     if (!user) {
       throw new AppError(401, 'Credenciales incorrectas');
     }
@@ -73,13 +76,32 @@ export class AuthService {
     };
   }
 
-  async getProfile(userId: number) {
+   async getProfile(userId: number) {
     const [rows] = await pool.query<UserRow[]>(
-      'SELECT id, name, email, role, is_active, created_at FROM users WHERE id = ?',
+      'SELECT id, name, email, role, is_active, career_id, semester, created_at FROM users WHERE id = ?',
       [userId]
     );
     if (!rows[0]) throw new AppError(404, 'Usuario no encontrado');
     return rows[0];
+  }
+
+  /**
+   * Lista las carreras disponibles (para el Onboarding del estudiante).
+   */
+  async getCareers() {
+    const [rows] = await pool.query('SELECT id, name FROM careers ORDER BY name');
+    return rows;
+  }
+
+  /**
+   * Guarda la carrera y semestre elegidos por el estudiante en el onboarding.
+   */
+  async updateAcademicProfile(userId: number, careerId: number, semester: number) {
+    await pool.query(
+      'UPDATE users SET career_id = ?, semester = ? WHERE id = ?',
+      [careerId, semester, userId]
+    );
+    return this.getProfile(userId);
   }
 
   /**
@@ -92,4 +114,6 @@ export class AuthService {
     const articulo = await getRelatedArticle(tema.trim());
     return { articulo };
   }
+
+  
 }
