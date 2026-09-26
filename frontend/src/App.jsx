@@ -76,6 +76,7 @@ function MainLayout() {
     return () => window.removeEventListener('popstate', onPopState);
   }, [isAuthenticated, pathToTab, navigateToTab]);
 
+<<<<<<< Updated upstream
   // Propiedad calculada que decide qué vista mostrar en la raíz según authenticated
   const rootComponent = useMemo(() => {
     if (!isAuthenticated) {
@@ -83,6 +84,72 @@ function MainLayout() {
     }
     return null;
   }, [isAuthenticated]);
+=======
+  // Pantalla de carga mientras se valida la sesión persistente y se completa el arranque inicial
+  if (initialLoading || loading) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          background: 'var(--bg-canvas)',
+          color: 'var(--text-primary)',
+          fontFamily: "'Inter', sans-serif",
+          userSelect: 'none',
+        }}
+      >
+        <div
+          style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '16px',
+            background: 'var(--theme-gradient)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '32px',
+            boxShadow: '0 8px 24px var(--primary-bg)',
+            marginBottom: '20px',
+            animation: 'pulse 1.8s infinite ease-in-out',
+          }}
+        >
+          📚
+        </div>
+        <h1
+          style={{
+            fontSize: '22px',
+            fontWeight: '700',
+            margin: '0 0 12px 0',
+            color: 'var(--text-primary)',
+            letterSpacing: '-0.3px',
+          }}
+        >
+          ShareNotes
+        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div
+            style={{
+              width: '18px',
+              height: '18px',
+              border: '2px solid var(--border-color)',
+              borderTopColor: 'var(--primary-color)',
+              borderRadius: '50%',
+              animation: 'spin 0.8s linear infinite',
+            }}
+          />
+          <span
+            style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '500' }}
+          >
+            Iniciando plataforma universitaria...
+          </span>
+        </div>
+      </div>
+    );
+  }
+>>>>>>> Stashed changes
 
   if (!isAuthenticated) {
     return rootComponent;
@@ -92,8 +159,33 @@ function MainLayout() {
     <div className="app-container">
       {/* Sidebar Lateral */}
       <aside className="sidebar">
+<<<<<<< Updated upstream
         <div className="logo" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 'bold', fontSize: '18px' }}>
           <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
+=======
+        <div
+          className="logo"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontWeight: 'bold',
+            fontSize: '18px',
+          }}
+        >
+          <div
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              background: 'var(--theme-gradient)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+            }}
+          >
+>>>>>>> Stashed changes
             📚
           </div>
           <span>ShareNotes</span>
@@ -129,7 +221,7 @@ function MainLayout() {
                 {pendingCount > 0 && (
                   <span
                     style={{
-                      backgroundColor: '#EF4444',
+                      backgroundColor: 'var(--color-danger)',
                       color: 'white',
                       fontSize: '11px',
                       fontWeight: 'bold',
@@ -170,8 +262,25 @@ function MainLayout() {
         </nav>
 
         {/* Footer del sidebar con créditos del equipo */}
+<<<<<<< Updated upstream
         <div style={{ marginTop: 'auto', padding: '16px 0', borderTop: '1px solid var(--border-color)', fontSize: '11px', color: 'var(--text-secondary)' }}>
           <div style={{ fontWeight: '600', color: '#fff', marginBottom: '4px' }}>ShareNotes v1.0</div>
+=======
+        <div
+          style={{
+            marginTop: 'auto',
+            padding: '16px 0',
+            borderTop: '1px solid var(--border-color)',
+            fontSize: '11px',
+            color: 'var(--text-secondary)',
+          }}
+        >
+          <div
+            style={{ fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px' }}
+          >
+            ShareNotes v1.0
+          </div>
+>>>>>>> Stashed changes
           <div>Proyecto de Software 3</div>
           <div style={{ marginTop: '4px', opacity: 0.8 }}>4 Módulos Integrados</div>
         </div>

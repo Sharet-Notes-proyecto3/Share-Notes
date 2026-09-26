@@ -2,8 +2,8 @@
   display: flex;
   height: 100vh;
   overflow: hidden;
-  background: radial-gradient(circle at top left, #083344 0%, #0f172a 100%);
-  transition: background 0.4s ease;
+  background: var(--bg-canvas);
+  transition: background 0.3s ease;
 }
 
 .sidebar {
@@ -13,20 +13,18 @@
   display: flex;
   flex-direction: column;
   padding: 24px;
+  color: var(--text-primary);
   transition: all 0.3s ease;
 }
 
 .logo {
   font-size: 24px;
   font-weight: 700;
-  color: #fff;
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 40px;
-  background: linear-gradient(90deg, #22d3ee, #0ea5e9);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--primary-color);
 }
 
 .nav-menu {
@@ -49,9 +47,15 @@
   cursor: pointer;
 }
 
-.nav-item:hover, .nav-item.active {
-  background: rgba(6, 182, 212, 0.1);
-  color: var(--accent-color);
+.nav-item:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.nav-item.active {
+  background: var(--primary-bg);
+  color: var(--primary-color);
+  font-weight: 600;
 }
 
 .main-content {
@@ -68,13 +72,14 @@
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border-color);
+  background: var(--bg-surface);
   backdrop-filter: blur(10px);
 }
 
 .search-bar {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-elevated);
   border: 1px solid var(--border-color);
   border-radius: 20px;
   padding: 8px 16px;
@@ -83,21 +88,21 @@
 }
 
 .search-bar:focus-within {
-  border-color: var(--accent-color);
-  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-bg);
 }
 
 .search-bar input {
   background: transparent;
   border: none;
-  color: #fff;
+  color: var(--text-primary);
   outline: none;
   margin-left: 8px;
   width: 100%;
 }
 
 .search-bar input::placeholder {
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
 
 .user-profile {
@@ -110,7 +115,8 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #06b6d4, #0284c7);
+  background: var(--theme-gradient);
+  color: var(--primary-contrast);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -125,7 +131,7 @@
   font-size: 28px;
   font-weight: 600;
   margin-bottom: 24px;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .notes-grid {
@@ -145,12 +151,13 @@
   display: flex;
   flex-direction: column;
   min-height: 200px;
+  box-shadow: var(--card-shadow);
 }
 
 .note-card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(6, 182, 212, 0.5);
-  box-shadow: 0 10px 30px -10px rgba(6, 182, 212, 0.3);
+  transform: translateY(-4px);
+  border-color: var(--primary-color);
+  box-shadow: 0 10px 25px var(--primary-bg);
 }
 
 .note-header {
@@ -163,7 +170,7 @@
 .note-title {
   font-size: 18px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
@@ -185,16 +192,16 @@
   align-items: center;
   font-size: 12px;
   color: var(--text-secondary);
-  border-top: 1px solid rgba(255,255,255,0.05);
+  border-top: 1px solid var(--border-subtle);
   padding-top: 16px;
 }
 
 .note-tag {
-  background: rgba(6, 182, 212, 0.15);
-  color: #67e8f9;
+  background: var(--primary-bg);
+  color: var(--color-info-text);
   padding: 4px 10px;
   border-radius: 12px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* Animations */
@@ -204,49 +211,7 @@
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.5s ease forwards;
-}
-
-/* Form inputs & buttons for integration */
-.form-input {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 12px 16px;
-  color: #fff;
-  font-family: inherit;
-  transition: all 0.2s;
-}
-
-select.form-input option {
-  background-color: var(--sidebar-bg);
-  color: #fff;
-}
-.form-input:focus {
-  outline: none;
-  border-color: var(--accent-color);
-  background: rgba(255, 255, 255, 0.1);
-}
-.primary-btn {
-  background: var(--accent-color);
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.primary-btn:hover {
-  background: var(--accent-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+  animation: fadeIn 0.4s ease forwards;
 }
 
 /* Profile Menu */
@@ -254,12 +219,12 @@ select.form-input option {
   position: absolute;
   top: 55px;
   right: 0;
-  background: var(--sidebar-bg);
+  background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 8px;
-  width: 220px;
-  box-shadow: 0 10px 30px -5px rgba(0,0,0,0.8);
+  width: 240px;
+  box-shadow: var(--card-shadow);
   z-index: 100;
   display: flex;
   flex-direction: column;
@@ -268,7 +233,7 @@ select.form-input option {
 
 .profile-menu-header {
   padding: 8px 12px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-subtle);
   margin-bottom: 4px;
 }
 
@@ -281,8 +246,8 @@ select.form-input option {
 }
 
 .profile-menu-role {
-  color: var(--accent-color);
-  font-size: 14px;
+  color: var(--primary-color);
+  font-size: 13px;
   margin-top: 4px;
   font-weight: 600;
 }
@@ -300,13 +265,13 @@ select.form-input option {
 }
 
 .profile-menu-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-elevated);
 }
 
 .profile-menu-item.danger {
-  color: #ef4444;
+  color: var(--color-danger-text);
 }
 
 .profile-menu-item.danger:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--color-danger-bg);
 }

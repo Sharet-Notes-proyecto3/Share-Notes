@@ -38,9 +38,9 @@ export default function CloseThreadButton({ thread, onClosed }) {
       onClick={handleCloseThread}
       disabled={loading}
       style={{
-        background: 'rgba(239, 68, 68, 0.15)',
-        border: '1px solid rgba(239, 68, 68, 0.35)',
-        color: '#f87171',
+        background: 'var(--color-danger-bg)',
+        border: '1px solid var(--color-danger-border)',
+        color: 'var(--color-danger-text)',
         padding: '4px 10px',
         borderRadius: '6px',
         fontSize: '12px',
