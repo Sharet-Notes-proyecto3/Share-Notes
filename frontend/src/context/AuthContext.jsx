@@ -3,16 +3,13 @@
 // Integración con AccountService, AccountStore y JWT Pattern
 // =============================================================================
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 import { accountService } from '../services/account.service';
 import accountStore from '../store/account-store';
 import { authService } from '../services/auth.service';
+import { setUnauthorizedHandler } from '../services/api';
+import OnboardingModal from '../components/auth/OnboardingModal';
 
 const AuthContext = createContext(null);
 
@@ -23,7 +20,11 @@ export const AuthProvider = ({ children }) => {
 
   const [token, setToken] = useState(() => accountService.getToken());
   const [user, setUser] = useState(() => accountStore.getters.account());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(
+    () =>
+      !accountStore.getters.isAuthenticated() &&
+      Boolean(accountService.getToken()),
+  );
 
   // ---------------------------------------------------------------------------
   // CERRAR SESIÓN
@@ -34,8 +35,48 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setUser(null);
   };
+  // ---------------------------------------------------------------------------
+  // INTERCEPTOR GLOBAL DE SESIÓN EXPIRADA
+  // ---------------------------------------------------------------------------
 
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      alert('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
+      logout();
+    });
+  }, []);
 
+  // ---------------------------------------------------------------------------
+  // ONBOARDING ACADÉMICO (Carrera y Semestre) — primer inicio de sesión
+  // ---------------------------------------------------------------------------
+
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+
+  const checkOnboarding = (u) => {
+    const role = (u?.role || '').toString().toLowerCase();
+    if (!u || role !== 'student') {
+      setNeedsOnboarding(false);
+      return;
+    }
+    setNeedsOnboarding(!u.career_id || !u.semester);
+  };
+
+  const completeOnboarding = async ({ careerId, semester }) => {
+    if (!user) return;
+    const updatedProfile = await authService.updateAcademicProfile(
+      accountService.getToken(),
+      careerId,
+      semester
+    );
+    setUser(updatedProfile);
+    setNeedsOnboarding(false);
+  };
+
+  const getAcademicProfile = () => {
+    if (!user) return null;
+    return { career_id: user.career_id, semester: user.semester };
+  };
+  // ---------------------------------------------------------------------------
   // RECUPERAR SESIÓN AL INICIAR LA APLICACIÓN
   // ---------------------------------------------------------------------------
 
@@ -43,8 +84,6 @@ export const AuthProvider = ({ children }) => {
     let isActive = true;
 
     const loadSession = async () => {
-      setLoading(true);
-
       const currentToken = accountService.getToken();
 
       if (!currentToken) {
@@ -56,13 +95,19 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
+      if (!accountStore.getters.isAuthenticated()) {
+        setLoading(true);
+      }
+
       try {
         const success = await accountService.loadAccount();
         if (!isActive) return;
 
         if (success) {
-          setUser(accountStore.getters.account());
+          const currentUser = accountStore.getters.account();
+          setUser(currentUser);
           setToken(accountService.getToken());
+          checkOnboarding(currentUser);
         } else {
           setUser(null);
           setToken(null);
@@ -98,6 +143,7 @@ export const AuthProvider = ({ children }) => {
 
     setToken(storedToken);
     setUser(currentUser);
+    checkOnboarding(currentUser);
 
     return data;
   };
@@ -115,11 +161,17 @@ export const AuthProvider = ({ children }) => {
   // Roles unificados con backend: admin | moderator | teacher | student
   // ---------------------------------------------------------------------------
 
-  const userRole = (accountStore.getters.userRole() || user?.role || 'student').toString().toLowerCase();
+  const userRole = (accountStore.getters.userRole() || user?.role || 'student')
+    .toString()
+    .toLowerCase();
   const isAdmin = userRole === 'admin';
-  const isModerator = isAdmin || userRole === 'moderator' || userRole === 'front_desk_cs';
+  const isModerator =
+    isAdmin || userRole === 'moderator' || userRole === 'front_desk_cs';
   const isTeacher = userRole === 'teacher' || userRole === 'functionary';
-  const isStudent = userRole === 'student' || userRole === 'user' || (!isAdmin && !isModerator && !isTeacher);
+  const isStudent =
+    userRole === 'student' ||
+    userRole === 'user' ||
+    (!isAdmin && !isModerator && !isTeacher);
 
   const hasAnyAuthority = (authorities) => {
     return accountService.checkAuthorities(authorities);
@@ -129,7 +181,8 @@ export const AuthProvider = ({ children }) => {
   // ESTADO DE AUTENTICACIÓN
   // ---------------------------------------------------------------------------
 
-  const isAuthenticated = Boolean(token) && Boolean(user) && accountStore.getters.isAuthenticated();
+  const isAuthenticated =
+    Boolean(token) && Boolean(user) && accountStore.getters.isAuthenticated();
 
   // ---------------------------------------------------------------------------
   // CONTEXTO GLOBAL
@@ -154,9 +207,14 @@ export const AuthProvider = ({ children }) => {
         isModerator,
         isTeacher,
         isStudent,
+
+        needsOnboarding,
+        completeOnboarding,
+        getAcademicProfile,
       }}
     >
       {children}
+      {isAuthenticated && needsOnboarding && <OnboardingModal />}
     </AuthContext.Provider>
   );
 };

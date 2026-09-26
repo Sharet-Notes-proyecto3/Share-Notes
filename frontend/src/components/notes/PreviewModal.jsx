@@ -14,6 +14,7 @@ export default function PreviewModal({ note, onClose }) {
   const [error, setError] = useState('');
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
+  const [downloadingReport, setDownloadingReport] = useState(false);
 
   const isPDF =
     note?.original_name?.toLowerCase().endsWith('.pdf') ||
@@ -71,6 +72,17 @@ export default function PreviewModal({ note, onClose }) {
     document.body.appendChild(a);
     a.click();
     a.remove();
+  };
+
+  const handleDownloadReport = async () => {
+    try {
+      setDownloadingReport(true);
+      await notesService.downloadNotesReport(token);
+    } catch (err) {
+      setError(err.message || 'No se pudo generar el reporte PDF.');
+    } finally {
+      setDownloadingReport(false);
+    }
   };
 
   return (
@@ -158,6 +170,7 @@ export default function PreviewModal({ note, onClose }) {
                 ⬇️ Descargar
               </button>
             )}
+
 
 
             {/* Cerrar modal */}

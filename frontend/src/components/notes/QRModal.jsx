@@ -13,6 +13,25 @@ export default function QRModal({ note, onClose }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const downloadQr = async () => {
+    if (!qrDataUrl) return;
+    try {
+      const response = await fetch(qrDataUrl);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `QR_Apunte_${note.id || 'sharenotes'}.png`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      const anchor = document.createElement('a');
+      anchor.href = qrDataUrl;
+      anchor.download = `QR_Apunte_${note.id || 'sharenotes'}.png`;
+      anchor.click();
+    }
+  };
+
   useEffect(() => {
     async function loadQR() {
       if (!note) return;
@@ -79,14 +98,7 @@ export default function QRModal({ note, onClose }) {
             </div>
 
             <button
-              onClick={() => {
-                const a = document.createElement('a');
-                a.href = qrDataUrl;
-                a.download = `QR_Apunte_${note.id || 'sharenotes'}.png`;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-              }}
+              onClick={downloadQr}
               style={{
                 width: '100%',
                 padding: '9px',
@@ -104,7 +116,7 @@ export default function QRModal({ note, onClose }) {
                 gap: '6px',
               }}
             >
-              📥 Descargar Imagen QR
+              📥 Descargar Imagen QR (.png)
             </button>
           </>
         )}
