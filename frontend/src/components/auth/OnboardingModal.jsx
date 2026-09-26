@@ -62,7 +62,7 @@ export default function OnboardingModal() {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0,0,0,0.8)',
+        backgroundColor: 'var(--modal-backdrop)',
         backdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'center',
@@ -75,8 +75,8 @@ export default function OnboardingModal() {
       <form
         onSubmit={handleSubmit}
         style={{
-          background: 'var(--sidebar-bg, #1e293b)',
-          border: '1px solid var(--border-color, #2b2b3d)',
+          background: 'var(--card-bg)',
+          border: '1px solid var(--border-color)',
           borderRadius: '18px',
           padding: '28px 26px',
           maxWidth: '420px',
@@ -86,17 +86,17 @@ export default function OnboardingModal() {
       >
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <div style={{ fontSize: '34px', marginBottom: '8px' }}>🎓</div>
-          <h2 style={{ margin: 0, color: 'var(--text-primary, #fff)', fontSize: '19px' }}>
+          <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '19px' }}>
             ¡Bienvenido/a, {user.name || 'Estudiante'}!
           </h2>
-          <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'var(--text-secondary, #94a3b8)' }}>
+          <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
             Cuéntanos tu carrera y semestre para personalizar tus apuntes y foros.
           </p>
         </div>
 
         {/* Carrera */}
         <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary, #94a3b8)', marginBottom: '8px', fontWeight: '600' }}>
+          <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '600' }}>
             Carrera
           </label>
           <select
@@ -107,9 +107,9 @@ export default function OnboardingModal() {
               width: '100%',
               padding: '10px 8px',
               borderRadius: '10px',
-              border: '1px solid var(--border-color, #334155)',
-              background: 'rgba(255,255,255,0.03)',
-              color: 'var(--text-primary, #fff)',
+              border: '1px solid var(--border-color)',
+              background: 'var(--bg-elevated)',
+              color: 'var(--text-primary)',
               fontSize: '13px',
             }}
           >
@@ -124,7 +124,7 @@ export default function OnboardingModal() {
 
         {/* Semestre */}
         <div style={{ marginBottom: '10px' }}>
-          <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary, #94a3b8)', marginBottom: '8px', fontWeight: '600' }}>
+          <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '600' }}>
             Semestre actual
           </label>
           <select
@@ -134,9 +134,9 @@ export default function OnboardingModal() {
               width: '100%',
               padding: '10px 8px',
               borderRadius: '10px',
-              border: '1px solid var(--border-color, #334155)',
-              background: 'rgba(255,255,255,0.03)',
-              color: 'var(--text-primary, #fff)',
+              border: '1px solid var(--border-color)',
+              background: 'var(--bg-elevated)',
+              color: 'var(--text-primary)',
               fontSize: '13px',
             }}
           >
@@ -148,7 +148,7 @@ export default function OnboardingModal() {
         </div>
 
         {error && (
-          <p style={{ color: '#f87171', fontSize: '12px', margin: '8px 0 0' }}>{error}</p>
+          <p style={{ color: 'var(--color-danger-text)', fontSize: '12px', margin: '8px 0 0' }}>{error}</p>
         )}
 
         <button
@@ -158,10 +158,10 @@ export default function OnboardingModal() {
             width: '100%',
             marginTop: '18px',
             padding: '11px',
-            background: 'var(--primary-color, #3b82f6)',
+            background: 'var(--primary-color)',
             border: 'none',
             borderRadius: '10px',
-            color: '#fff',
+            color: 'var(--text-inverse)',
             fontWeight: '700',
             fontSize: '13.5px',
             cursor: saving ? 'default' : 'pointer',

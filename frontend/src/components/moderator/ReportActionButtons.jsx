@@ -20,8 +20,8 @@ export function ReportActionButtons({ report, onResolve, onDismiss, disabled = f
   return (
     <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
       {confirmingAction ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FEF3C7', padding: '4px 8px', borderRadius: '4px', border: '1px solid #F59E0B' }}>
-          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#92400E' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--color-warning-bg)', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--color-warning-border)' }}>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-warning-text)' }}>
             ¿Confirmar {confirmingAction === 'resolve' ? 'Resolver' : 'Descartar'}?
           </span>
           <button
@@ -31,8 +31,8 @@ export function ReportActionButtons({ report, onResolve, onDismiss, disabled = f
               padding: '2px 8px',
               fontSize: '12px',
               fontWeight: 'bold',
-              color: 'white',
-              backgroundColor: confirmingAction === 'resolve' ? '#10B981' : '#6B7280',
+              color: 'var(--text-inverse)',
+              backgroundColor: confirmingAction === 'resolve' ? 'var(--color-success)' : 'var(--text-muted)',
               border: 'none',
               borderRadius: '3px',
               cursor: 'pointer',
@@ -46,9 +46,9 @@ export function ReportActionButtons({ report, onResolve, onDismiss, disabled = f
             style={{
               padding: '2px 8px',
               fontSize: '12px',
-              color: '#374151',
-              backgroundColor: '#E5E7EB',
-              border: 'none',
+              color: 'var(--text-primary)',
+              backgroundColor: 'var(--bg-elevated)',
+              border: '1px solid var(--border-color)',
               borderRadius: '3px',
               cursor: 'pointer',
             }}
@@ -65,8 +65,8 @@ export function ReportActionButtons({ report, onResolve, onDismiss, disabled = f
               padding: '6px 12px',
               fontSize: '13px',
               fontWeight: '600',
-              color: 'white',
-              backgroundColor: '#10B981',
+              color: 'var(--text-inverse)',
+              backgroundColor: 'var(--color-success)',
               border: 'none',
               borderRadius: '4px',
               cursor: disabled ? 'not-allowed' : 'pointer',
@@ -83,9 +83,9 @@ export function ReportActionButtons({ report, onResolve, onDismiss, disabled = f
               padding: '6px 12px',
               fontSize: '13px',
               fontWeight: '600',
-              color: '#374151',
-              backgroundColor: '#F3F4F6',
-              border: '1px solid #D1D5DB',
+              color: 'var(--text-secondary)',
+              backgroundColor: 'var(--bg-elevated)',
+              border: '1px solid var(--border-color)',
               borderRadius: '4px',
               cursor: disabled ? 'not-allowed' : 'pointer',
               opacity: disabled ? 0.6 : 1,

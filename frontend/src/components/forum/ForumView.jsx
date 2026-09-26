@@ -83,7 +83,7 @@ export default function ForumView() {
       {/* Encabezado */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
         <div>
-          <h2 style={{ margin: '0 0 4px', color: '#fff', fontSize: '24px' }}>💬 Foro Académico</h2>
+          <h2 style={{ margin: '0 0 4px', color: 'var(--text-primary)', fontSize: '24px' }}>💬 Foro Académico</h2>
           <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>
             Resuelve dudas, colabora y debate sobre las materias universitarias
           </p>
@@ -155,9 +155,9 @@ export default function ForumView() {
               style={{
                 padding: '0 12px',
                 borderRadius: '8px',
-                border: '1px solid rgba(255,255,255,0.15)',
-                background: 'rgba(255,255,255,0.06)',
-                color: '#94a3b8',
+                border: '1px solid var(--border-color)',
+                background: 'var(--bg-elevated)',
+                color: 'var(--text-secondary)',
                 fontSize: '12px',
                 fontWeight: '600',
                 cursor: 'pointer',
@@ -184,9 +184,9 @@ export default function ForumView() {
           ⏳ Cargando debates del foro...
         </div>
       ) : filteredThreads.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--sidebar-bg)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
           <div style={{ fontSize: '40px', marginBottom: '12px' }}>💡</div>
-          <h3 style={{ color: '#fff', margin: '0 0 6px' }}>
+          <h3 style={{ color: 'var(--text-primary)', margin: '0 0 6px' }}>
             {searchTerm ? 'No se encontraron resultados' : 'No hay debates activos'}
           </h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>

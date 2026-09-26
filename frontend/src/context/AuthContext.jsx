@@ -35,7 +35,6 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setUser(null);
   };
-
   // ---------------------------------------------------------------------------
   // INTERCEPTOR GLOBAL DE SESIÓN EXPIRADA
   // ---------------------------------------------------------------------------
@@ -45,14 +44,9 @@ export const AuthProvider = ({ children }) => {
       alert('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
       logout();
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ---------------------------------------------------------------------------
-  // ONBOARDING ACADÉMICO (Carrera y Semestre) — primer inicio de sesión
-  // ---------------------------------------------------------------------------
-
-    // ---------------------------------------------------------------------------
   // ONBOARDING ACADÉMICO (Carrera y Semestre) — primer inicio de sesión
   // ---------------------------------------------------------------------------
 
