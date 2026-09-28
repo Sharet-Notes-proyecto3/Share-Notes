@@ -2,6 +2,7 @@
 // Ejecutar con: npm run db:migrate
 import pool from './database';
 import bcrypt from 'bcryptjs';
+import logger from '../utils/logger';
 
 const SQL_TABLES = `
 
@@ -12,6 +13,9 @@ CREATE TABLE IF NOT EXISTS users (
   email            VARCHAR(150) NOT NULL UNIQUE,
   password_hash    VARCHAR(255) NOT NULL,
   role             ENUM('student','teacher','moderator','admin') NOT NULL DEFAULT 'student',
+  program_type     ENUM('tecnologo','ingenieria') NULL DEFAULT NULL,
+  semester         TINYINT UNSIGNED NULL DEFAULT NULL,
+  career_id        INT UNSIGNED NULL DEFAULT NULL,
   restricted_until TIMESTAMP NULL DEFAULT NULL,
   is_active        BOOLEAN NOT NULL DEFAULT TRUE,
   created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -171,12 +175,13 @@ const ALTER_QUERIES = [
   `ALTER TABLE reports ADD COLUMN resolved_at TIMESTAMP NULL DEFAULT NULL`,
     `ALTER TABLE users ADD COLUMN career_id INT UNSIGNED NULL DEFAULT NULL`,
   `ALTER TABLE users ADD COLUMN semester TINYINT UNSIGNED NULL DEFAULT NULL`,
+  `ALTER TABLE users ADD COLUMN program_type ENUM('tecnologo','ingenieria') NULL DEFAULT NULL`,
 ];
 
 async function migrate() {
   const conn = await pool.getConnection();
   try {
-    console.log(
+    logger.info(
       '🔄  Ejecutando migraciones de base de datos para ShareNotes...',
     );
 
@@ -215,16 +220,16 @@ async function migrate() {
         (2, 1), (2, 2), (2, 3), (2, 4)`,
     );
 
-    console.log('✅  Migración completada exitosamente.');
-    console.log(
+    logger.info('✅  Migración completada exitosamente.');
+    logger.info(
       '👥  Usuarios semilla de prueba creados (Contraseña para todos: password123):',
     );
-    console.log('    - Admin:     admin@sharenotes.edu');
-    console.log('    - Docente:   teacher@sharenotes.edu');
-    console.log('    - Moderador: moderator@sharenotes.edu');
-    console.log('    - Alumno:    student@sharenotes.edu');
+    logger.info('    - Admin:     admin@sharenotes.edu');
+    logger.info('    - Docente:   teacher@sharenotes.edu');
+    logger.info('    - Moderador: moderator@sharenotes.edu');
+    logger.info('    - Alumno:    student@sharenotes.edu');
   } catch (err) {
-    console.error('❌  Error en migración:', err);
+    logger.error('❌  Error en migración:', err);
   } finally {
     conn.release();
     process.exit(0);

@@ -82,15 +82,46 @@ export class AdminService {
     return rows;
   }
 
-  async resolveReport(reportId: number, status: 'reviewed' | 'dismissed') {
+  async resolveReport(
+    reportId: number,
+    status: 'resolved' | 'dismissed' | 'reviewed',
+    adminId?: number,
+  ) {
     const [rows] = await pool.query<RowDataPacket[]>(
-      'SELECT id FROM reports WHERE id = ?',
-      [reportId]
+      'SELECT id, target_type, target_id FROM reports WHERE id = ?',
+      [reportId],
     );
-    if (!rows[0]) throw new AppError(404, 'Reporte no encontrado');
+    const report = rows[0];
+    if (!report) throw new AppError(404, 'Reporte no encontrado');
 
-    await pool.query('UPDATE reports SET status = ? WHERE id = ?', [status, reportId]);
-    return { message: `Reporte marcado como: ${status}` };
+    const finalStatus = status === 'reviewed' ? 'resolved' : status;
+
+    if (adminId) {
+      await pool.query(
+        'UPDATE reports SET status = ?, resolved_by = ?, resolved_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [finalStatus, adminId, reportId],
+      );
+    } else {
+      await pool.query(
+        'UPDATE reports SET status = ?, resolved_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [finalStatus, reportId],
+      );
+    }
+
+    await logAuditAction({
+      userId: adminId || 1,
+      userRole: 'admin',
+      action: finalStatus === 'resolved' ? 'RESOLVE_REPORT' : 'DISMISS_REPORT',
+      targetResource: 'report',
+      targetId: reportId,
+      details: {
+        targetType: report.target_type,
+        targetId: report.target_id,
+        status: finalStatus,
+      },
+    });
+
+    return { message: `Reporte marcado como: ${finalStatus}` };
   }
 
   // ─── Contenido ────────────────────────────────────────────────────────────

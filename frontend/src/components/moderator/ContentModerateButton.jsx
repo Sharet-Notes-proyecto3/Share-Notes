@@ -31,7 +31,7 @@ export function ContentModerateButton({
   };
 
   return (
-    <RoleGate allow={['MODERATOR', 'FRONT_DESK_CS', 'ADMIN']}>
+    <RoleGate allow={['moderator', 'admin']}>
       <div style={{ display: 'inline-block', position: 'relative' }}>
         <button
           onClick={() => setIsOpen(true)}
