@@ -1,11 +1,12 @@
-// =============================================================================
+﻿// =============================================================================
 // MODIFICACIÓN 1 — COMPONENTE: MODAL DE PERFIL DE ESTUDIANTE
 // Responsable: Integrante 1 (Anna — Autenticación, Sesión y Perfil)
 // Nuevas funciones: editar nombre + foto de perfil personalizada
 // =============================================================================
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { authService } from '../../services/auth.service';
 
 // Nombre de la institución que aparece en la tarjeta del estudiante.
 const INSTITUTION_NAME = 'Institución Universitaria del Putumayo';
@@ -15,11 +16,12 @@ const getPhotoKey = (userId) => `sharenotes-avatar-${userId}`;
 const getNameKey  = (userId) => `sharenotes-name-${userId}`;
 
 export default function ProfileModal({ onClose }) {
-  const { user, isAdmin, isModerator, isTeacher, isStudent } = useAuth();
+  const { user, token, isAdmin, isModerator, isTeacher, isStudent } = useAuth();
   if (!user) return null;
   return (
     <ProfileModalInner
       user={user}
+      token={token}
       isAdmin={isAdmin}
       isModerator={isModerator}
       isTeacher={isTeacher}
@@ -28,8 +30,7 @@ export default function ProfileModal({ onClose }) {
     />
   );
 }
-
-function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, onClose }) {
+function ProfileModalInner({ user, token, isAdmin, isModerator, isTeacher, isStudent, onClose }) {
   // ── Nombre editable ────────────────────────────────────────────────────────
   const savedName = localStorage.getItem(getNameKey(user.id)) || user.name || '';
   const [editingName, setEditingName] = useState(false);
@@ -42,6 +43,23 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
     () => localStorage.getItem(getPhotoKey(user.id)) || null
   );
   const fileInputRef = useRef(null);
+
+    // ── Carrera y semestre (académico) ──────────────────────────────────────
+  const [careerName, setCareerName] = useState(null);
+
+  useEffect(() => {
+    if (!user.career_id) return;
+    let isActive = true;
+    authService.getCareers(token)
+      .then((res) => {
+        if (!isActive) return;
+        const list = Array.isArray(res) ? res : res.data || [];
+        const match = list.find((c) => String(c.id) === String(user.career_id));
+        if (match) setCareerName(match.name);
+      })
+      .catch((err) => console.error('Error al cargar la carrera:', err));
+    return () => { isActive = false; };
+  }, [user.career_id, token]);
 
   // ─────────────────────────────────────────────────────────────────────────
   const getRoleName = () => {
@@ -106,10 +124,12 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, o
   };
 
   // ── Campos del perfil ─────────────────────────────────────────────────────
-  const fields = [
+   const fields = [
     { label: 'Correo electrónico', value: user.email || '—',   icon: '@' },
     { label: 'ID de estudiante',   value: user.id != null ? `#${user.id}` : '—', icon: '#' },
     { label: 'Rol académico',      value: getRoleName(),         icon: '◆' },
+    { label: 'Carrera',            value: careerName || (user.career_id ? `Carrera #${user.career_id}` : 'Sin configurar'), icon: '🎓' },
+    { label: 'Semestre',           value: user.semester ? `${user.semester}° semestre` : 'Sin configurar', icon: '📚' },
     { label: 'Institución',        value: INSTITUTION_NAME,      icon: '🏛' },
   ];
 
