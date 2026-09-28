@@ -104,14 +104,15 @@ export default function OnboardingModal() {
             onChange={(e) => setCareerId(e.target.value)}
             disabled={loadingCareers}
             style={{
-              width: '100%',
-              padding: '10px 8px',
-              borderRadius: '10px',
-              border: '1px solid var(--border-color, #334155)',
-              background: 'rgba(255,255,255,0.03)',
-              color: 'var(--text-primary, #fff)',
-              fontSize: '13px',
-            }}
+  width: '100%',
+  padding: '10px 8px',
+  borderRadius: '10px',
+  border: '1px solid #334155',
+  background: '#0f172a',
+  color: '#f1f5f9',
+  fontSize: '13px',
+  colorScheme: 'dark',
+}}
           >
             <option value="">
               {loadingCareers ? 'Cargando carreras...' : 'Selecciona tu carrera...'}
@@ -131,14 +132,15 @@ export default function OnboardingModal() {
             value={semester}
             onChange={(e) => setSemester(e.target.value)}
             style={{
-              width: '100%',
-              padding: '10px 8px',
-              borderRadius: '10px',
-              border: '1px solid var(--border-color, #334155)',
-              background: 'rgba(255,255,255,0.03)',
-              color: 'var(--text-primary, #fff)',
-              fontSize: '13px',
-            }}
+  width: '100%',
+  padding: '10px 8px',
+  borderRadius: '10px',
+  border: '1px solid #334155',
+  background: '#0f172a',
+  color: '#f1f5f9',
+  fontSize: '13px',
+  colorScheme: 'dark',
+}}
           >
             <option value="">Selecciona tu semestre...</option>
             {SEMESTRES.map((s) => (
