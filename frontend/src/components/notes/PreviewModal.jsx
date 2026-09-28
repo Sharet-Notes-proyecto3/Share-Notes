@@ -30,8 +30,11 @@ export default function PreviewModal({ note, onClose }) {
       try {
         setLoading(true);
         setError('');
-        const blob = await notesService.getNoteBlob(token, note.id);
-        if (isMounted && blob) {
+        const rawBlob = await notesService.getNoteBlob(token, note.id);
+        if (isMounted && rawBlob) {
+          const blob = (isPDF && (!rawBlob.type || rawBlob.type === 'application/octet-stream'))
+            ? new Blob([rawBlob], { type: 'application/pdf' })
+            : rawBlob;
           currentUrl = URL.createObjectURL(blob);
           setBlobUrl(currentUrl);
         }
@@ -151,6 +154,32 @@ export default function PreviewModal({ note, onClose }) {
               </div>
             )}
 
+            {/* Abrir en nueva pestaña */}
+            {blobUrl && (
+              <a
+                href={blobUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                }}
+                title="Abrir en pestaña completa del navegador"
+              >
+                ↗️ Pestaña
+              </a>
+            )}
+
             {/* Descarga protegida */}
             {blobUrl && (
               <button
@@ -241,16 +270,27 @@ export default function PreviewModal({ note, onClose }) {
 
           {!loading && !error && blobUrl && (
             isPDF ? (
-              <iframe
-                src={blobUrl}
-                title={`Visor PDF - ${note.title}`}
+              <object
+                data={blobUrl}
+                type="application/pdf"
                 style={{
                   width: '100%',
                   height: '100%',
-                  border: 'none',
                   borderRadius: '8px',
+                  border: 'none',
                 }}
-              />
+              >
+                <iframe
+                  src={blobUrl}
+                  title={`Visor PDF - ${note.title}`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    borderRadius: '8px',
+                  }}
+                />
+              </object>
             ) : (
               <div
                 style={{

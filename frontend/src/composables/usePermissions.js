@@ -13,16 +13,7 @@ export const PERMISSIONS_MATRIX = {
   admin: {
     all: true,
   },
-  ADMIN: {
-    all: true,
-  },
   moderator: {
-    notes: ['view', 'create', 'edit', 'delete', 'export'],
-    forum: ['view', 'create', 'reply', 'moderate'],
-    admin: ['view'],
-    profile: ['view', 'edit'],
-  },
-  FRONT_DESK_CS: {
     notes: ['view', 'create', 'edit', 'delete', 'export'],
     forum: ['view', 'create', 'reply', 'moderate'],
     admin: ['view'],
@@ -33,17 +24,7 @@ export const PERMISSIONS_MATRIX = {
     forum: ['view', 'create', 'reply'],
     profile: ['view', 'edit'],
   },
-  FUNCTIONARY: {
-    notes: ['view', 'create', 'edit'],
-    forum: ['view', 'create', 'reply'],
-    profile: ['view', 'edit'],
-  },
   student: {
-    notes: ['view', 'create'],
-    forum: ['view', 'create', 'reply'],
-    profile: ['view', 'edit'],
-  },
-  USER: {
     notes: ['view', 'create'],
     forum: ['view', 'create', 'reply'],
     profile: ['view', 'edit'],
