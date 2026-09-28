@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const logger = require('./logger');
 
 // Crear el transporter reutilizable
 // Usa Ethereal (servicio de pruebas gratuito) por defecto,
@@ -19,7 +20,7 @@ async function getTransporter() {
         pass: process.env.SMTP_PASS,
       },
     });
-    console.log(`📧 Transporter configurado con SMTP real: ${process.env.SMTP_HOST}`);
+    logger.info(`Transporter configurado con SMTP real: ${process.env.SMTP_HOST}`);
     return transporter;
   }
 
@@ -34,8 +35,7 @@ async function getTransporter() {
       pass: testAccount.pass,
     },
   });
-  console.log('📧 Transporter configurado con Ethereal (modo pruebas)');
-  console.log(`   Usuario Ethereal: ${testAccount.user}`);
+  logger.info('Transporter configurado con Ethereal (modo pruebas)', { etherealUser: testAccount.user });
   return transporter;
 }
 

@@ -41,7 +41,7 @@ Share-Notes/
 │   │   └── index.css        # Sistema de estilos y animaciones
 │   └── vite.config.js
 ├── ms-pdf/                  # Microservicio de Generación de Reportes PDF (Port 4001)
-│   └── src/index.js         # Endpoint /generate-report con PDFKit
+│   └── src/index.js         # Endpoint /generate con PDFKit
 ├── ms-email/                # Microservicio de Notificaciones por Correo (Port 4002)
 │   ├── src/index.js         # Endpoint /notify con Nodemailer + plantillas HTML
 │   └── .env.example         # Configuración SMTP

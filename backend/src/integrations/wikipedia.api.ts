@@ -1,3 +1,5 @@
+import logger from '../utils/logger';
+
 const WIKIPEDIA_API_URL = 'https://es.wikipedia.org/w/api.php';
 
 export async function getRelatedArticle(topic: string): Promise<string | null> {
@@ -16,7 +18,7 @@ export async function getRelatedArticle(topic: string): Promise<string | null> {
     const data = (await res.json()) as [string, string[], string[], string[]];
     return data[3]?.[0] || null;
   } catch (err) {
-    console.error('[Wikipedia-API] Error:', err);
+    logger.error('[Wikipedia-API] Error:', err);
     return null;
   }
 }

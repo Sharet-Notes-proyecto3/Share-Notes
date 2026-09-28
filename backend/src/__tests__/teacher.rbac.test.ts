@@ -120,7 +120,7 @@ describe('🧪 Suite de Pruebas Unitarias — Rol TEACHER (RBAC + ABAC)', () => 
       .mockResolvedValueOnce([[{ total_verified: 2 }]]) // total verified
       .mockResolvedValueOnce([[{ student_id: 1, student_name: 'Ana', threads_count: 1, replies_count: 4 }]]); // forumStats
 
-    const pdfBuffer = await teacherService.generateCourseReport(5, 10, 'teacher');
+    const pdfBuffer = await teacherService.generateCourseReport(5, 10, 'teacher', 'test-cid-teacher');
     expect(pdfBuffer).toBeInstanceOf(Buffer);
     expect(pdfBuffer.length).toBeGreaterThan(0);
   });

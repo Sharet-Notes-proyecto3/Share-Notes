@@ -38,7 +38,7 @@ export function ModeratorDashboard({ defaultTab = 'reports' }) {
 
   return (
     <RoleGate
-      allow={['MODERATOR', 'FRONT_DESK_CS', 'ADMIN']}
+      allow={['moderator', 'admin']}
       fallback={
         <div style={{ padding: '32px', textAlign: 'center', backgroundColor: 'var(--color-danger-bg)', border: '1px solid var(--color-danger-border)', color: 'var(--color-danger-text)', borderRadius: '8px', margin: '24px' }}>
           <h2>403 Prohibido</h2>

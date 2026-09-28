@@ -8,11 +8,11 @@ export const verifyNote = async (req: Request, res: Response, next: NextFunction
   try {
     const noteId = parseInt(req.params.id);
     if (isNaN(noteId)) {
-      res.status(400).json({ message: 'ID de apunte inválido' });
+      res.status(400).json({ message: 'ID de apunte inválido', correlationId: req.correlationId });
       return;
     }
     const result = await service.verifyNote(noteId, req.user!.userId, req.user!.role);
-    res.json(result);
+    res.json({ ...result, correlationId: req.correlationId });
   } catch (err) {
     next(err);
   }
@@ -22,11 +22,11 @@ export const markSolution = async (req: Request, res: Response, next: NextFuncti
   try {
     const replyId = parseInt(req.params.id);
     if (isNaN(replyId)) {
-      res.status(400).json({ message: 'ID de respuesta inválido' });
+      res.status(400).json({ message: 'ID de respuesta inválido', correlationId: req.correlationId });
       return;
     }
     const result = await service.markAnswerSolution(replyId, req.user!.userId, req.user!.role);
-    res.json(result);
+    res.json({ ...result, correlationId: req.correlationId });
   } catch (err) {
     next(err);
   }
@@ -36,11 +36,11 @@ export const closeThread = async (req: Request, res: Response, next: NextFunctio
   try {
     const threadId = parseInt(req.params.id);
     if (isNaN(threadId)) {
-      res.status(400).json({ message: 'ID de hilo inválido' });
+      res.status(400).json({ message: 'ID de hilo inválido', correlationId: req.correlationId });
       return;
     }
     const result = await service.closeThread(threadId, req.user!.userId, req.user!.role);
-    res.json(result);
+    res.json({ ...result, correlationId: req.correlationId });
   } catch (err) {
     next(err);
   }
@@ -52,11 +52,16 @@ export const generateCourseReport = async (req: Request, res: Response, next: Ne
     const subjectId = parseInt(subjectIdRaw);
 
     if (!subjectId || isNaN(subjectId)) {
-      res.status(400).json({ message: 'El ID de la asignatura (subjectId) es requerido' });
+      res.status(400).json({ message: 'El ID de la asignatura (subjectId) es requerido', correlationId: req.correlationId });
       return;
     }
 
-    const pdfBuffer = await service.generateCourseReport(subjectId, req.user!.userId, req.user!.role);
+    const pdfBuffer = await service.generateCourseReport(
+      subjectId,
+      req.user!.userId,
+      req.user!.role,
+      req.correlationId,
+    );
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="reporte-curso-${subjectId}.pdf"`);

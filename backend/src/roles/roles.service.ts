@@ -1,6 +1,6 @@
 import pool from '../config/database';
 import { AppError } from '../middlewares/error.middleware';
-import { Role, ROLE_HIERARCHY } from './roles.definition';
+import { Role } from './roles.definition';
 import { RowDataPacket } from 'mysql2';
 import { logAuditAction } from '../services/audit.service';
 
