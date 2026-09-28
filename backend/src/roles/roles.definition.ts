@@ -133,9 +133,10 @@ export const ROLE_PERMISSION_SETS: Record<Role, Set<Permission>> = {
   admin: new Set(ADMIN_PERMISSIONS),
 };
 
+// Jerarquía de 4 niveles reales y distintos
 export const ROLE_HIERARCHY: Record<Role, number> = {
   student: 1,
   teacher: 2,
-  moderator: 2,
-  admin: 3,
+  moderator: 3,
+  admin: 4,
 };

@@ -4,7 +4,7 @@ import accountStore from '../store/account-store';
 
 /**
  * Componente Wrapper RoleGate para renderizado condicional según rol.
- * Uso: <RoleGate allow={['TEACHER', 'FUNCTIONARY', 'ADMIN']}>{children}</RoleGate>
+ * Uso: <RoleGate allow={['teacher', 'admin']}>{children}</RoleGate>
  */
 export function RoleGate({ allow = [], fallback = null, children }) {
   const { user } = useAuth();

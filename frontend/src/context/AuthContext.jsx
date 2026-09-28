@@ -16,14 +16,13 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   // ---------------------------------------------------------------------------
   // ESTADO DE SESIÓN DESDE ACCOUNT SERVICE / STORE
+  // loading inicia en true si hay un token guardado para evitar destellos de AuthModal
   // ---------------------------------------------------------------------------
 
   const [token, setToken] = useState(() => accountService.getToken());
   const [user, setUser] = useState(() => accountStore.getters.account());
   const [loading, setLoading] = useState(
-    () =>
-      !accountStore.getters.isAuthenticated() &&
-      Boolean(accountService.getToken()),
+    () => Boolean(accountService.getToken()),
   );
 
   // ---------------------------------------------------------------------------
@@ -45,14 +44,9 @@ export const AuthProvider = ({ children }) => {
       alert('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
       logout();
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ---------------------------------------------------------------------------
-  // ONBOARDING ACADÉMICO (Carrera y Semestre) — primer inicio de sesión
-  // ---------------------------------------------------------------------------
-
-    // ---------------------------------------------------------------------------
   // ONBOARDING ACADÉMICO (Carrera y Semestre) — primer inicio de sesión
   // ---------------------------------------------------------------------------
 
@@ -64,15 +58,17 @@ export const AuthProvider = ({ children }) => {
       setNeedsOnboarding(false);
       return;
     }
-    setNeedsOnboarding(!u.career_id || !u.semester);
+    // Disparar onboarding si la cuenta de estudiante no tiene tipo de programa o semestre
+    setNeedsOnboarding(!u.program_type || !u.semester);
   };
 
-  const completeOnboarding = async ({ careerId, semester }) => {
+  const completeOnboarding = async ({ careerId, semester, programType }) => {
     if (!user) return;
     const updatedProfile = await authService.updateAcademicProfile(
       accountService.getToken(),
       careerId,
-      semester
+      semester,
+      programType
     );
     setUser(updatedProfile);
     setNeedsOnboarding(false);
@@ -80,8 +76,13 @@ export const AuthProvider = ({ children }) => {
 
   const getAcademicProfile = () => {
     if (!user) return null;
-    return { career_id: user.career_id, semester: user.semester };
+    return {
+      career_id: user.career_id,
+      semester: user.semester,
+      program_type: user.program_type,
+    };
   };
+
   // ---------------------------------------------------------------------------
   // RECUPERAR SESIÓN AL INICIAR LA APLICACIÓN
   // ---------------------------------------------------------------------------
@@ -101,9 +102,7 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      if (!accountStore.getters.isAuthenticated()) {
-        setLoading(true);
-      }
+      setLoading(true);
 
       try {
         const success = await accountService.loadAccount();
@@ -118,8 +117,7 @@ export const AuthProvider = ({ children }) => {
           setUser(null);
           setToken(null);
         }
-      } catch (error) {
-        console.error('La sesión almacenada no es válida:', error);
+      } catch {
         if (!isActive) return;
         accountService.logout();
         setUser(null);
@@ -158,12 +156,12 @@ export const AuthProvider = ({ children }) => {
   // REGISTRO
   // ---------------------------------------------------------------------------
 
-  const register = async (name, email, password, role = 'student') => {
-    return await authService.register(name, email, password, role);
+  const register = async (name, email, password, role = 'student', programType = null, semester = null) => {
+    return await authService.register(name, email, password, role, programType, semester);
   };
 
   // ---------------------------------------------------------------------------
-  // EVALUACIÓN DE ROLES CON PRIORIDAD Y AUTORIDADES
+  // EVALUACIÓN DE ROLES
   // Roles unificados con backend: admin | moderator | teacher | student
   // ---------------------------------------------------------------------------
 
@@ -171,13 +169,10 @@ export const AuthProvider = ({ children }) => {
     .toString()
     .toLowerCase();
   const isAdmin = userRole === 'admin';
-  const isModerator =
-    isAdmin || userRole === 'moderator' || userRole === 'front_desk_cs';
-  const isTeacher = userRole === 'teacher' || userRole === 'functionary';
+  const isModerator = isAdmin || userRole === 'moderator';
+  const isTeacher = isAdmin || userRole === 'teacher';
   const isStudent =
-    userRole === 'student' ||
-    userRole === 'user' ||
-    (!isAdmin && !isModerator && !isTeacher);
+    userRole === 'student' || (!isAdmin && !isModerator && !isTeacher);
 
   const hasAnyAuthority = (authorities) => {
     return accountService.checkAuthorities(authorities);

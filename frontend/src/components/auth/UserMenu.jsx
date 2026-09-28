@@ -8,7 +8,7 @@ const getPhotoKey = (userId) => `sharenotes-avatar-${userId}`;
 const getNameKey  = (userId) => `sharenotes-name-${userId}`;
 
 export default function UserMenu() {
-  const { user, logout, isAdmin, isModerator, isTeacher, isStudent } =
+  const { user, logout, isAdmin, isModerator, isTeacher } =
     useAuth();
 
   const [open, setOpen] = useState(false);
@@ -172,9 +172,9 @@ export default function UserMenu() {
           <div className="profile-divider"></div>
 
           {/* Sección de Artículo Wikipedia de Interés Académico */}
-          <div style={{ padding: '12px 16px', background: 'rgba(15, 23, 42, 0.4)', borderBottom: '1px solid var(--border-color, #334155)' }}>
+          <div style={{ padding: '12px 16px', background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border-color)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontSize: '11px', fontWeight: '700', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--primary-color)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                 🌐 Artículo Académico (Wikipedia)
               </span>
             </div>
@@ -195,9 +195,9 @@ export default function UserMenu() {
                   flex: 1,
                   padding: '6px 8px',
                   borderRadius: '6px',
-                  border: '1px solid #334155',
-                  background: '#0f172a',
-                  color: '#fff',
+                  border: '1px solid var(--border-color)',
+                  background: 'var(--bg-surface)',
+                  color: 'var(--text-primary)',
                   fontSize: '11px',
                 }}
               />
@@ -208,8 +208,8 @@ export default function UserMenu() {
                   padding: '6px 10px',
                   borderRadius: '6px',
                   border: 'none',
-                  background: '#0284c7',
-                  color: '#fff',
+                  background: 'var(--primary-color)',
+                  color: 'var(--text-inverse)',
                   fontSize: '11px',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -231,9 +231,9 @@ export default function UserMenu() {
                   gap: '6px',
                   padding: '6px 8px',
                   borderRadius: '6px',
-                  background: 'rgba(56, 189, 248, 0.1)',
-                  border: '1px solid rgba(56, 189, 248, 0.3)',
-                  color: '#38bdf8',
+                  background: 'var(--primary-bg)',
+                  border: '1px solid var(--primary-border)',
+                  color: 'var(--primary-color)',
                   fontSize: '11px',
                   textDecoration: 'none',
                   overflow: 'hidden',
@@ -245,7 +245,7 @@ export default function UserMenu() {
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{wikiUrl}</span>
               </a>
             ) : (
-              <div style={{ fontSize: '10px', color: '#64748b' }}>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
                 {loadingWiki ? 'Buscando artículo en Wikipedia...' : 'No se encontró un artículo directo.'}
               </div>
             )}

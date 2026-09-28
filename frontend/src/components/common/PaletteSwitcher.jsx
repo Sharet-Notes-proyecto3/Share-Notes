@@ -31,23 +31,20 @@ export default function ThemeToggle({ style = {} }) {
         gap: '8px',
         padding: '7px 14px',
         borderRadius: '999px',
-        background: isDark ? '#18181b' : '#ffffff',
-        border: isDark ? '1px solid #3f3f46' : '1px solid #7dd3fc',
-        color: isDark ? '#f4f4f5' : '#0284c7',
+        background: 'var(--theme-btn-bg)',
+        border: '1px solid var(--theme-btn-border)',
+        color: 'var(--text-primary)',
         fontSize: '13px',
         fontWeight: '600',
         cursor: 'pointer',
-        backdropFilter: 'blur(10px)',
-        boxShadow: isDark
-          ? '0 4px 14px rgba(0, 0, 0, 0.5)'
-          : '0 4px 14px rgba(56, 189, 248, 0.25)',
-        transition: 'all 0.25s ease',
+        boxShadow: 'var(--theme-btn-shadow)',
+        transition: 'all 0.2s ease',
         userSelect: 'none',
         ...style,
       }}
-      title={isDark ? 'Cambiar a Modo Día (Blanco + Azul Claro)' : 'Cambiar a Modo Noche (Negro + Gris)'}
+      title={isDark ? 'Cambiar a Modo Día' : 'Cambiar a Modo Noche'}
     >
-      <span style={{ fontSize: '15px' }}>{isDark ? '🌙' : '☀️'}</span>
+      <span className="theme-toggle-icon">{isDark ? '🌙' : '☀️'}</span>
       <span>{isDark ? 'Modo Noche' : 'Modo Día'}</span>
     </button>
   );

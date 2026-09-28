@@ -30,8 +30,11 @@ export default function PreviewModal({ note, onClose }) {
       try {
         setLoading(true);
         setError('');
-        const blob = await notesService.getNoteBlob(token, note.id);
-        if (isMounted && blob) {
+        const rawBlob = await notesService.getNoteBlob(token, note.id);
+        if (isMounted && rawBlob) {
+          const blob = (isPDF && (!rawBlob.type || rawBlob.type === 'application/octet-stream'))
+            ? new Blob([rawBlob], { type: 'application/pdf' })
+            : rawBlob;
           currentUrl = URL.createObjectURL(blob);
           setBlobUrl(currentUrl);
         }
@@ -90,7 +93,7 @@ export default function PreviewModal({ note, onClose }) {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+        backgroundColor: 'var(--modal-backdrop)',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
@@ -101,15 +104,15 @@ export default function PreviewModal({ note, onClose }) {
     >
       <div
         style={{
-          background: 'var(--sidebar-bg, #1e293b)',
-          border: '1px solid var(--border-color, #334155)',
+          background: 'var(--card-bg)',
+          border: '1px solid var(--border-color)',
           borderRadius: '16px',
           width: '95%',
           maxWidth: '1000px',
           height: '90vh',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
+          boxShadow: 'var(--card-shadow)',
           overflow: 'hidden',
         }}
       >
@@ -117,25 +120,25 @@ export default function PreviewModal({ note, onClose }) {
         <div
           style={{
             padding: '14px 20px',
-            borderBottom: '1px solid var(--border-color, #334155)',
+            borderBottom: '1px solid var(--border-color)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            background: 'rgba(0, 0, 0, 0.2)',
+            background: 'var(--bg-surface)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
             <span style={{ fontSize: '24px' }}>{isPDF ? '📄' : '🖼️'}</span>
             <div>
-              <h3 style={{ margin: 0, color: '#fff', fontSize: '16px', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+              <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '16px', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
                 {note.title}
               </h3>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '2px', fontSize: '12px', color: 'var(--text-secondary, #94a3b8)' }}>
-                <span style={{ color: '#60a5fa' }}>📖 {note.subject_name || 'Materia'}</span>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '2px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                <span style={{ color: 'var(--primary-color)' }}>📖 {note.subject_name || 'Materia'}</span>
                 <span>•</span>
                 <span>👤 {note.uploader_name || 'Compañero'}</span>
                 <span>•</span>
-                <span style={{ color: '#34d399', fontWeight: '600' }}>🔒 Protegido JWT</span>
+                <span style={{ color: 'var(--color-success-text)', fontWeight: '600' }}>🔒 Protegido JWT</span>
               </div>
             </div>
           </div>
@@ -143,7 +146,7 @@ export default function PreviewModal({ note, onClose }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             {/* Controles de Imagen */}
             {!isPDF && blobUrl && (
-              <div style={{ display: 'flex', gap: '6px', background: 'rgba(255,255,255,0.06)', padding: '4px', borderRadius: '8px' }}>
+              <div style={{ display: 'flex', gap: '6px', background: 'var(--bg-elevated)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                 <button onClick={handleZoomIn} style={controlBtnStyle} title="Acercar (Zoom In)">🔍+</button>
                 <button onClick={handleZoomOut} style={controlBtnStyle} title="Alejar (Zoom Out)">🔍-</button>
                 <button onClick={handleRotate} style={controlBtnStyle} title="Rotar 90°">🔄</button>
@@ -151,16 +154,40 @@ export default function PreviewModal({ note, onClose }) {
               </div>
             )}
 
+            {/* Abrir en nueva pestaña */}
+            {blobUrl && (
+              <a
+                href={blobUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                }}
+                title="Abrir en pestaña completa del navegador"
+              >
+                ↗️ Pestaña
+              </a>
+            )}
+
             {/* Descarga protegida */}
             {blobUrl && (
               <button
                 onClick={handleDownload}
+                className="primary-btn"
                 style={{
-                  background: 'var(--primary-color, #3b82f6)',
-                  color: '#fff',
                   padding: '8px 14px',
                   borderRadius: '8px',
-                  border: 'none',
                   fontSize: '13px',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -169,26 +196,19 @@ export default function PreviewModal({ note, onClose }) {
                   gap: '6px',
                 }}
               >
-                ⬇️ Descargar PDF/Imagen
+                ⬇️ Descargar
               </button>
             )}
 
-            <button
-              onClick={handleDownloadReport}
-              disabled={downloadingReport}
-              style={{ ...controlBtnStyle, padding: '8px 10px', border: '1px solid var(--border-color, #334155)' }}
-              title="Generar reporte PDF consolidado mediante MS-PDF"
-            >
-              {downloadingReport ? '⏳ Reporte...' : '📑 Reporte PDF'}
-            </button>
+
 
             {/* Cerrar modal */}
             <button
               onClick={onClose}
               style={{
-                background: 'rgba(239, 68, 68, 0.15)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
-                color: '#f87171',
+                background: 'var(--color-danger-bg)',
+                border: '1px solid var(--color-danger-border)',
+                color: 'var(--color-danger-text)',
                 padding: '8px 12px',
                 borderRadius: '8px',
                 fontSize: '14px',
@@ -206,7 +226,7 @@ export default function PreviewModal({ note, onClose }) {
         <div
           style={{
             flex: 1,
-            background: '#0b0f19',
+            background: 'var(--bg-canvas)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -218,7 +238,7 @@ export default function PreviewModal({ note, onClose }) {
           {loading && (
             <div
               style={{
-                color: '#60a5fa',
+                color: 'var(--primary-color)',
                 fontSize: '14px',
                 display: 'flex',
                 flexDirection: 'column',
@@ -234,32 +254,43 @@ export default function PreviewModal({ note, onClose }) {
           {error && (
             <div
               style={{
-                color: '#f87171',
-                background: 'rgba(239,68,68,0.1)',
-                border: '1px solid rgba(239,68,68,0.3)',
+                color: 'var(--color-danger-text)',
+                background: 'var(--color-danger-bg)',
+                border: '1px solid var(--color-danger-border)',
                 padding: '20px 30px',
                 borderRadius: '12px',
                 textAlign: 'center',
               }}
             >
               <div style={{ fontSize: '32px', marginBottom: '8px' }}>⚠️</div>
-              <h4 style={{ margin: '0 0 6px', color: '#fff' }}>No se pudo cargar la vista previa</h4>
+              <h4 style={{ margin: '0 0 6px', color: 'var(--text-primary)' }}>No se pudo cargar la vista previa</h4>
               <p style={{ margin: 0, fontSize: '13px' }}>{error}</p>
             </div>
           )}
 
           {!loading && !error && blobUrl && (
             isPDF ? (
-              <iframe
-                src={blobUrl}
-                title={`Visor PDF - ${note.title}`}
+              <object
+                data={blobUrl}
+                type="application/pdf"
                 style={{
                   width: '100%',
                   height: '100%',
-                  border: 'none',
                   borderRadius: '8px',
+                  border: 'none',
                 }}
-              />
+              >
+                <iframe
+                  src={blobUrl}
+                  title={`Visor PDF - ${note.title}`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    borderRadius: '8px',
+                  }}
+                />
+              </object>
             ) : (
               <div
                 style={{
@@ -280,7 +311,7 @@ export default function PreviewModal({ note, onClose }) {
                     objectFit: 'contain',
                     transform: `scale(${zoom}) rotate(${rotation}deg)`,
                     transition: 'transform 0.2s ease',
-                    boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
+                    boxShadow: 'var(--card-shadow)',
                     borderRadius: '6px',
                   }}
                 />
@@ -296,7 +327,7 @@ export default function PreviewModal({ note, onClose }) {
 const controlBtnStyle = {
   background: 'transparent',
   border: 'none',
-  color: '#fff',
+  color: 'var(--text-primary)',
   padding: '6px 8px',
   borderRadius: '6px',
   cursor: 'pointer',

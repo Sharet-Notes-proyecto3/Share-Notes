@@ -38,7 +38,7 @@ export default function ReportModal({ item, onClose, onSuccess }) {
       setLoading(true);
       setError('');
       await forumService.reportContent(token, {
-        targetType: item.type, // 'thread' | 'reply' | 'note'
+        targetType: item.type,
         targetId: item.id,
         reason: fullReason,
       });
@@ -66,7 +66,7 @@ export default function ReportModal({ item, onClose, onSuccess }) {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0,0,0,0.75)',
+        backgroundColor: 'var(--modal-backdrop)',
         backdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'center',
@@ -77,18 +77,18 @@ export default function ReportModal({ item, onClose, onSuccess }) {
     >
       <div
         style={{
-          background: 'var(--sidebar-bg, #1e1e2d)',
-          border: '1px solid var(--border-color, #2b2b3d)',
+          background: 'var(--card-bg)',
+          border: '1px solid var(--border-color)',
           borderRadius: '16px',
           padding: '28px',
           maxWidth: '480px',
           width: '100%',
-          boxShadow: '0 12px 32px rgba(0,0,0,0.6)',
+          boxShadow: 'var(--card-shadow)',
         }}
       >
         {/* Encabezado */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-          <h3 style={{ margin: 0, color: '#f87171', fontSize: '19px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h3 style={{ margin: 0, color: 'var(--color-danger-text)', fontSize: '19px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             🚩 Reportar Contenido Indebido
           </h3>
           <button
@@ -102,13 +102,13 @@ export default function ReportModal({ item, onClose, onSuccess }) {
         {/* Detalle del objetivo */}
         <div
           style={{
-            background: 'rgba(239, 68, 68, 0.08)',
-            border: '1px solid rgba(239, 68, 68, 0.25)',
+            background: 'var(--color-danger-bg)',
+            border: '1px solid var(--color-danger-border)',
             borderRadius: '8px',
             padding: '10px 14px',
             marginBottom: '18px',
             fontSize: '13px',
-            color: '#fca5a5',
+            color: 'var(--color-danger-text)',
           }}
         >
           <strong>Objetivo:</strong> {getTargetTitle()}
@@ -117,7 +117,7 @@ export default function ReportModal({ item, onClose, onSuccess }) {
         {success ? (
           <div style={{ textAlign: 'center', padding: '24px 10px' }}>
             <div style={{ fontSize: '42px', marginBottom: '8px' }}>✅</div>
-            <h4 style={{ color: '#fff', margin: '0 0 6px', fontSize: '18px' }}>Reporte enviado con éxito</h4>
+            <h4 style={{ color: 'var(--text-primary)', margin: '0 0 6px', fontSize: '18px' }}>Reporte enviado con éxito</h4>
             <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: 0 }}>
               Gracias por colaborar en la moderación del Foro Académico.
             </p>
@@ -125,7 +125,7 @@ export default function ReportModal({ item, onClose, onSuccess }) {
         ) : (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {error && (
-              <div style={{ color: '#f87171', background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', padding: '10px', borderRadius: '8px', fontSize: '13px' }}>
+              <div style={{ color: 'var(--color-danger-text)', background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger-border)', padding: '10px', borderRadius: '8px', fontSize: '13px' }}>
                 ⚠️ {error}
               </div>
             )}
@@ -168,10 +168,10 @@ export default function ReportModal({ item, onClose, onSuccess }) {
                 style={{
                   flex: 1,
                   padding: '10px',
-                  background: 'transparent',
+                  background: 'var(--bg-elevated)',
                   border: '1px solid var(--border-color)',
                   borderRadius: '8px',
-                  color: '#fff',
+                  color: 'var(--text-primary)',
                   cursor: 'pointer',
                   fontSize: '13px',
                 }}
@@ -184,17 +184,17 @@ export default function ReportModal({ item, onClose, onSuccess }) {
                 style={{
                   flex: 2,
                   padding: '10px',
-                  background: '#ef4444',
+                  background: 'var(--color-danger)',
                   border: 'none',
                   borderRadius: '8px',
-                  color: '#fff',
+                  color: 'var(--text-inverse)',
                   fontWeight: '600',
                   cursor: loading ? 'not-allowed' : 'pointer',
                   fontSize: '13px',
                   opacity: loading ? 0.7 : 1,
                 }}
               >
-                {loading ? 'Enviando report POST /api/forum/report...' : '🚨 Enviar Reporte'}
+                {loading ? 'Enviando reporte...' : '🚨 Enviar Reporte'}
               </button>
             </div>
           </form>

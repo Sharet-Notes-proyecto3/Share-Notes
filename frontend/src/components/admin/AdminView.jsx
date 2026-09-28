@@ -115,7 +115,7 @@ export default function AdminView() {
 
   if (!isModerator) {
     return (
-      <div style={{ textAlign: 'center', padding: '60px 20px', color: '#f87171' }}>
+      <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--color-danger-text)' }}>
         <h2>⛔ Acceso Restringido</h2>
         <p>Esta sección está reservada exclusivamente para Administradores y Moderadores.</p>
       </div>
@@ -126,8 +126,8 @@ export default function AdminView() {
     <div style={{ padding: '24px' }} className="animate-fade-in">
       {/* Encabezado */}
       <div style={{ marginBottom: '24px' }}>
-        <h2 style={{ margin: '0 0 4px', color: '#fff', fontSize: '24px' }}>🛡️ Panel de Administración y Moderación</h2>
-        <p style={{ margin: 0, color: 'var(--text-secondary, #94a3b8)', fontSize: '14px' }}>
+        <h2 style={{ margin: '0 0 4px', color: 'var(--text-primary)', fontSize: '24px' }}>🛡️ Panel de Administración y Moderación</h2>
+        <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>
           Gestión de usuarios, asignación de roles académicos, catálogo y resolución de reportes
         </p>
       </div>
@@ -136,9 +136,9 @@ export default function AdminView() {
         <div
           style={{
             marginBottom: '20px',
-            background: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            color: '#fca5a5',
+            background: 'var(--color-danger-bg)',
+            border: '1px solid var(--color-danger-border)',
+            color: 'var(--color-danger-text)',
             borderRadius: '12px',
             padding: '12px 16px',
             fontSize: '13px',
@@ -150,28 +150,28 @@ export default function AdminView() {
 
       {/* Tarjetas de Métricas Rápidas */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ background: 'var(--sidebar-bg, #1e293b)', border: '1px solid var(--border-color, #334155)', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary, #94a3b8)' }}>👥 Usuarios Activos</div>
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#86efac', marginTop: '4px' }}>{metrics.activeUsers}</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary, #94a3b8)', marginTop: '4px' }}>De un total de {metrics.totalUsers}</div>
+        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>👥 Usuarios Activos</div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--color-success-text)', marginTop: '4px' }}>{metrics.activeUsers}</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>De un total de {metrics.totalUsers}</div>
         </div>
 
-        <div style={{ background: 'var(--sidebar-bg, #1e293b)', border: '1px solid var(--border-color, #334155)', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary, #94a3b8)' }}>🚫 Usuarios Suspendidos</div>
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#fca5a5', marginTop: '4px' }}>{metrics.suspendedUsers}</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary, #94a3b8)', marginTop: '4px' }}>Cuentas inactivas</div>
+        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>🚫 Usuarios Suspendidos</div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--color-danger-text)', marginTop: '4px' }}>{metrics.suspendedUsers}</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Cuentas inactivas</div>
         </div>
 
-        <div style={{ background: 'var(--sidebar-bg, #1e293b)', border: '1px solid var(--border-color, #334155)', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary, #94a3b8)' }}>👥 Total Usuarios</div>
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#60a5fa', marginTop: '4px' }}>{metrics.totalUsers}</div>
-          <div style={{ fontSize: '11px', color: '#60a5fa', marginTop: '4px' }}>Plataforma ShareNotes</div>
+        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>👥 Total Usuarios</div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--primary-color)', marginTop: '4px' }}>{metrics.totalUsers}</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Plataforma ShareNotes</div>
         </div>
 
-        <div style={{ background: 'var(--sidebar-bg, #1e293b)', border: '1px solid var(--border-color, #334155)', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary, #94a3b8)' }}>🚨 Reportes Pendientes</div>
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginTop: '4px' }}>{metrics.pendingReports}</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary, #94a3b8)', marginTop: '4px' }}>{metrics.totalReports} reportes en total</div>
+        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>🚨 Reportes Pendientes</div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--color-warning-text)', marginTop: '4px' }}>{metrics.pendingReports}</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>{metrics.totalReports} reportes en total</div>
         </div>
       </div>
 
@@ -180,7 +180,7 @@ export default function AdminView() {
       </div>
 
       {/* Selector de Pestañas */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid var(--border-color, #334155)', paddingBottom: '12px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', flexWrap: 'wrap' }}>
         <button
           onClick={() => setActiveTab('users')}
           style={{
@@ -190,8 +190,8 @@ export default function AdminView() {
             cursor: 'pointer',
             fontWeight: '600',
             fontSize: '13px',
-            background: activeTab === 'users' ? 'var(--primary-color, #3b82f6)' : 'transparent',
-            color: activeTab === 'users' ? '#fff' : 'var(--text-secondary, #94a3b8)',
+            background: activeTab === 'users' ? 'var(--primary-color)' : 'transparent',
+            color: activeTab === 'users' ? 'var(--primary-contrast)' : 'var(--text-secondary)',
           }}
         >
           👥 Gestión de Usuarios ({users.length})
@@ -206,8 +206,8 @@ export default function AdminView() {
             cursor: 'pointer',
             fontWeight: '600',
             fontSize: '13px',
-            background: activeTab === 'catalog' ? 'var(--primary-color, #3b82f6)' : 'transparent',
-            color: activeTab === 'catalog' ? '#fff' : 'var(--text-secondary, #94a3b8)',
+            background: activeTab === 'catalog' ? 'var(--primary-color)' : 'transparent',
+            color: activeTab === 'catalog' ? 'var(--primary-contrast)' : 'var(--text-secondary)',
           }}
         >
           📚 Catálogo Académico
@@ -222,8 +222,8 @@ export default function AdminView() {
             cursor: 'pointer',
             fontWeight: '600',
             fontSize: '13px',
-            background: activeTab === 'reports' ? 'var(--primary-color, #3b82f6)' : 'transparent',
-            color: activeTab === 'reports' ? '#fff' : 'var(--text-secondary, #94a3b8)',
+            background: activeTab === 'reports' ? 'var(--primary-color)' : 'transparent',
+            color: activeTab === 'reports' ? 'var(--primary-contrast)' : 'var(--text-secondary)',
           }}
         >
           🚨 Reportes de Moderación {metrics.pendingReports > 0 && `(${metrics.pendingReports})`}
@@ -232,7 +232,7 @@ export default function AdminView() {
 
       {/* Contenido según pestaña */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '50px', color: 'var(--text-secondary, #94a3b8)' }}>
+        <div style={{ textAlign: 'center', padding: '50px', color: 'var(--text-secondary)' }}>
           ⏳ Cargando información administrativa...
         </div>
       ) : activeTab === 'users' ? (
@@ -266,4 +266,3 @@ export default function AdminView() {
     </div>
   );
 }
-

@@ -34,20 +34,20 @@ export function ModerationLogsTable() {
   const getActionBadge = (action) => {
     const act = (action || '').toUpperCase();
     if (act.includes('RESOLV')) {
-      return <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: '#D1FAE5', color: '#065F46' }}>✓ {action}</span>;
+      return <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: 'var(--color-success-bg)', color: 'var(--color-success-text)' }}>✓ {action}</span>;
     }
     if (act.includes('DISMISS')) {
-      return <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: '#F3F4F6', color: '#374151' }}>✕ {action}</span>;
+      return <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>✕ {action}</span>;
     }
     if (act.includes('RESTRICT') || act.includes('BLOCK') || act.includes('DELETE')) {
-      return <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: '#FEE2E2', color: '#991B1B' }}>🚫 {action}</span>;
+      return <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger-text)' }}>🚫 {action}</span>;
     }
-    return <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: '#FEF3C7', color: '#92400E' }}>ℹ️ {action}</span>;
+    return <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: 'var(--color-warning-bg)', color: 'var(--color-warning-text)' }}>ℹ️ {action}</span>;
   };
 
   if (loading && logs.length === 0) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center', color: '#6B7280' }}>
+      <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
         ⏳ Cargando historial de moderación...
       </div>
     );
@@ -55,7 +55,7 @@ export function ModerationLogsTable() {
 
   if (error) {
     return (
-      <div style={{ padding: '16px', backgroundColor: '#FEE2E2', border: '1px solid #FCA5A5', color: '#991B1B', borderRadius: '6px', margin: '16px 0' }}>
+      <div style={{ padding: '16px', backgroundColor: 'var(--color-danger-bg)', border: '1px solid var(--color-danger-border)', color: 'var(--color-danger-text)', borderRadius: '6px', margin: '16px 0' }}>
         ⚠️ {error}
       </div>
     );
@@ -64,7 +64,7 @@ export function ModerationLogsTable() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ margin: 0, fontSize: '16px', color: '#1E293B' }}>📋 Audit Logs de Moderación</h3>
+        <h3 style={{ margin: 0, fontSize: '16px', color: 'var(--text-primary)' }}>📋 Audit Logs de Moderación</h3>
         <button
           onClick={fetchLogs}
           disabled={loading}
@@ -72,8 +72,9 @@ export function ModerationLogsTable() {
             padding: '6px 12px',
             fontSize: '12px',
             fontWeight: 'bold',
-            backgroundColor: '#F1F5F9',
-            border: '1px solid #CBD5E1',
+            backgroundColor: 'var(--bg-elevated)',
+            border: '1px solid var(--border-color)',
+            color: 'var(--text-primary)',
             borderRadius: '4px',
             cursor: 'pointer',
           }}
@@ -83,14 +84,14 @@ export function ModerationLogsTable() {
       </div>
 
       {logs.length === 0 ? (
-        <div style={{ padding: '32px', textAlign: 'center', backgroundColor: '#F9FAFB', borderRadius: '8px', border: '1px dashed #D1D5DB' }}>
-          <p style={{ fontSize: '14px', color: '#6B7280', margin: 0 }}>No hay registros de moderación registrados aún.</p>
+        <div style={{ padding: '32px', textAlign: 'center', backgroundColor: 'var(--bg-surface)', borderRadius: '8px', border: '1px dashed var(--border-color)' }}>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>No hay registros de moderación registrados aún.</p>
         </div>
       ) : (
-        <div style={{ overflowX: 'auto', backgroundColor: '#FFFFFF', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div style={{ overflowX: 'auto', backgroundColor: 'var(--card-bg)', borderRadius: '8px', border: '1px solid var(--border-color)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
             <thead>
-              <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '2px solid #E2E8F0', color: '#475569' }}>
+              <tr style={{ backgroundColor: 'var(--bg-surface)', borderBottom: '2px solid var(--border-color)', color: 'var(--text-secondary)' }}>
                 <th style={{ padding: '10px 14px' }}>ID</th>
                 <th style={{ padding: '10px 14px' }}>Acción</th>
                 <th style={{ padding: '10px 14px' }}>Moderador</th>
@@ -101,19 +102,19 @@ export function ModerationLogsTable() {
             </thead>
             <tbody>
               {logs.map((log) => (
-                <tr key={log.id} style={{ borderBottom: '1px solid #E2E8F0' }}>
-                  <td style={{ padding: '10px 14px', color: '#64748B', fontWeight: 'bold' }}>#{log.id}</td>
+                <tr key={log.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <td style={{ padding: '10px 14px', color: 'var(--text-muted)', fontWeight: 'bold' }}>#{log.id}</td>
                   <td style={{ padding: '10px 14px' }}>{getActionBadge(log.action || log.event)}</td>
-                  <td style={{ padding: '10px 14px', fontWeight: '500', color: '#1E293B' }}>
+                  <td style={{ padding: '10px 14px', fontWeight: '500', color: 'var(--text-primary)' }}>
                     {log.moderator_name || log.admin_name || `Moderador #${log.admin_id || log.moderator_id || 'N/A'}`}
                   </td>
-                  <td style={{ padding: '10px 14px', color: '#334155' }}>
+                  <td style={{ padding: '10px 14px', color: 'var(--text-secondary)' }}>
                     {log.target_user_name || log.target_resource || `ID: ${log.target_id || log.user_id || 'N/A'}`}
                   </td>
-                  <td style={{ padding: '10px 14px', color: '#475569', maxWidth: '250px' }}>
+                  <td style={{ padding: '10px 14px', color: 'var(--text-secondary)', maxWidth: '250px' }}>
                     {log.reason || log.details || 'Sin motivo indicado'}
                   </td>
-                  <td style={{ padding: '10px 14px', color: '#64748B', fontSize: '12px' }}>
+                  <td style={{ padding: '10px 14px', color: 'var(--text-muted)', fontSize: '12px' }}>
                     {formatDate(log.created_at || log.timestamp)}
                   </td>
                 </tr>

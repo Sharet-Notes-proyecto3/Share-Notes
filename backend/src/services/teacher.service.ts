@@ -5,7 +5,6 @@ import { RowDataPacket } from 'mysql2';
 import { logAuditAction } from './audit.service';
 import { generatePdfReport } from '../utils/microservicesClient';
 
-
 export class TeacherService {
   /**
    * Marca un apunte como "Recurso Verificado / Oficial"
@@ -116,7 +115,12 @@ export class TeacherService {
   /**
    * Genera el reporte PDF con métricas analíticas del curso asignado al docente
    */
-  async generateCourseReport(subjectId: number, teacherId: number, role: string): Promise<Buffer> {
+  async generateCourseReport(
+    subjectId: number,
+    teacherId: number,
+    role: string,
+    correlationId: string
+  ): Promise<Buffer> {
     // 1. Obtener información de la materia
     const [subjRows] = await pool.query<RowDataPacket[]>(
       'SELECT id, name FROM subjects WHERE id = ?',
@@ -158,11 +162,12 @@ export class TeacherService {
     const [forumStats] = await pool.query<RowDataPacket[]>(
       `SELECT u.id AS student_id, u.name AS student_name,
               (SELECT COUNT(*) FROM forum_threads t WHERE t.author_id = u.id AND t.subject_id = ? AND t.is_active = TRUE) AS threads_count,
-              (SELECT COUNT(*) FROM forum_replies r JOIN forum_threads t ON r.thread_id = t.id WHERE r.author_id = u.id AND t.subject_id = ? AND r.is_active = TRUE) AS replies_count
+              (SELECT COUNT(*) FROM forum_replies r JOIN forum_threads t2 ON r.thread_id = t2.id WHERE r.author_id = u.id AND t2.subject_id = ? AND r.is_active = TRUE) AS replies_count
        FROM users u
-       HAVING (threads_count > 0 OR replies_count > 0)
-       ORDER BY (threads_count + replies_count) DESC`,
-      [subjectId, subjectId]
+       WHERE u.id IN (SELECT uploader_id FROM notes WHERE subject_id = ? AND is_active = TRUE)
+          OR u.id IN (SELECT author_id FROM forum_threads WHERE subject_id = ? AND is_active = TRUE)
+       GROUP BY u.id, u.name`,
+      [subjectId, subjectId, subjectId, subjectId]
     );
 
     // 6. Intentar generar PDF mediante microservicio MS-PDF
@@ -177,14 +182,13 @@ export class TeacherService {
       })),
     };
 
-    let pdfBuffer = await generatePdfReport(pdfData);
+    let pdfBuffer = await generatePdfReport(pdfData, correlationId);
 
     // Fallback local en Buffer PDF estándar si MS-PDF no está disponible
     if (!pdfBuffer) {
       const pdfText = `%PDF-1.4\n1 0 obj <</Type /Catalog /Pages 2 0 R>> endobj\n2 0 obj <</Type /Pages /Kids [3 0 R] /Count 1>> endobj\n3 0 obj <</Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R>> endobj\n4 0 obj <</Length 120>> stream\nBT /F1 12 Tf 50 750 Td (Reporte Analitico del Curso: ${subjectName}) Tj 0 -20 Td (Docente: ${teacherName}) Tj 0 -20 Td (Apuntes Verificados: ${totalVerified}) Tj ET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000216 00000 n \ntrailer <</Size 5 /Root 1 0 R>>\nstartxref\n386\n%%EOF`;
       pdfBuffer = Buffer.from(pdfText);
     }
-
 
     // Registrar en auditoría
     await logAuditAction({

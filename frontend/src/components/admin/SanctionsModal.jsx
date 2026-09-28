@@ -40,7 +40,7 @@ export default function SanctionsModal({ user, onClose, onSanctionAdded }) {
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(15, 23, 42, 0.72)',
+        background: 'var(--modal-backdrop)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -53,18 +53,18 @@ export default function SanctionsModal({ user, onClose, onSanctionAdded }) {
         style={{
           width: '100%',
           maxWidth: '520px',
-          background: '#0f172a',
-          border: '1px solid #334155',
+          background: 'var(--card-bg)',
+          border: '1px solid var(--border-color)',
           borderRadius: '16px',
           padding: '24px',
-          color: '#fff',
+          color: 'var(--text-primary)',
           boxShadow: '0 20px 60px rgba(0,0,0,0.45)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
           <div>
-            <div style={{ fontSize: '11px', color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               Moderación
             </div>
             <h3 style={{ margin: '6px 0 0', fontSize: '22px' }}>Aplicar sanción</h3>
@@ -73,8 +73,8 @@ export default function SanctionsModal({ user, onClose, onSanctionAdded }) {
             onClick={onClose}
             style={{
               background: 'transparent',
-              border: '1px solid #334155',
-              color: '#cbd5e1',
+              border: '1px solid var(--border-color)',
+              color: 'var(--text-secondary)',
               borderRadius: '8px',
               width: '36px',
               height: '36px',
@@ -85,13 +85,13 @@ export default function SanctionsModal({ user, onClose, onSanctionAdded }) {
           </button>
         </div>
 
-        <div style={{ marginBottom: '18px', color: '#cbd5e1' }}>
+        <div style={{ marginBottom: '18px', color: 'var(--text-secondary)' }}>
           <strong>{user?.name}</strong> · {user?.email}
         </div>
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: '#cbd5e1', fontSize: '13px' }}>Tipo de sanción</label>
+            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '13px' }}>Tipo de sanción</label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value)}
@@ -99,9 +99,9 @@ export default function SanctionsModal({ user, onClose, onSanctionAdded }) {
                 width: '100%',
                 padding: '10px 12px',
                 borderRadius: '10px',
-                border: '1px solid #334155',
-                background: '#111827',
-                color: '#fff',
+                border: '1px solid var(--border-color)',
+                background: 'var(--bg-elevated)',
+                color: 'var(--text-primary)',
               }}
             >
               <option value="warning">⚠️ Advertencia</option>
@@ -111,7 +111,7 @@ export default function SanctionsModal({ user, onClose, onSanctionAdded }) {
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: '#cbd5e1', fontSize: '13px' }}>Motivo</label>
+            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '13px' }}>Motivo</label>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
@@ -122,16 +122,16 @@ export default function SanctionsModal({ user, onClose, onSanctionAdded }) {
                 resize: 'vertical',
                 padding: '10px 12px',
                 borderRadius: '10px',
-                border: '1px solid #334155',
-                background: '#111827',
-                color: '#fff',
+                border: '1px solid var(--border-color)',
+                background: 'var(--bg-elevated)',
+                color: 'var(--text-primary)',
               }}
             />
           </div>
 
           {type === 'temp_ban' && (
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', color: '#cbd5e1', fontSize: '13px' }}>Fecha de expiración</label>
+              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '13px' }}>Fecha de expiración</label>
               <input
                 type="datetime-local"
                 value={expiresAt}
@@ -140,9 +140,9 @@ export default function SanctionsModal({ user, onClose, onSanctionAdded }) {
                   width: '100%',
                   padding: '10px 12px',
                   borderRadius: '10px',
-                  border: '1px solid #334155',
-                  background: '#111827',
-                  color: '#fff',
+                  border: '1px solid var(--border-color)',
+                  background: 'var(--bg-elevated)',
+                  color: 'var(--text-primary)',
                 }}
               />
             </div>
@@ -154,8 +154,8 @@ export default function SanctionsModal({ user, onClose, onSanctionAdded }) {
               onClick={onClose}
               style={{
                 background: 'transparent',
-                border: '1px solid #334155',
-                color: '#cbd5e1',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-secondary)',
                 borderRadius: '10px',
                 padding: '10px 16px',
                 cursor: 'pointer',
@@ -167,11 +167,12 @@ export default function SanctionsModal({ user, onClose, onSanctionAdded }) {
               type="submit"
               disabled={loading}
               style={{
-                background: 'linear-gradient(135deg, #f59e0b, #ef4444)',
+                background: 'var(--color-danger)',
                 border: 'none',
-                color: '#fff',
+                color: 'var(--text-inverse)',
                 borderRadius: '10px',
                 padding: '10px 16px',
+                fontWeight: '600',
                 cursor: loading ? 'not-allowed' : 'pointer',
                 opacity: loading ? 0.7 : 1,
               }}

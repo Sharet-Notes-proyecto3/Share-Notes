@@ -1,186 +1,348 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* =============================================================================
+   SISTEMA DE DISEÑO DE COLOR CENTRALIZADO — SHARENOTES (WCAG AA ACCESIBLE)
+   Paleta Reducida y Consistente:
+   - 1 Primario: #0284c7 (Acción principal / Marca)
+   - 1 Secundario: #4f46e5 (Acción alternativa / Acento)
+   - Escala Neutros: 5 niveles (Canvas, Surface, Card, Elevated, Border)
+   - 4 Estados Semánticos (Éxito, Error, Advertencia, Info) con fondo y texto accesibles
+   ============================================================================= */
+
 /* =========================================================
-   MODO NOCHE (Negro + Gris - Predeterminado)
+   1. MODO NOCHE (Predeterminado)
    ========================================================= */
 :root {
+  /* ── Neutros (Fondos y Superficies) ── */
   --bg-color: #09090b;
+  --bg-canvas: #09090b;
   --sidebar-bg: #141417;
-  --card-bg: rgba(24, 24, 27, 0.88);
-  --text-primary: #f4f4f5;
-  --text-secondary: #9ca3af;
-  --accent-color: #38bdf8;
-  --accent-hover: #0284c7;
-  --border-color: rgba(255, 255, 255, 0.12);
-  --font-family: 'Inter', sans-serif;
-  --primary-color: #0284c7;
-  --theme-gradient: linear-gradient(135deg, #38bdf8, #0284c7);
-  --showcase-bg: linear-gradient(145deg, #18181b, #09090b);
+  --bg-surface: #141417;
+  --card-bg: #18181b;
+  --bg-card: #18181b;
+  --bg-elevated: #27272a;
+  --bg-elevated-hover: #3f3f46;
 
+  /* ── Neutros (Bordes) ── */
+  --border-color: rgba(255, 255, 255, 0.12);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.20);
+
+  /* ── Neutros (Tipografía - Alto Contraste WCAG AA) ── */
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --text-inverse: #09090b;
+
+  /* ── Color Primario (Marca & Acción Principal) ── */
+  --primary-color: #0284c7;
+  --primary-hover: #0369a1;
+  --primary-active: #075985;
+  --primary-bg: rgba(2, 132, 199, 0.14);
+  --primary-border: rgba(2, 132, 199, 0.35);
+  --primary-contrast: #ffffff;
+  --accent-color: #0284c7;
+  --accent-hover: #0369a1;
+
+  /* ── Color Secundario ── */
+  --secondary-color: #4f46e5;
+  --secondary-hover: #4338ca;
+  --secondary-bg: rgba(79, 70, 229, 0.14);
+  --secondary-border: rgba(79, 70, 229, 0.35);
+  --secondary-contrast: #ffffff;
+
+  /* ── Estados Semánticos (Fondo, Borde y Texto) ── */
+  /* Éxito */
+  --color-success: #22c55e;
+  --color-success-bg: rgba(34, 197, 94, 0.14);
+  --color-success-border: rgba(34, 197, 94, 0.35);
+  --color-success-text: #4ade80;
+
+  /* Error / Peligro */
+  --color-danger: #ef4444;
+  --color-danger-bg: rgba(239, 68, 68, 0.14);
+  --color-danger-border: rgba(239, 68, 68, 0.35);
+  --color-danger-text: #f87171;
+
+  /* Advertencia */
+  --color-warning: #f59e0b;
+  --color-warning-bg: rgba(245, 158, 11, 0.14);
+  --color-warning-border: rgba(245, 158, 11, 0.35);
+  --color-warning-text: #fbbf24;
+
+  /* Info */
+  --color-info: #0284c7;
+  --color-info-bg: rgba(2, 132, 199, 0.14);
+  --color-info-border: rgba(2, 132, 199, 0.35);
+  --color-info-text: #38bdf8;
+
+  /* ── Gradientes & Efectos ── */
+  --theme-gradient: linear-gradient(135deg, #0284c7, #4f46e5);
+  --showcase-bg: linear-gradient(145deg, #18181b, #09090b);
+  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --modal-backdrop: rgba(0, 0, 0, 0.75);
+
+  --font-family: 'Inter', sans-serif;
   --theme-btn-bg: #18181b;
   --theme-btn-border: #3f3f46;
-  --theme-btn-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+  --theme-btn-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
 /* =========================================================
-   MODO DÍA (Blanco + Azul Claro)
+   2. MODO DÍA (Limpio & Accesible)
    ========================================================= */
 :root.light-mode {
-  --bg-color: #ffffff;
-  --sidebar-bg: #f0f9ff;
-  --card-bg: rgba(255, 255, 255, 0.95);
+  /* ── Neutros (Fondos y Superficies) ── */
+  --bg-color: #f8fafc;
+  --bg-canvas: #f8fafc;
+  --sidebar-bg: #ffffff;
+  --bg-surface: #ffffff;
+  --card-bg: #ffffff;
+  --bg-card: #ffffff;
+  --bg-elevated: #f1f5f9;
+  --bg-elevated-hover: #e2e8f0;
+
+  /* ── Neutros (Bordes) ── */
+  --border-color: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  --border-strong: #cbd5e1;
+
+  /* ── Neutros (Tipografía - Alto Contraste WCAG AA) ── */
   --text-primary: #0f172a;
   --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-inverse: #ffffff;
+
+  /* ── Color Primario (Marca & Acción Principal) ── */
+  --primary-color: #0284c7;
+  --primary-hover: #0369a1;
+  --primary-active: #075985;
+  --primary-bg: #f0f9ff;
+  --primary-border: #bae6fd;
+  --primary-contrast: #ffffff;
   --accent-color: #0284c7;
   --accent-hover: #0369a1;
-  --border-color: rgba(2, 132, 199, 0.2);
-  --primary-color: #0284c7;
-  --theme-gradient: linear-gradient(135deg, #38bdf8, #0284c7);
-  --showcase-bg: linear-gradient(145deg, #e0f2fe, #f0f9ff);
+
+  /* ── Color Secundario ── */
+  --secondary-color: #4f46e5;
+  --secondary-hover: #4338ca;
+  --secondary-bg: #eef2ff;
+  --secondary-border: #c7d2fe;
+  --secondary-contrast: #ffffff;
+
+  /* ── Estados Semánticos (Fondo, Borde y Texto) ── */
+  /* Éxito: texto oscuro sobre fondo claro (Ratio >= 5:1) */
+  --color-success: #16a34a;
+  --color-success-bg: #f0fdf4;
+  --color-success-border: #bbf7d0;
+  --color-success-text: #15803d;
+
+  /* Error / Peligro: texto oscuro sobre fondo claro (Ratio >= 5.5:1) */
+  --color-danger: #dc2626;
+  --color-danger-bg: #fef2f2;
+  --color-danger-border: #fecaca;
+  --color-danger-text: #b91c1c;
+
+  /* Advertencia: texto ámbar oscuro sobre fondo claro (Ratio >= 4.8:1) */
+  --color-warning: #d97706;
+  --color-warning-bg: #fffbeb;
+  --color-warning-border: #fde68a;
+  --color-warning-text: #b45309;
+
+  /* Info: texto azul oscuro sobre fondo claro (Ratio >= 5.5:1) */
+  --color-info: #0284c7;
+  --color-info-bg: #f0f9ff;
+  --color-info-border: #bae6fd;
+  --color-info-text: #0369a1;
+
+  /* ── Gradientes & Efectos ── */
+  --theme-gradient: linear-gradient(135deg, #0284c7, #4f46e5);
+  --showcase-bg: linear-gradient(145deg, #f0f9ff, #ffffff);
+  --card-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+  --modal-backdrop: rgba(15, 23, 42, 0.6);
 
   --theme-btn-bg: #ffffff;
-  --theme-btn-border: #7dd3fc;
-  --theme-btn-shadow: 0 2px 12px rgba(2, 132, 199, 0.25);
+  --theme-btn-border: #cbd5e1;
+  --theme-btn-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-/* ── Sidebar en modo claro: texto blanco sobre azul oscuro ── */
+/* =========================================================
+   3. ESTILOS BASE Y REAJUSTE DE LAYOUT GLOBAL
+   ========================================================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar estilizada */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-canvas);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* =========================================================
+   4. ESTILOS DE ELEMENTOS COMUNES Y MODO CLARO
+   ========================================================= */
+
+/* ── Sidebar en Modo Claro (Corrección de Texto Invisible) ── */
 .light-mode .sidebar {
-  color: #f0f6ff;
+  background: var(--sidebar-bg);
+  border-right-color: var(--border-color);
+  color: var(--text-primary);
 }
+
 .light-mode .sidebar .logo {
-  background: linear-gradient(90deg, #7dd3fc, #bfdbfe);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--primary-color);
+  -webkit-text-fill-color: initial;
+  background: none;
 }
+
 .light-mode .nav-item {
-  color: rgba(224,242,255,0.75);
+  color: var(--text-secondary);
 }
-.light-mode .nav-item:hover,
+
+.light-mode .nav-item:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
 .light-mode .nav-item.active {
-  background: rgba(255,255,255,0.15);
-  color: #fff;
+  background: var(--primary-bg);
+  color: var(--primary-color);
+  font-weight: 600;
 }
+
 .light-mode .sidebar > div:last-child {
-  border-top-color: rgba(255,255,255,0.15);
-  color: rgba(200,225,255,0.7);
+  border-top-color: var(--border-color);
+  color: var(--text-secondary);
 }
+
 .light-mode .sidebar > div:last-child div:first-child {
-  color: #fff;
+  color: var(--text-primary);
 }
 
-/* ── Header / barra superior ── */
+/* ── Header ── */
 .light-mode header {
-  background: #f8faff !important;
-  border-bottom-color: rgba(30,58,110,0.12) !important;
-}
-.light-mode header > div:first-child {
-  color: #334155 !important;
+  background: var(--bg-surface) !important;
+  border-bottom-color: var(--border-color) !important;
 }
 
-/* ── Fondo principal del contenido ── */
+.light-mode header > div:first-child {
+  color: var(--text-secondary) !important;
+}
+
+/* ── Contenedor Principal ── */
 .light-mode .app-container {
-  background: linear-gradient(135deg, #dbeafe 0%, #ede9fe 55%, #e0f2fe 100%) !important;
+  background: var(--bg-canvas) !important;
 }
 
 /* ── Tarjetas ── */
 .light-mode .note-card {
-  background: rgba(255,255,255,0.92) !important;
-  border-color: rgba(30,58,110,0.12) !important;
-  box-shadow: 0 2px 12px rgba(30,58,110,0.08);
+  background: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: var(--card-shadow) !important;
 }
+
 .light-mode .note-card:hover {
-  border-color: rgba(2,132,199,0.45) !important;
-  box-shadow: 0 8px 24px rgba(2,132,199,0.18) !important;
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.15) !important;
 }
 
-/* ── Menú desplegable de usuario ── */
-.light-mode .profile-menu {
-  background: #ffffff;
-  border-color: rgba(30,58,110,0.15);
-  box-shadow: 0 10px 30px rgba(30,58,110,0.18);
-}
-.light-mode .profile-action strong { color: #0f172a !important; }
-.light-mode .profile-action small  { color: #475569 !important; }
-.light-mode .profile-action:hover  { background: rgba(30,58,110,0.08) !important; }
-.light-mode .logout-action strong  { color: #dc2626 !important; }
-.light-mode .logout-action small   { color: #ef4444 !important; }
-.light-mode .logout-action:hover   { background: rgba(220,38,38,0.08) !important; }
-.light-mode .action-icon           { color: #0284c7 !important; }
-.light-mode .profile-divider       { background: rgba(30,58,110,0.1) !important; }
-.light-mode .profile-role          { background: rgba(2,132,199,0.1) !important; color: #0284c7 !important; }
-.light-mode .profile-main-info h3  { color: #0f172a !important; }
-.light-mode .profile-main-info p   { color: #475569 !important; }
-
-/* ═══════════════════════════════════════════════════════════
-   OVERRIDES GLOBALES MODO CLARO — Textos y tarjetas
-   ═══════════════════════════════════════════════════════════ */
-
-/* Títulos h2 y h3 que usan color:#fff hardcodeado */
-.light-mode h2 { color: #0f172a !important; }
-.light-mode h3 { color: #0f172a !important; }
-
-/* Texto secundario legible */
-.light-mode [style*="var(--text-secondary"] { color: #475569 !important; }
-
-/* Tarjeta de apunte: fondo blanco con sombra */
-.light-mode [style*="var(--sidebar-bg"] {
-  background: #ffffff !important;
-  border-color: rgba(30,58,110,0.12) !important;
-  box-shadow: 0 2px 12px rgba(30,58,110,0.07) !important;
+/* ── Títulos y Textos ── */
+.light-mode h1,
+.light-mode h2,
+.light-mode h3,
+.light-mode h4 {
+  color: var(--text-primary) !important;
 }
 
-/* Botones secundarios Descargar/QR */
-.light-mode [style*="rgba(255, 255, 255, 0.08)"],
-.light-mode [style*="rgba(255,255,255,0.08)"] {
-  background: rgba(30,58,110,0.06) !important;
-  color: #1e3a6e !important;
-  border-color: rgba(30,58,110,0.18) !important;
+.light-mode p {
+  color: var(--text-secondary);
 }
 
-/* Inputs y select de búsqueda */
-.light-mode .form-input {
-  background: #ffffff !important;
-  border-color: rgba(30,58,110,0.2) !important;
-  color: #0f172a !important;
-  box-shadow: 0 1px 4px rgba(30,58,110,0.08);
-}
-.light-mode .form-input::placeholder { color: #94a3b8 !important; }
-.light-mode .form-input:focus {
-  border-color: #0284c7 !important;
-  box-shadow: 0 0 0 3px rgba(2,132,199,0.12) !important;
-}
-.light-mode select.form-input option {
-  background: #ffffff !important;
-  color: #0f172a !important;
+/* ── Inputs y Controles de Formulario ── */
+.form-input {
+  width: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  transition: all 0.2s ease;
 }
 
-/* Botón reporte PDF más visible */
-.light-mode [style*="rgba(239, 68, 68, 0.15)"] {
-  background: rgba(220,38,38,0.08) !important;
-  border-color: rgba(220,38,38,0.25) !important;
-  color: #dc2626 !important;
+.form-input::placeholder {
+  color: var(--text-muted);
 }
 
-/* Excepción: botones con fondo sólido coloreado → texto siempre blanco */
-.light-mode .primary-btn              { color: #ffffff !important; }
-.light-mode button.primary-btn        { color: #ffffff !important; }
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-bg);
+}
 
-/* Tags de materia y PDF/Imagen en tarjetas: mantener colores */
-.light-mode [style*="color: #60a5fa"] { color: #1d4ed8 !important; background: rgba(29,78,216,0.1) !important; }
-.light-mode [style*="color: #f87171"]:not(button) { color: #dc2626 !important; }
-.light-mode [style*="color: #34d399"] { color: #059669 !important; }
+select.form-input option {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
 
-/* Texto "Subido por" en tarjetas */
-.light-mode [style*="color: 'var(--text-secondary"] { color: #475569 !important; }
+/* ── Botones Principales y Secundarios ── */
+.primary-btn {
+  background: var(--primary-color);
+  color: var(--primary-contrast);
+  border: none;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.primary-btn:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--primary-bg);
+}
+
+.primary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 /* =========================================================
-   BOTÓN TOGGLE TEMA (día / noche)
+   5. BOTÓN DE ALTERNANCIA DÍA / NOCHE
    ========================================================= */
 .theme-toggle-btn {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 6px 13px;
+  gap: 8px;
+  padding: 7px 14px;
   border-radius: 999px;
   border: 1px solid var(--theme-btn-border);
   background: var(--theme-btn-bg);
@@ -189,65 +351,22 @@
   font-weight: 600;
   font-family: var(--font-family);
   cursor: pointer;
-  transition: background 0.25s, box-shadow 0.25s, transform 0.15s;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
   box-shadow: var(--theme-btn-shadow);
   white-space: nowrap;
   user-select: none;
 }
 
 .theme-toggle-btn:hover {
-  background: var(--accent-color);
-  color: #fff;
-  border-color: var(--accent-color);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(6,182,212,0.35);
 }
 
 .theme-toggle-btn:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
 }
 
 .theme-toggle-icon {
-  font-size: 15px;
-  transition: transform 0.4s ease;
-}
-
-.theme-toggle-btn:hover .theme-toggle-icon {
-  transform: rotate(20deg);
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: var(--font-family);
-  background-color: var(--bg-color);
-  color: var(--text-primary);
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-  transition: background-color 0.35s ease, color 0.35s ease;
-}
-
-/* ── Transición suave en todos los elementos al cambiar tema ── */
-*, *::before, *::after {
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-}
-
-/* ── El botón toggle en modo claro debe verse blanco (sobre sidebar azul oscuro) ── */
-.light-mode .theme-toggle-btn {
-  color: #ffffff;
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg-color);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--sidebar-bg);
-  border-radius: 4px;
+  font-size: 14px;
 }

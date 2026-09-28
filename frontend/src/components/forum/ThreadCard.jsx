@@ -11,7 +11,6 @@ import CloseThreadButton from '../teacher/CloseThreadButton';
 import MarkSolutionButton from '../teacher/MarkSolutionButton';
 import ContentModerateButton from '../moderator/ContentModerateButton';
 
-
 export default function ThreadCard({ thread, onRefresh }) {
   const { token, user, isAdmin, isModerator } = useAuth();
   const [expanded, setExpanded] = useState(false);
@@ -23,7 +22,7 @@ export default function ThreadCard({ thread, onRefresh }) {
   // Votación reactiva tipo Me gusta (Toggle dar / quitar voto)
   const [votedReplyIds, setVotedReplyIds] = useState(new Set());
   
-  // Mención / Respuesta directa a un compañero (Estilo Facebook)
+  // Mención / Respuesta directa a un compañero
   const [replyingTo, setReplyingTo] = useState(null);
 
   // Modal de reportes
@@ -54,7 +53,6 @@ export default function ThreadCard({ thread, onRefresh }) {
     const rawText = newReply.trim();
     if (!rawText) return;
 
-    // Si se está respondiendo directamente a alguien, adjuntar la mención tipo @Nombre
     const replyText = replyingTo && !rawText.startsWith(`@${replyingTo}`)
       ? `@${replyingTo} ${rawText}`
       : rawText;
@@ -94,11 +92,10 @@ export default function ThreadCard({ thread, onRefresh }) {
     }
   };
 
-  // Votación reactiva con Toggle (Dar o Quitar "Me gusta / Útil")
+  // Votación reactiva con Toggle
   const handleVote = async (replyId) => {
     const isVoted = votedReplyIds.has(replyId);
     
-    // Alternar voto en el estado local de forma reactiva instantánea
     setVotedReplyIds((prev) => {
       const next = new Set(prev);
       if (isVoted) {
@@ -124,11 +121,9 @@ export default function ThreadCard({ thread, onRefresh }) {
     }
   };
 
-  // Eliminación de comentario/respuesta
   const handleDeleteReply = async (replyId) => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar este comentario?')) return;
 
-    // Actualización reactiva instantánea en la interfaz
     setReplies((prev) => prev.filter((r) => r.id !== replyId));
 
     try {
@@ -139,7 +134,6 @@ export default function ThreadCard({ thread, onRefresh }) {
     }
   };
 
-  // Eliminación de tema/hilo completo
   const handleDeleteThread = async () => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar este debate completo?')) return;
 
@@ -167,7 +161,6 @@ export default function ThreadCard({ thread, onRefresh }) {
     });
   };
 
-  // Formateador visual para renderizar las menciones estilo @Nombre destacadas
   const renderReplyBody = (text) => {
     if (!text) return null;
     const mentionRegex = /^(@[^\s]+)\s+(.*)/;
@@ -177,8 +170,9 @@ export default function ThreadCard({ thread, onRefresh }) {
         <span>
           <span
             style={{
-              background: 'rgba(96, 165, 250, 0.15)',
-              color: '#60a5fa',
+              background: 'var(--primary-bg)',
+              color: 'var(--color-info-text)',
+              border: '1px solid var(--primary-border)',
               padding: '2px 6px',
               borderRadius: '4px',
               fontWeight: '600',
@@ -198,11 +192,12 @@ export default function ThreadCard({ thread, onRefresh }) {
   return (
     <div
       style={{
-        background: 'var(--sidebar-bg)',
+        background: 'var(--card-bg)',
         border: '1px solid var(--border-color)',
         borderRadius: '12px',
         padding: '20px',
         marginBottom: '16px',
+        boxShadow: 'var(--card-shadow)',
         transition: 'all 0.2s ease',
       }}
     >
@@ -224,8 +219,9 @@ export default function ThreadCard({ thread, onRefresh }) {
                   fontSize: '11px',
                   padding: '3px 8px',
                   borderRadius: '6px',
-                  background: 'rgba(167, 139, 250, 0.15)',
-                  color: '#a78bfa',
+                  background: 'var(--secondary-bg)',
+                  border: '1px solid var(--secondary-border)',
+                  color: 'var(--secondary-color)',
                   fontWeight: '600',
                 }}
               >
@@ -246,13 +242,13 @@ export default function ThreadCard({ thread, onRefresh }) {
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    color: '#f87171',
+                    color: 'var(--color-danger-text)',
                     cursor: 'pointer',
                     fontSize: '12px',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '4px',
-                    opacity: 0.85,
+                    opacity: 0.9,
                   }}
                   title="Borrar este debate"
                 >
@@ -265,13 +261,13 @@ export default function ThreadCard({ thread, onRefresh }) {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#ef4444',
+                  color: 'var(--color-danger-text)',
                   cursor: 'pointer',
                   fontSize: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px',
-                  opacity: 0.8,
+                  opacity: 0.9,
                 }}
                 title="Reportar este hilo de conversación"
               >
@@ -283,14 +279,14 @@ export default function ThreadCard({ thread, onRefresh }) {
         );
       })()}
 
-      <h3 style={{ margin: '0 0 8px', color: '#fff', fontSize: '17px' }}>{thread.title}</h3>
+      <h3 style={{ margin: '0 0 8px', color: 'var(--text-primary)', fontSize: '17px' }}>{thread.title}</h3>
       <p style={{ margin: '0 0 14px', color: 'var(--text-secondary)', fontSize: '14px', lineHeight: 1.5 }}>
         {thread.body}
       </p>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
         <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-          👤 Autor: <strong>{thread.author_name || thread.user_name || 'Compañero'}</strong>
+          👤 Autor: <strong style={{ color: 'var(--text-primary)' }}>{thread.author_name || thread.user_name || 'Compañero'}</strong>
         </span>
 
         <button
@@ -298,7 +294,7 @@ export default function ThreadCard({ thread, onRefresh }) {
           style={{
             background: 'transparent',
             border: 'none',
-            color: '#60a5fa',
+            color: 'var(--primary-color)',
             cursor: 'pointer',
             fontSize: '13px',
             fontWeight: '600',
@@ -323,11 +319,6 @@ export default function ThreadCard({ thread, onRefresh }) {
                 const isVoted = votedReplyIds.has(reply.id);
                 const authorName = reply.author_name || reply.user_name || 'Compañero';
                 
-                // Determinación de visibilidad de botón Borrar:
-                // 1. El creador del debate ve "Borrar" en su debate y en todas sus respuestas
-                // 2. Cada usuario ve "Borrar" únicamente en sus propias respuestas
-                // 3. Un usuario NO ve "Borrar" en respuestas ajenas si no es el creador del debate
-                
                 const isReplyCreator = Boolean(
                   user &&
                   ((reply.author_id && user.id && Number(reply.author_id) === Number(user.id)) ||
@@ -340,14 +331,14 @@ export default function ThreadCard({ thread, onRefresh }) {
                   <div
                     key={reply.id}
                     style={{
-                      background: 'rgba(255, 255, 255, 0.03)',
+                      background: 'var(--bg-elevated)',
                       border: '1px solid var(--border-color)',
                       borderRadius: '8px',
                       padding: '12px',
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>
+                      <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
                         👤 {authorName}
                       </span>
 
@@ -358,10 +349,10 @@ export default function ThreadCard({ thread, onRefresh }) {
                               fontSize: '11px',
                               padding: '2px 8px',
                               borderRadius: '6px',
-                              background: 'rgba(167, 139, 250, 0.2)',
-                              color: '#c4b5fd',
+                              background: 'var(--color-warning-bg)',
+                              color: 'var(--color-warning-text)',
                               fontWeight: '700',
-                              border: '1px solid rgba(167, 139, 250, 0.4)',
+                              border: '1px solid var(--color-warning-border)',
                             }}
                           >
                             ⭐ Solución Docente
@@ -370,35 +361,35 @@ export default function ThreadCard({ thread, onRefresh }) {
 
                         <MarkSolutionButton thread={thread} reply={reply} onMarked={() => toggleExpand()} />
 
-                        {/* Botón Responder al Compañero (Estilo Facebook) */}
+                        {/* Botón Responder al Compañero */}
                         <button
                           onClick={() => handleStartReplyToUser(authorName)}
                           style={{
-                            background: 'rgba(96, 165, 250, 0.1)',
-                            border: '1px solid rgba(96, 165, 250, 0.3)',
+                            background: 'var(--primary-bg)',
+                            border: '1px solid var(--primary-border)',
                             borderRadius: '6px',
-                            color: '#60a5fa',
+                            color: 'var(--color-info-text)',
                             padding: '4px 8px',
                             fontSize: '11px',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '4px',
+                            fontWeight: '500',
                           }}
                           title={`Responder directamente a ${authorName}`}
                         >
                           ↩️ Responder
                         </button>
 
-
-                        {/* Botón "Útil" con Toggle (Dar / Quitar Me Gusta) */}
+                        {/* Botón "Útil" con Toggle */}
                         <button
                           onClick={() => handleVote(reply.id)}
                           style={{
-                            background: isVoted ? 'rgba(34, 197, 94, 0.25)' : 'rgba(34, 197, 94, 0.1)',
-                            border: `1px solid ${isVoted ? '#22c55e' : 'rgba(34, 197, 94, 0.3)'}`,
+                            background: isVoted ? 'var(--color-success-bg)' : 'var(--bg-card)',
+                            border: `1px solid ${isVoted ? 'var(--color-success-border)' : 'var(--border-color)'}`,
                             borderRadius: '6px',
-                            color: isVoted ? '#4ade80' : '#86efac',
+                            color: isVoted ? 'var(--color-success-text)' : 'var(--text-secondary)',
                             padding: '4px 10px',
                             fontSize: '11px',
                             cursor: 'pointer',
@@ -420,11 +411,11 @@ export default function ThreadCard({ thread, onRefresh }) {
                             style={{
                               background: 'transparent',
                               border: 'none',
-                              color: '#f87171',
+                              color: 'var(--color-danger-text)',
                               cursor: 'pointer',
                               fontSize: '11px',
                               padding: '2px 6px',
-                              opacity: 0.85,
+                              opacity: 0.9,
                             }}
                             title="Borrar este comentario"
                           >
@@ -438,11 +429,11 @@ export default function ThreadCard({ thread, onRefresh }) {
                           style={{
                             background: 'transparent',
                             border: 'none',
-                            color: '#ef4444',
+                            color: 'var(--color-danger-text)',
                             cursor: 'pointer',
                             fontSize: '11px',
                             padding: '2px 6px',
-                            opacity: 0.75,
+                            opacity: 0.9,
                           }}
                           title="Reportar comentario indebido"
                         >
@@ -451,7 +442,7 @@ export default function ThreadCard({ thread, onRefresh }) {
                       </div>
                     </div>
 
-                    <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                    <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-primary)', lineHeight: 1.4 }}>
                       {renderReplyBody(reply.body || reply.content)}
                     </p>
                   </div>
@@ -460,20 +451,20 @@ export default function ThreadCard({ thread, onRefresh }) {
             </div>
           )}
 
-          {/* Banner indicador si se está respondiendo a alguien en particular */}
+          {/* Banner indicador si se está respondiendo a alguien */}
           {replyingTo && (
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                background: 'rgba(96, 165, 250, 0.12)',
-                border: '1px solid rgba(96, 165, 250, 0.3)',
+                background: 'var(--primary-bg)',
+                border: '1px solid var(--primary-border)',
                 borderRadius: '6px',
                 padding: '6px 12px',
                 marginBottom: '8px',
                 fontSize: '12px',
-                color: '#93c5fd',
+                color: 'var(--color-info-text)',
               }}
             >
               <span>
@@ -485,7 +476,7 @@ export default function ThreadCard({ thread, onRefresh }) {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#93c5fd',
+                  color: 'var(--color-info-text)',
                   cursor: 'pointer',
                   fontSize: '14px',
                   fontWeight: 'bold',
@@ -497,7 +488,7 @@ export default function ThreadCard({ thread, onRefresh }) {
             </div>
           )}
 
-          {/* Formulario para Responder en tiempo real */}
+          {/* Formulario para Responder */}
           <form onSubmit={handleAddReply} style={{ display: 'flex', gap: '8px' }}>
             <input
               type="text"

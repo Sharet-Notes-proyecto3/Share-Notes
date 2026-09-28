@@ -1,6 +1,7 @@
 // src/config/database.ts
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
+import logger from '../utils/logger';
 
 dotenv.config();
 
@@ -19,11 +20,11 @@ const pool = mysql.createPool({
 // Verificar conexión al iniciar
 pool.getConnection()
   .then(conn => {
-    console.log('✅  MySQL conectado correctamente');
+    logger.info('✅  MySQL conectado correctamente');
     conn.release();
   })
   .catch(err => {
-    console.error('❌  Error al conectar MySQL:', err.message);
+    logger.error(`❌  Error al conectar MySQL: ${err.message}`);
     process.exit(1);
   });
 

@@ -34,10 +34,10 @@ export default function MarkSolutionButton({ thread, reply, onMarked }) {
       onClick={handleMarkSolution}
       disabled={loading}
       style={{
-        background: 'rgba(167, 139, 250, 0.15)',
-        border: '1px solid rgba(167, 139, 250, 0.4)',
+        background: 'var(--secondary-bg)',
+        border: '1px solid var(--secondary-border)',
         borderRadius: '6px',
-        color: '#c4b5fd',
+        color: 'var(--secondary-color)',
         padding: '4px 8px',
         fontSize: '11px',
         fontWeight: '600',

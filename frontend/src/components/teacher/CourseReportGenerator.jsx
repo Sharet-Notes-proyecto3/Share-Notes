@@ -39,8 +39,8 @@ export default function CourseReportGenerator({ subjects = [], selectedCourseId,
   return (
     <div
       style={{
-        background: 'rgba(59, 130, 246, 0.08)',
-        border: '1px solid rgba(59, 130, 246, 0.25)',
+        background: 'var(--color-info-bg)',
+        border: '1px solid var(--color-info-border)',
         borderRadius: '12px',
         padding: '16px',
         marginBottom: '20px',
@@ -48,7 +48,7 @@ export default function CourseReportGenerator({ subjects = [], selectedCourseId,
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
         <span style={{ fontSize: '20px' }}>📊</span>
-        <h4 style={{ margin: 0, color: '#fff', fontSize: '15px' }}>Generador de Reportes Analíticos del Curso</h4>
+        <h4 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '15px' }}>Generador de Reportes Analíticos del Curso</h4>
       </div>
       <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
         Genera y descarga un reporte PDF certificado (vía MS-PDF) con el consolidado de apuntes, aportes verificados e interacción en el foro.
@@ -81,7 +81,8 @@ export default function CourseReportGenerator({ subjects = [], selectedCourseId,
             gap: '6px',
             padding: '9px 16px',
             fontSize: '13px',
-            background: 'linear-gradient(135deg, #10b981, #059669)',
+            background: 'var(--color-success)',
+            color: 'var(--text-inverse)',
           }}
         >
           {loading ? '⏳ Generando PDF...' : '📄 Descargar Reporte PDF del Curso'}
@@ -89,7 +90,7 @@ export default function CourseReportGenerator({ subjects = [], selectedCourseId,
       </form>
 
       {statusMessage && (
-        <div style={{ marginTop: '10px', fontSize: '12px', color: statusMessage.includes('✅') ? '#34d399' : '#60a5fa', fontWeight: '500' }}>
+        <div style={{ marginTop: '10px', fontSize: '12px', color: statusMessage.includes('✅') ? 'var(--color-success-text)' : 'var(--color-info-text)', fontWeight: '500' }}>
           {statusMessage}
         </div>
       )}

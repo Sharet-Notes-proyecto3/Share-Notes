@@ -1,13 +1,18 @@
+import 'dotenv/config';
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import dotenv from "dotenv";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
+import logger from "./utils/logger";
+import { correlationMiddleware } from "./middlewares/correlation.middleware";
 
-// Cargar variables de entorno lo primero
-dotenv.config();
+// Validación en producción: evitar que origin quede undefined en CORS
+if (process.env.NODE_ENV === "production" && !process.env.APP_PUBLIC_URL) {
+  logger.error("FATAL: APP_PUBLIC_URL no está definida en el entorno de producción para configurar CORS.");
+  throw new Error("FATAL: APP_PUBLIC_URL no está definida en el entorno de producción para configurar CORS.");
+}
 
 // Importa rutas
 import authRoutes from "./routes/auth.routes";
@@ -27,15 +32,24 @@ import "./config/database";
 const app = express();
 const PORT = parseInt(process.env.PORT || "3000");
 
-//Seguridad
+// Seguridad
 app.use(helmet());
+
+// Trazabilidad con Correlation ID en todas las peticiones
+app.use(correlationMiddleware);
+
+// Configuración de CORS segura con exposición de headers de descarga (sin exponer ni permitir secretos internos a clientes públicos)
+const corsOrigin =
+  process.env.NODE_ENV === "production"
+    ? process.env.APP_PUBLIC_URL || "http://localhost:5173"
+    : "*";
 
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === "production" ? process.env.APP_PUBLIC_URL : "*", // En desarrollo acepta cualquier origen
+    origin: corsOrigin,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Correlation-ID"],
+    exposedHeaders: ["Content-Disposition", "Content-Length", "X-Correlation-ID"],
   }),
 );
 
@@ -74,17 +88,18 @@ app.use(
   }),
 );
 
-//Health check
-app.get("/api/health", (_req, res) => {
+// Health check
+app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
     project: "ShareNotes API",
     version: "1.0.0",
+    correlationId: req.correlationId,
     timestamp: new Date().toISOString(),
   });
 });
 
-//Rutas
+// Rutas
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/notes", noteRoutes);
 app.use("/api/forum", forumRoutes);
@@ -93,24 +108,21 @@ app.use("/api", teacherRoutes);
 app.use("/api", moderatorRoutes);
 app.use("/api/roles", rolesRouter);
 
-
-
-//Ruta no encontrada
-app.use((_req, res) => {
-  res.status(404).json({ message: "Ruta no encontrada" });
+// Ruta no encontrada
+app.use((req, res) => {
+  res.status(404).json({ message: "Ruta no encontrada", correlationId: req.correlationId });
 });
 
 // Manejo global de errores
 app.use(errorHandler);
 
-// Iniciar servidor
-app.listen(PORT, () => {
-  console.log("");
-  console.log("ShareNotes API corriendo");
-  console.log(`http://localhost:${PORT}/api`);
-  console.log(`Swagger UI: http://localhost:${PORT}/api/docs`);
-  console.log(`Entorno: ${process.env.NODE_ENV || "development"}`);
-  console.log("");
-});
+// Iniciar servidor solo si no estamos en entorno de pruebas
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    logger.info(`ShareNotes API corriendo en http://localhost:${PORT}/api`);
+    logger.info(`Swagger UI disponible en http://localhost:${PORT}/api/docs`);
+    logger.info(`Entorno: ${process.env.NODE_ENV || "development"}`);
+  });
+}
 
 export default app;
