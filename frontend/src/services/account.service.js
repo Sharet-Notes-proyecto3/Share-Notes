@@ -36,8 +36,8 @@ export class AccountService {
   }
 
   /**
-   * Revisa si existe token en localStorage o sessionStorage bajo 'jhi-authenticationToken'.
-   * Si ya hay sesión autenticada en el store, NO vuelve a pedir el account.
+   * Revisa si existe token en localStorage o sessionStorage.
+   * Si ya hay sesión autenticada en el store, no vuelve a pedir la cuenta.
    */
   async loadAccount() {
     const token = this.getToken();
@@ -46,7 +46,6 @@ export class AccountService {
       return false;
     }
 
-    // Si ya existe sesión autenticada en el store y hay token válido, no vuelve a pedir la cuenta
     if (this.store.state.authenticated && this.store.state.userIdentity) {
       return true;
     }
@@ -55,8 +54,8 @@ export class AccountService {
   }
 
   /**
-   * Hace GET a api/account o /auth/profile.
-   * Si responde 200 con login válido llama a store.setAuthentication(account);
+   * Hace GET a /auth/profile.
+   * Si responde 200 con usuario válido llama a store.setAuthentication(account);
    * Si falla, llama a store.logout()
    */
   async retrieveAccount() {
@@ -70,8 +69,7 @@ export class AccountService {
         this.store.actions.logout();
         return false;
       }
-    } catch (error) {
-      console.error('Error al recuperar la cuenta:', error);
+    } catch {
       this.store.actions.logout();
       return false;
     }
@@ -115,7 +113,8 @@ export class AccountService {
   }
 
   /**
-   * Valida las autoridades/roles de la identidad actual
+   * Valida las autoridades/roles de la identidad actual con los 4 roles reales:
+   * student | teacher | moderator | admin
    */
   checkAuthorities(authorities) {
     if (!this.store.state.authenticated || !this.store.state.userIdentity) {
@@ -139,32 +138,10 @@ export class AccountService {
 
     const userRoles = new Set([currentRole, identityRole, ...userAuthorities].filter(Boolean));
 
-    // Mapeo bidireccional de sinónimos para compatibilidad total
-    if (userRoles.has('teacher') || userRoles.has('functionary') || userRoles.has('role_teacher') || userRoles.has('role_functionary')) {
-      userRoles.add('teacher');
-      userRoles.add('functionary');
-      userRoles.add('role_teacher');
-      userRoles.add('role_functionary');
-    }
-    if (userRoles.has('moderator') || userRoles.has('front_desk_cs') || userRoles.has('role_moderator') || userRoles.has('role_front_desk_cs')) {
-      userRoles.add('moderator');
-      userRoles.add('front_desk_cs');
-      userRoles.add('role_moderator');
-      userRoles.add('role_front_desk_cs');
-    }
-    if (userRoles.has('admin') || userRoles.has('role_admin')) {
-      userRoles.add('admin');
-      userRoles.add('role_admin');
-    }
-    if (userRoles.has('student') || userRoles.has('user') || userRoles.has('role_student') || userRoles.has('role_user')) {
-      userRoles.add('student');
-      userRoles.add('user');
-      userRoles.add('role_student');
-      userRoles.add('role_user');
-    }
-
     return authList.some((requiredAuth) => {
       const normalized = requiredAuth.toString().toLowerCase();
+      // Admin tiene acceso total
+      if (userRoles.has('admin')) return true;
       return userRoles.has(normalized);
     });
   }

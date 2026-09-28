@@ -1,9 +1,11 @@
 // =============================================================================
 // MODIFICACIÓN 2 — COMPONENTE: VISTA PRINCIPAL Y GRID DE APUNTES
 // Responsable: Integrante 2 (Apuntes, Búsqueda, QR, Visor y Reportes PDF)
+// Restricción: Estudiantes con perfil configurado solo visualizan y buscan
+//              apuntes de materias correspondientes a su semestre registrado.
 // =============================================================================
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { notesService } from '../../services/notes.service';
 import { useAuth } from '../../context/AuthContext';
 import NoteCard from './NoteCard';
@@ -25,14 +27,48 @@ export default function NotesGrid() {
   const [selectedNoteForQR, setSelectedNoteForQR] = useState(null);
   const [selectedNoteForPreview, setSelectedNoteForPreview] = useState(null);
 
-  const careerId = user?.career_id || user?.careerId || user?.career?.id || '';
-  const semester = user?.semester || user?.semestre || '';
+  const [selectedSemester, setSelectedSemester] = useState('');
+
+  // Identificar si aplica la restricción de semestre para estudiantes
+  const isStudent = (user?.role || '').toLowerCase() === 'student';
+  const hasAcademicProfile =
+    Boolean(user?.program_type || user?.programType) &&
+    user?.semester !== null &&
+    user?.semester !== undefined &&
+    user?.semester !== '';
+
+  const isRestrictedStudent = isStudent && hasAcademicProfile;
+  const studentSemester = isRestrictedStudent ? Number(user.semester) : null;
+  const programTypeLabel =
+    (user?.program_type || user?.programType) === 'ingenieria'
+      ? 'Ingeniería'
+      : 'Tecnólogo';
+
+  // Filtrado de materias: Si es estudiante restringido, solo materias de su propio semestre
+  const filteredSubjects = useMemo(() => {
+    if (isRestrictedStudent) {
+      return (subjects || []).filter((sub) => Number(sub.semester) === studentSemester);
+    }
+    return subjects || [];
+  }, [subjects, isRestrictedStudent, studentSemester]);
+
+  // Si la materia seleccionada previamente no pertenece a las materias permitidas, resetear
+  useEffect(() => {
+    if (selectedSubject && isRestrictedStudent) {
+      const isValid = filteredSubjects.some((s) => String(s.id) === String(selectedSubject));
+      if (!isValid) {
+        setSelectedSubject('');
+      }
+    }
+  }, [filteredSubjects, selectedSubject, isRestrictedStudent]);
 
   const refreshNotes = useCallback(async () => {
     if (!token) return;
     try {
       setLoading(true);
-      const notesRes = await notesService.getNotes(token, selectedSubject, searchTerm, semester, careerId);
+      // Para estudiantes restringidos, la consulta siempre enfoca su semestre
+      const effectiveSemester = isRestrictedStudent ? studentSemester : selectedSemester;
+      const notesRes = await notesService.getNotes(token, selectedSubject, searchTerm, effectiveSemester, '');
       setNotes(Array.isArray(notesRes) ? notesRes : notesRes.data || []);
     } catch (err) {
       console.error('Error al cargar apuntes:', err);
@@ -40,7 +76,7 @@ export default function NotesGrid() {
     } finally {
       setLoading(false);
     }
-  }, [token, selectedSubject, searchTerm, semester, careerId]);
+  }, [token, selectedSubject, searchTerm, selectedSemester, isRestrictedStudent, studentSemester]);
 
   useEffect(() => {
     if (!token) return;
@@ -49,23 +85,19 @@ export default function NotesGrid() {
       .then((subjectsRes) => {
         if (isMounted) {
           const availableSubjects = Array.isArray(subjectsRes) ? subjectsRes : subjectsRes.data || [];
-          setSubjects(availableSubjects.filter((subject) => {
-            const sameCareer = !careerId || String(subject.career_id || subject.careerId || '') === String(careerId);
-            const sameSemester = !semester || String(subject.semester || '') === String(semester);
-            return sameCareer && sameSemester;
-          }));
+          setSubjects(availableSubjects);
         }
       })
       .catch((err) => console.error('Error al cargar materias:', err));
     return () => { isMounted = false; };
-  }, [token, careerId, semester]);
+  }, [token]);
 
   // Cargar apuntes cuando cambie el filtro de materias o término de búsqueda
   useEffect(() => {
     if (!token) return;
     const timeoutId = window.setTimeout(refreshNotes, searchTerm ? 250 : 0);
     return () => window.clearTimeout(timeoutId);
-  }, [refreshNotes, searchTerm, token]);
+  }, [refreshNotes, searchTerm, selectedSubject, selectedSemester, token]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -100,8 +132,8 @@ export default function NotesGrid() {
       {/* Header y Acciones */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
         <div>
-          <h2 style={{ margin: '0 0 4px', color: '#fff', fontSize: '24px' }}>📚 Repositorio de Apuntes</h2>
-          <p style={{ margin: 0, color: 'var(--text-secondary, #94a3b8)', fontSize: '14px' }}>
+          <h2 style={{ margin: '0 0 4px', color: 'var(--text-primary)', fontSize: '24px' }}>📚 Repositorio de Apuntes</h2>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>
             Explora, visualiza, descarga y comparte material de estudio universitario
           </p>
         </div>
@@ -115,9 +147,9 @@ export default function NotesGrid() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  background: 'rgba(239, 68, 68, 0.15)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  color: '#f87171',
+                  background: 'var(--color-danger-bg)',
+                  border: '1px solid var(--color-danger-border)',
+                  color: 'var(--color-danger-text)',
                   padding: '10px 16px',
                   borderRadius: '8px',
                   cursor: 'pointer',
@@ -160,26 +192,66 @@ export default function NotesGrid() {
           value={selectedSubject}
           onChange={(e) => setSelectedSubject(e.target.value)}
         >
-          <option value="">Todas las materias</option>
-          {subjects.map((sub) => (
+          <option value="">
+            {isRestrictedStudent ? `Todas las materias (Semestre ${studentSemester}°)` : 'Todas las materias'}
+          </option>
+          {filteredSubjects.map((sub) => (
             <option key={sub.id} value={sub.id}>
               {sub.name} (Semestre {sub.semester})
             </option>
           ))}
         </select>
 
-        {(searchTerm || selectedSubject) && (
+        {isRestrictedStudent ? (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '9px 14px',
+              borderRadius: '8px',
+              background: 'rgba(59, 130, 246, 0.12)',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              color: '#60a5fa',
+              fontSize: '13px',
+              fontWeight: '600',
+              whiteSpace: 'nowrap',
+            }}
+            title={`Restringido a tu semestre académico (${programTypeLabel})`}
+          >
+            <span>🎓 Mostrando: Semestre {studentSemester}° ({programTypeLabel})</span>
+          </div>
+        ) : (
+          <select
+            className="form-input"
+            style={{ flex: '1 1 160px' }}
+            value={selectedSemester}
+            onChange={(e) => setSelectedSemester(e.target.value)}
+          >
+            <option value="">Todos los semestres</option>
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((sem) => (
+              <option key={sem} value={sem}>
+                Semestre {sem}
+              </option>
+            ))}
+          </select>
+        )}
+
+        {(searchTerm || selectedSubject || (!isRestrictedStudent && selectedSemester)) && (
           <button
             onClick={() => {
               setSearchTerm('');
               setSelectedSubject('');
+              if (!isRestrictedStudent) {
+                setSelectedSemester('');
+              }
             }}
             style={{
               padding: '9px 14px',
               borderRadius: '8px',
-              border: '1px solid rgba(255,255,255,0.15)',
-              background: 'rgba(255,255,255,0.06)',
-              color: '#94a3b8',
+              border: '1px solid var(--border-color)',
+              background: 'var(--bg-elevated)',
+              color: 'var(--text-secondary)',
               fontSize: '12px',
               fontWeight: '600',
               cursor: 'pointer',
@@ -192,8 +264,8 @@ export default function NotesGrid() {
 
       {/* Contador de resultados */}
       {!loading && (
-        <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '16px', fontWeight: '500' }}>
-          📄 Mostrando <strong>{notes.length}</strong> {notes.length === 1 ? 'apunte' : 'apuntes'}
+        <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', fontWeight: '500' }}>
+          📄 Mostrando <strong style={{ color: 'var(--text-primary)' }}>{notes.length}</strong> {notes.length === 1 ? 'apunte' : 'apuntes'}
           {selectedSubject ? ' para la materia seleccionada' : ''}
           {searchTerm ? ` que coinciden con "${searchTerm}"` : ''}
         </div>
@@ -201,15 +273,17 @@ export default function NotesGrid() {
 
       {/* Grid de Apuntes */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '50px', color: 'var(--text-secondary, #94a3b8)' }}>
+        <div style={{ textAlign: 'center', padding: '50px', color: 'var(--text-secondary)' }}>
           ⏳ Cargando apuntes de la plataforma...
         </div>
       ) : notes.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--sidebar-bg, #1e293b)', borderRadius: '12px', border: '1px dashed var(--border-color, #334155)' }}>
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
           <div style={{ fontSize: '40px', marginBottom: '12px' }}>📭</div>
-          <h3 style={{ color: '#fff', margin: '0 0 6px' }}>No se encontraron apuntes</h3>
-          <p style={{ color: 'var(--text-secondary, #94a3b8)', fontSize: '14px', margin: 0 }}>
-            Sé el primero en subir un apunte para esta materia.
+          <h3 style={{ color: 'var(--text-primary)', margin: '0 0 6px' }}>No se encontraron apuntes</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>
+            {isRestrictedStudent
+              ? `Aún no hay apuntes disponibles para tu semestre actual (${studentSemester}°). ¡Sé el primero en subir uno!`
+              : 'Sé el primero en subir un apunte para esta materia.'}
           </p>
         </div>
       ) : (
@@ -237,8 +311,7 @@ export default function NotesGrid() {
         <UploadModal
           subjects={subjects}
           onClose={() => setShowUpload(false)}
- onNoteUploaded={refreshNotes}
-
+          onNoteUploaded={refreshNotes}
         />
       )}
 

@@ -38,9 +38,6 @@ export const accountStore = {
     /**
      * Retorna el rol del usuario usando los nombres reales del backend:
      * 'admin' > 'moderator' > 'teacher' > 'student'
-     *
-     * Compatible con ambos formatos: rol directo (backend ShareNotes)
-     * o array de authorities (patrón JHipster legacy).
      */
     userRole(state = accountStore.state) {
       const identity = state.userIdentity;
@@ -54,34 +51,18 @@ export const accountStore = {
         }
       }
 
-      // Fallback: evaluar authorities legacy (compatibilidad JHipster)
+      // Evaluar authorities si vienen como array
       const authorities = Array.isArray(identity.authorities)
-        ? identity.authorities.map((a) => a.toString().toUpperCase())
+        ? identity.authorities.map((a) => a.toString().toLowerCase())
         : [];
 
-      if (authorities.some((a) => a === 'ADMIN' || a === 'ROLE_ADMIN')) {
+      if (authorities.includes('admin')) {
         return 'admin';
       }
-      if (
-        authorities.some(
-          (a) =>
-            a === 'MODERATOR' ||
-            a === 'ROLE_MODERATOR' ||
-            a === 'FRONT_DESK_CS' ||
-            a === 'ROLE_FRONT_DESK_CS',
-        )
-      ) {
+      if (authorities.includes('moderator')) {
         return 'moderator';
       }
-      if (
-        authorities.some(
-          (a) =>
-            a === 'TEACHER' ||
-            a === 'ROLE_TEACHER' ||
-            a === 'FUNCTIONARY' ||
-            a === 'ROLE_FUNCTIONARY',
-        )
-      ) {
+      if (authorities.includes('teacher')) {
         return 'teacher';
       }
       return 'student';

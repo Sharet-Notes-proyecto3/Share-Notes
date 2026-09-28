@@ -19,18 +19,9 @@ function MainLayout() {
   const [activeTab, setActiveTab] = useState('notes');
   const { pendingCount } = useReportsQueue();
 
-  // Espera visual elegante de 1 segundo en el arranque para evitar destellos y carreras de estado
-  const [initialLoading, setInitialLoading] = useState(true);
   const hasInitializedRoute = useRef(false);
   const lastAlertPath = useRef('');
   const lastAlertTime = useRef(0);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setInitialLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Mapeo entre tabs y rutas del enrutador
   const tabToPath = useMemo(
@@ -97,7 +88,7 @@ function MainLayout() {
 
   // Sincronizar ruta inicial por URL directa (protección contra acceso forzado por URL)
   useEffect(() => {
-    if (initialLoading || !isAuthenticated || loading) return;
+    if (!isAuthenticated || loading) return;
 
     if (!hasInitializedRoute.current) {
       hasInitializedRoute.current = true;
@@ -113,10 +104,10 @@ function MainLayout() {
 
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, [initialLoading, isAuthenticated, loading, pathToTab, navigateToTab]);
+  }, [isAuthenticated, loading, pathToTab, navigateToTab]);
 
-  // Pantalla de carga mientras se valida la sesión persistente y se completa el arranque inicial
-  if (initialLoading || loading) {
+  // Pantalla de carga reactiva basada en el estado real de autenticación/sesión
+  if (loading) {
     return (
       <div
         style={{
@@ -173,7 +164,7 @@ function MainLayout() {
           <span
             style={{ fontSize: '13px', color: '#9ca3af', fontWeight: '500' }}
           >
-            Iniciando plataforma universitaria...
+            Cargando sesión y contenidos...
           </span>
         </div>
       </div>
@@ -203,7 +194,7 @@ function MainLayout() {
               width: '36px',
               height: '36px',
               borderRadius: '8px',
-              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+              background: 'var(--theme-gradient)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -232,8 +223,8 @@ function MainLayout() {
             <span>Foro Académico</span>
           </div>
 
-          {/* Seccion de Moderación con Badge dinámico */}
-          <RoleGate allow={['MODERATOR', 'FRONT_DESK_CS', 'ADMIN']}>
+          {/* Sección de Moderación con Badge dinámico */}
+          <RoleGate allow={['moderator', 'admin']}>
             <div
               className={`nav-item ${activeTab === 'moderator' ? 'active' : ''}`}
               onClick={() => navigateToTab('moderator')}
@@ -247,7 +238,7 @@ function MainLayout() {
                 {pendingCount > 0 && (
                   <span
                     style={{
-                      backgroundColor: '#EF4444',
+                      backgroundColor: 'var(--color-danger)',
                       color: 'white',
                       fontSize: '11px',
                       fontWeight: 'bold',
@@ -265,7 +256,7 @@ function MainLayout() {
           </RoleGate>
 
           {/* Ocultamiento condicional con el patrón RoleGate */}
-          <RoleGate allow={['TEACHER', 'FUNCTIONARY', 'ADMIN']}>
+          <RoleGate allow={['teacher', 'admin']}>
             <div
               className={`nav-item ${activeTab === 'teacher' ? 'active' : ''}`}
               onClick={() => navigateToTab('teacher')}
@@ -298,7 +289,7 @@ function MainLayout() {
           }}
         >
           <div
-            style={{ fontWeight: '600', color: '#fff', marginBottom: '4px' }}
+            style={{ fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px' }}
           >
             ShareNotes v1.0
           </div>
@@ -352,12 +343,12 @@ function MainLayout() {
           {activeTab === 'notes' && <NotesGrid />}
           {activeTab === 'forum' && <ForumView />}
           {activeTab === 'moderator' && (
-            <RoleGate allow={['MODERATOR', 'FRONT_DESK_CS', 'ADMIN']}>
+            <RoleGate allow={['moderator', 'admin']}>
               <ModeratorDashboard />
             </RoleGate>
           )}
           {activeTab === 'teacher' && (
-            <RoleGate allow={['TEACHER', 'FUNCTIONARY', 'ADMIN']}>
+            <RoleGate allow={['teacher', 'admin']}>
               <TeacherDashboard />
             </RoleGate>
           )}

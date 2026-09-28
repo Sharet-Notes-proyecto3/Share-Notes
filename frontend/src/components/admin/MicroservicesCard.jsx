@@ -39,28 +39,30 @@ export default function MicroservicesCard() {
   return (
     <div
       style={{
-        background: 'var(--sidebar-bg, #1e293b)',
-        border: '1px solid var(--border-color, #334155)',
+        background: 'var(--card-bg)',
+        border: '1px solid var(--border-color)',
         borderRadius: '12px',
         padding: '18px 20px',
+        boxShadow: 'var(--card-shadow)',
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
         <div>
-          <div style={{ fontSize: '11px', color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
             Monitoreo en vivo
           </div>
-          <h3 style={{ margin: '6px 0 0', color: '#fff', fontSize: '20px' }}>Microservicios</h3>
+          <h3 style={{ margin: '6px 0 0', color: 'var(--text-primary)', fontSize: '20px' }}>Microservicios</h3>
         </div>
         <div
           style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '8px',
-            padding: '6px 10px',
+            padding: '6px 12px',
             borderRadius: '999px',
-            background: loading ? 'rgba(148, 163, 184, 0.12)' : 'rgba(34, 197, 94, 0.15)',
-            color: loading ? '#cbd5e1' : '#86efac',
+            background: loading ? 'var(--bg-elevated)' : 'var(--color-success-bg)',
+            border: `1px solid ${loading ? 'var(--border-color)' : 'var(--color-success-border)'}`,
+            color: loading ? 'var(--text-secondary)' : 'var(--color-success-text)',
             fontSize: '12px',
             fontWeight: 700,
           }}
@@ -70,20 +72,20 @@ export default function MicroservicesCard() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
-        <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '10px', padding: '14px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '10px' }}>MS-PDF</div>
-          <div style={{ fontSize: '18px', fontWeight: '700', color: status.msPdf ? '#86efac' : '#fca5a5' }}>
+        <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '14px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '10px' }}>MS-PDF</div>
+          <div style={{ fontSize: '18px', fontWeight: '700', color: status.msPdf ? 'var(--color-success-text)' : 'var(--color-danger-text)' }}>
             {status.msPdf ? 'Activo' : 'Inactivo'}
           </div>
-          <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '6px' }}>Puerto 3002</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>Puerto 3002</div>
         </div>
 
-        <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '10px', padding: '14px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '10px' }}>MS-Email</div>
-          <div style={{ fontSize: '18px', fontWeight: '700', color: status.msEmail ? '#86efac' : '#fca5a5' }}>
+        <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '14px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '10px' }}>MS-Email</div>
+          <div style={{ fontSize: '18px', fontWeight: '700', color: status.msEmail ? 'var(--color-success-text)' : 'var(--color-danger-text)' }}>
             {status.msEmail ? 'Activo' : 'Inactivo'}
           </div>
-          <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '6px' }}>Puerto 3001</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>Puerto 3001</div>
         </div>
       </div>
     </div>

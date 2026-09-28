@@ -77,8 +77,8 @@ export const notesService = {
     try {
       const res = await api.get(`/notes/${noteId}/qr`, token);
       if (res && (res.qrCodeDataUrl || res.qr)) return res;
-    } catch {
-      // Fallback a generador dinámico si la ruta backend es vía endpoint
+    } catch (err) {
+      console.warn(`[NotesService] Usando fallback local para QR de apunte ${noteId}:`, err?.message);
     }
     const downloadUrl = `${API_BASE_URL}/notes/${noteId}/download`;
     const qrCodeDataUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(downloadUrl)}`;

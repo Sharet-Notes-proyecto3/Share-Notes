@@ -2,7 +2,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pool from '../config/database';
-import { JwtPayload, UserRole } from '../types';
+import { JwtPayload, UserRole, ProgramType } from '../types';
 import { AppError } from '../middlewares/error.middleware';
 import { RowDataPacket } from 'mysql2';
 import { getRelatedArticle } from '../integrations/wikipedia.api';
@@ -15,12 +15,21 @@ interface UserRow extends RowDataPacket {
   role: UserRole;
   is_active: boolean;
   created_at?: string;
-  career_id?: number; semester?: number;
+  career_id?: number | null;
+  semester?: number | null;
+  program_type?: ProgramType | null;
 }
 
 export class AuthService {
 
-  async register(name: string, email: string, password: string, role: UserRole = 'student') {
+  async register(
+    name: string,
+    email: string,
+    password: string,
+    role: UserRole = 'student',
+    programType?: ProgramType | null,
+    semester?: number | null
+  ) {
     // Verificar si el email ya existe
     const [rows] = await pool.query<UserRow[]>(
       'SELECT id FROM users WHERE email = ?',
@@ -32,21 +41,27 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const [result] = await pool.query(
-      'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
-      [name, email, passwordHash, role]
+      'INSERT INTO users (name, email, password_hash, role, program_type, semester) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, email, passwordHash, role, programType || null, semester || null]
     );
 
     const insertId = (result as any).insertId;
-    return { id: insertId, name, email, role };
+    return {
+      id: insertId,
+      name,
+      email,
+      role,
+      program_type: programType || null,
+      semester: semester || null,
+    };
   }
 
   async login(email: string, password: string) {
     const [rows] = await pool.query<UserRow[]>(
-      'SELECT id, name, email, password_hash, role, is_active FROM users WHERE email = ?',
+      'SELECT id, name, email, password_hash, role, is_active, career_id, semester, program_type FROM users WHERE email = ?',
       [email]
     );
 
-    
     const user = rows[0];
     
     if (!user) {
@@ -61,7 +76,14 @@ export class AuthService {
       throw new AppError(401, 'Credenciales incorrectas');
     }
 
-    const payload: JwtPayload = { userId: user.id, email: user.email, role: user.role };
+    const payload: JwtPayload = {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      semester: user.semester || null,
+      programType: user.program_type || null,
+      program_type: user.program_type || null,
+    };
     const secret = process.env.JWT_SECRET;
     if (!secret) {
       throw new AppError(500, 'Error interno: configuración de seguridad incompleta (JWT_SECRET no definido)');
@@ -72,13 +94,21 @@ export class AuthService {
 
     return {
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        program_type: user.program_type || null,
+        semester: user.semester || null,
+        career_id: user.career_id || null,
+      },
     };
   }
 
-   async getProfile(userId: number) {
+  async getProfile(userId: number) {
     const [rows] = await pool.query<UserRow[]>(
-      'SELECT id, name, email, role, is_active, career_id, semester, created_at FROM users WHERE id = ?',
+      'SELECT id, name, email, role, is_active, career_id, semester, program_type, created_at FROM users WHERE id = ?',
       [userId]
     );
     if (!rows[0]) throw new AppError(404, 'Usuario no encontrado');
@@ -94,13 +124,37 @@ export class AuthService {
   }
 
   /**
-   * Guarda la carrera y semestre elegidos por el estudiante en el onboarding.
+   * Guarda los datos académicos elegidos por el estudiante (carrera, semestre y tipo de programa).
    */
-  async updateAcademicProfile(userId: number, careerId: number, semester: number) {
-    await pool.query(
-      'UPDATE users SET career_id = ?, semester = ? WHERE id = ?',
-      [careerId, semester, userId]
-    );
+  async updateAcademicProfile(
+    userId: number,
+    careerId?: number | null,
+    semester?: number | null,
+    programType?: ProgramType | null
+  ) {
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    if (careerId !== undefined && careerId !== null) {
+      fields.push('career_id = ?');
+      values.push(careerId);
+    }
+    if (semester !== undefined && semester !== null) {
+      fields.push('semester = ?');
+      values.push(semester);
+    }
+    if (programType !== undefined && programType !== null) {
+      fields.push('program_type = ?');
+      values.push(programType);
+    }
+
+    if (fields.length > 0) {
+      values.push(userId);
+      await pool.query(
+        `UPDATE users SET ${fields.join(', ')} WHERE id = ?`,
+        values
+      );
+    }
     return this.getProfile(userId);
   }
 
@@ -114,6 +168,4 @@ export class AuthService {
     const articulo = await getRelatedArticle(tema.trim());
     return { articulo };
   }
-
-  
 }

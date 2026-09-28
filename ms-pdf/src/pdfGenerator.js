@@ -1,4 +1,5 @@
 const PDFDocument = require('pdfkit');
+const logger = require('./logger');
 
 function generatePDF(data, callback, errorCallback) {
   try {
@@ -36,7 +37,7 @@ function generatePDF(data, callback, errorCallback) {
 
     doc.end();
   } catch (error) {
-    console.error('Error generando PDF:', error);
+    logger.error('Error generando PDF:', { error: error.message || error });
     errorCallback(error);
   }
 }
