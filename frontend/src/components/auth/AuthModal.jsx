@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import PaletteSwitcher from '../common/PaletteSwitcher';
 import './Auth.css';
@@ -12,10 +12,32 @@ export default function AuthModal() {
   const [password, setPassword] = useState('');
   const [role] = useState('student');
 
+  const [programType, setProgramType] = useState('');
+  const [semester, setSemester] = useState('');
+
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Opciones de semestre recalculadas dinámicamente según el tipo de programa:
+  // - Tecnólogo: 1 a 6
+  // - Ingeniería: 7 a 10
+  const semesterOptions = useMemo(() => {
+    if (programType === 'tecnologo') {
+      return [1, 2, 3, 4, 5, 6];
+    }
+    if (programType === 'ingenieria') {
+      return [7, 8, 9, 10];
+    }
+    return [];
+  }, [programType]);
+
+  const handleProgramTypeChange = (e) => {
+    const nextType = e.target.value;
+    setProgramType(nextType);
+    setSemester(''); // Restablecer para no permitir semestres inválidos entre programas
+  };
 
   const getPasswordStrength = () => {
     if (!password) return 0;
@@ -68,11 +90,22 @@ export default function AuthModal() {
           );
         }
 
+        if (role === 'student') {
+          if (!programType) {
+            throw new Error('Por favor selecciona tu tipo de programa académico.');
+          }
+          if (!semester) {
+            throw new Error('Por favor selecciona tu semestre actual.');
+          }
+        }
+
         await register(
           name.trim(),
           email.trim(),
           password,
-          role
+          role,
+          role === 'student' ? programType : null,
+          role === 'student' && semester ? Number(semester) : null
         );
 
         setSuccess(
@@ -81,6 +114,8 @@ export default function AuthModal() {
 
         setIsLogin(true);
         setPassword('');
+        setProgramType('');
+        setSemester('');
       }
     } catch (err) {
       setError(
@@ -96,6 +131,8 @@ export default function AuthModal() {
     setError('');
     setSuccess('');
     setPassword('');
+    setProgramType('');
+    setSemester('');
   };
 
   return (
@@ -337,7 +374,59 @@ export default function AuthModal() {
                 )}
               </div>
 
+              {!isLogin && role === 'student' && (
+                <>
+                  <div className="auth-field">
+                    <label htmlFor="programType">
+                      Tipo de programa académico
+                    </label>
 
+                    <div className="input-wrapper">
+                      <span className="input-icon">🎓</span>
+
+                      <select
+                        id="programType"
+                        value={programType}
+                        onChange={handleProgramTypeChange}
+                        required
+                      >
+                        <option value="">Selecciona tu programa...</option>
+                        <option value="tecnologo">Tecnólogo (Semestres 1 a 6)</option>
+                        <option value="ingenieria">Ingeniería (Semestres 7 a 10)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="auth-field">
+                    <label htmlFor="semester">
+                      Semestre actual
+                    </label>
+
+                    <div className="input-wrapper">
+                      <span className="input-icon">📅</span>
+
+                      <select
+                        id="semester"
+                        value={semester}
+                        onChange={(e) => setSemester(e.target.value)}
+                        disabled={!programType}
+                        required
+                      >
+                        <option value="">
+                          {!programType
+                            ? 'Selecciona primero el tipo de programa'
+                            : 'Selecciona tu semestre...'}
+                        </option>
+                        {semesterOptions.map((s) => (
+                          <option key={s} value={s}>
+                            {s}° Semestre
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </>
+              )}
 
               <button
                 type="submit"

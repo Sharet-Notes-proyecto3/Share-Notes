@@ -1,21 +1,52 @@
 // =============================================================================
 // MODIFICACIÓN 2 — COMPONENTE: MODAL DE SUBIDA DE APUNTES MULTIMEDIA
 // Responsable: Integrante 2 (Apuntes, Archivos & Subidas)
+// Restricción: Estudiantes solo pueden seleccionar materias de su propio semestre.
 // =============================================================================
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { notesService } from '../../services/notes.service';
 import { useAuth } from '../../context/AuthContext';
 
-export default function UploadModal({ subjects, onClose, onNoteUploaded }) {
+export default function UploadModal({ subjects = [], onClose, onNoteUploaded }) {
   const { token, user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [subjectId, setSubjectId] = useState(subjects[0]?.id || '');
+  const [subjectId, setSubjectId] = useState('');
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const selectedSubject = subjects.find((subject) => String(subject.id) === String(subjectId));
+
+  // Identificar si aplica la restricción de semestre para estudiantes:
+  const isStudent = (user?.role || '').toLowerCase() === 'student';
+  const hasAcademicProfile =
+    Boolean(user?.program_type || user?.programType) &&
+    user?.semester !== null &&
+    user?.semester !== undefined &&
+    user?.semester !== '';
+
+  const isRestrictedStudent = isStudent && hasAcademicProfile;
+  const studentSemester = isRestrictedStudent ? Number(user.semester) : null;
+
+  // Filtrar materias: si es estudiante con perfil, SOLO materias de su semestre exacto
+  const filteredSubjects = useMemo(() => {
+    if (isRestrictedStudent) {
+      return (subjects || []).filter((sub) => Number(sub.semester) === studentSemester);
+    }
+    return subjects || [];
+  }, [subjects, isRestrictedStudent, studentSemester]);
+
+  const hasNoSubjectsForSemester = isRestrictedStudent && filteredSubjects.length === 0;
+
+  const selectedSubject = filteredSubjects.find((subject) => String(subject.id) === String(subjectId));
+
+  // Sincronizar la materia seleccionada con las materias permitidas
+  useEffect(() => {
+    const isCurrentValid = filteredSubjects.some((s) => String(s.id) === String(subjectId));
+    if (!isCurrentValid) {
+      setSubjectId(filteredSubjects[0]?.id || '');
+    }
+  }, [filteredSubjects, subjectId]);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -42,6 +73,12 @@ export default function UploadModal({ subjects, onClose, onNoteUploaded }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (hasNoSubjectsForSemester) {
+      setError(`No hay materias registradas para tu semestre (${studentSemester}°). Contacta al administrador.`);
+      return;
+    }
+
     if (!title || !subjectId || !file) {
       setError('Por favor completa todos los campos requeridos y selecciona un archivo.');
       return;
@@ -51,15 +88,17 @@ export default function UploadModal({ subjects, onClose, onNoteUploaded }) {
       setLoading(true);
       setError('');
       await notesService.uploadNote(token, {
-        title,
-        description,
+        title: title.trim(),
+        description: description ? description.trim() : undefined,
         subjectId,
         careerId: selectedSubject?.career_id || selectedSubject?.careerId || user?.career_id || user?.careerId,
         semester: selectedSubject?.semester || user?.semester || user?.semestre,
         file,
       });
 
-      onNoteUploaded();
+      if (typeof onNoteUploaded === 'function') {
+        onNoteUploaded();
+      }
       onClose();
     } catch (err) {
       setError(err.message || 'Error al subir el apunte');
@@ -123,20 +162,44 @@ export default function UploadModal({ subjects, onClose, onNoteUploaded }) {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Materia *</label>
-            <select
-              className="form-input"
-              value={subjectId}
-              onChange={(e) => setSubjectId(e.target.value)}
-              required
-            >
-              <option value="">Selecciona una materia...</option>
-              {subjects.map((sub) => (
-                <option key={sub.id} value={sub.id}>
-                  {sub.name} (Semestre {sub.semester})
-                </option>
-              ))}
-            </select>
+            <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+              Materia * {isRestrictedStudent && (
+                <span style={{ fontSize: '11px', color: 'var(--primary-color)', fontWeight: '600' }}>
+                  (Solo materias de tu semestre actual: {studentSemester}°)
+                </span>
+              )}
+            </label>
+
+            {hasNoSubjectsForSemester ? (
+              <div
+                style={{
+                  padding: '12px 14px',
+                  borderRadius: '10px',
+                  background: 'var(--color-danger-bg)',
+                  border: '1px solid var(--color-danger-border)',
+                  color: 'var(--color-danger-text)',
+                  fontSize: '13px',
+                  lineHeight: '1.4',
+                }}
+              >
+                ⚠️ No hay materias registradas para tu semestre ({studentSemester}°) — contacta al administrador.
+              </div>
+            ) : (
+              <select
+                className="form-input"
+                value={subjectId}
+                onChange={(e) => setSubjectId(e.target.value)}
+                required
+              >
+                <option value="">Selecciona una materia...</option>
+                {filteredSubjects.map((sub) => (
+                  <option key={sub.id} value={sub.id}>
+                    {sub.name} (Semestre {sub.semester})
+                  </option>
+                ))}
+              </select>
+            )}
+
             {selectedSubject && (
               <small style={{ display: 'block', marginTop: '5px', color: 'var(--text-secondary)' }}>
                 Carrera: {selectedSubject.career_name || selectedSubject.career?.name || 'Asignada'} · Semestre {selectedSubject.semester}
@@ -176,9 +239,13 @@ export default function UploadModal({ subjects, onClose, onNoteUploaded }) {
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || hasNoSubjectsForSemester}
               className="primary-btn"
-              style={{ flex: 2 }}
+              style={{
+                flex: 2,
+                opacity: (loading || hasNoSubjectsForSemester) ? 0.6 : 1,
+                cursor: (loading || hasNoSubjectsForSemester) ? 'not-allowed' : 'pointer',
+              }}
             >
               {loading ? 'Subiendo y Notificando...' : 'Publicar Apunte'}
             </button>

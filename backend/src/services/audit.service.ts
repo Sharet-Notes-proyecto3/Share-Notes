@@ -1,5 +1,6 @@
 // src/services/audit.service.ts
 import pool from '../config/database';
+import logger from '../utils/logger';
 
 interface AuditData {
   userId: number;
@@ -33,10 +34,9 @@ export async function logAuditAction(data: AuditData): Promise<void> {
     await pool.query(query, params);
     return;
   } catch (error: any) {
-    console.warn(
+    logger.warn(
       `⚠️ audit_log: fallo en primer intento para acción "${data.action}" ` +
-      `(user ${data.userId}, ${data.targetResource} #${data.targetId}):`,
-      error.code || error.message
+      `(user ${data.userId}, ${data.targetResource} #${data.targetId}): ${error.code || error.message}`
     );
   }
 
@@ -44,10 +44,10 @@ export async function logAuditAction(data: AuditData): Promise<void> {
   try {
     await new Promise(resolve => setTimeout(resolve, 500));
     await pool.query(query, params);
-    console.info(`✅ audit_log: reintento exitoso para acción "${data.action}"`);
+    logger.info(`✅ audit_log: reintento exitoso para acción "${data.action}"`);
   } catch (retryError: any) {
     // Si falla el reintento, registrar con máximo detalle pero NO bloquear la operación original
-    console.error(
+    logger.error(
       `❌ audit_log: FALLO DEFINITIVO para acción "${data.action}" ` +
       `(user ${data.userId}, rol ${data.userRole}, ${data.targetResource} #${data.targetId}). ` +
       `Este evento de auditoría se ha PERDIDO. Error: ${retryError.code || retryError.message}`
