@@ -57,33 +57,71 @@ export const routes = [
     component: 'ModeratorDashboard',
     meta: { authorities: ['moderator', 'admin'] },
   },
+  {
+    path: '/forbidden',
+    name: 'Forbidden',
+    component: 'ForbiddenView',
+    meta: { public: true },
+  },
+  {
+    path: '/not-found',
+    name: 'NotFound',
+    component: 'NotFoundView',
+    meta: { public: true },
+  },
+  {
+    path: '*',
+    name: 'CatchAll',
+    component: 'NotFoundView',
+    meta: { public: true },
+  },
 ];
 
-
 /**
- * Función de Guard de Navegación de Rutas (equivalente a router.beforeEach de Vue Router)
+ * Función de Guard de Navegación de Rutas (equivalente a router.beforeResolve)
+ * Bloquea rutas no encontradas y deniega acceso si el usuario no tiene permisos.
  */
 export async function beforeEachRouteGuard(to, from, next) {
-  // Si la ruta es pública, permitir navegación libre
-  if (to?.meta?.public) {
+  const target = to || {};
+  const targetPath = target.path || target.fullPath || '/';
+
+  if (!targetPath || targetPath === 'undefined') {
+    if (typeof next === 'function') next({ path: '/not-found' });
+    return false;
+  }
+
+  const routeExists = routes.some((route) => {
+    if (route.path === '*') return true;
+    if (route.path === targetPath) return true;
+    if (route.path.includes(':') && targetPath.startsWith(route.path.split('/:')[0])) {
+      return true;
+    }
+    return false;
+  });
+
+  if (!routeExists && targetPath !== '/forbidden' && targetPath !== '/not-found') {
+    if (typeof next === 'function') next({ path: '/not-found' });
+    return false;
+  }
+
+  if (target?.meta?.public || targetPath === '/forbidden' || targetPath === '/not-found') {
     if (typeof next === 'function') next();
     return true;
   }
 
-  const requiredAuthorities = to?.meta?.authorities || [];
-
-  // Intenta recuperar sesión y evalúa permisos con el servicio de cuenta
+  const requiredAuthorities = target?.meta?.authorities || [];
   const hasPermission = await accountService.hasAnyAuthorityAndCheckAuth(requiredAuthorities);
 
   if (hasPermission) {
     if (typeof next === 'function') next();
     return true;
-  } else {
-    // Si no está autenticado o no posee los permisos requeridos, redirigir
-    const redirectTarget = { name: 'Home', query: { redirect: to?.fullPath || '/' } };
-    if (typeof next === 'function') next(redirectTarget);
-    return false;
   }
+
+  if (typeof next === 'function') {
+    next({ path: '/forbidden', query: { redirect: targetPath } });
+  }
+
+  return false;
 }
 
 export const router = {
