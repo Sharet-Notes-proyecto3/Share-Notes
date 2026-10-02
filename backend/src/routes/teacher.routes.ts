@@ -24,21 +24,4 @@ router.post(
   teacherCtrl.generateCourseReport
 );
 
-// Acciones contextuales sobre foro de la materia asignada
-router.put(
-  '/forum/answers/:id/mark-solution',
-  authMiddleware,
-  requirePermission('forum:mark_solution'),
-  isTeacherOfCourse,
-  teacherCtrl.markSolution
-);
-
-router.post(
-  '/forum/posts/:id/close',
-  authMiddleware,
-  requirePermission('forum:close_thread'),
-  isTeacherOfCourse,
-  teacherCtrl.closeThread
-);
-
 export default router;

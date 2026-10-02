@@ -206,31 +206,52 @@ export class NoteService {
     `;
     const params: (string | number)[] = [];
 
-    // Determinar si el usuario es estudiante y consultar SIEMPRE su semestre en tiempo real desde la BD
-    let studentSemester: number | null = null;
-    if (user?.role === 'student' && user?.userId) {
-      const [uRows] = await pool.query<RowDataPacket[]>(
-        'SELECT semester FROM users WHERE id = ?',
+    // Determinar si el usuario es docente y consultar sus materias asignadas en tiempo real desde la BD
+    if (user?.role === 'teacher' && user?.userId) {
+      const [cRows] = await pool.query<RowDataPacket[]>(
+        'SELECT subject_id FROM teacher_courses WHERE teacher_id = ?',
         [user.userId]
       );
-      if (uRows[0] && uRows[0].semester !== null && uRows[0].semester !== undefined) {
-        studentSemester = Number(uRows[0].semester);
+      const assignedSubjectIds = cRows.map((r: any) => Number(r.subject_id));
+      if (assignedSubjectIds.length === 0) {
+        // Docente sin materias asignadas: no ve apuntes
+        return [];
       }
-    }
 
-    if (user?.role === 'student' && studentSemester) {
-      // Regla estricta de seguridad en backend: el estudiante solo puede ver notas de su propio semestre.
-      // Se ignora y sobreescribe cualquier intento de filtrar por otro semestre desde el cliente.
-      query += ' AND s.semester = ?';
-      params.push(studentSemester);
-    } else if (filters.semester) {
-      query += ' AND s.semester = ?';
-      params.push(filters.semester);
-    }
+      if (filters.subjectId && assignedSubjectIds.includes(Number(filters.subjectId))) {
+        query += ' AND n.subject_id = ?';
+        params.push(Number(filters.subjectId));
+      } else {
+        query += ` AND n.subject_id IN (${assignedSubjectIds.map(() => '?').join(', ')})`;
+        params.push(...assignedSubjectIds);
+      }
+    } else {
+      // Determinar si el usuario es estudiante y consultar SIEMPRE su semestre en tiempo real desde la BD
+      let studentSemester: number | null = null;
+      if (user?.role === 'student' && user?.userId) {
+        const [uRows] = await pool.query<RowDataPacket[]>(
+          'SELECT semester FROM users WHERE id = ?',
+          [user.userId]
+        );
+        if (uRows[0] && uRows[0].semester !== null && uRows[0].semester !== undefined) {
+          studentSemester = Number(uRows[0].semester);
+        }
+      }
 
-    if (filters.subjectId) {
-      query += ' AND n.subject_id = ?';
-      params.push(filters.subjectId);
+      if (user?.role === 'student' && studentSemester) {
+        // Regla estricta de seguridad en backend: el estudiante solo puede ver notas de su propio semestre.
+        // Se ignora y sobreescribe cualquier intento de filtrar por otro semestre desde el cliente.
+        query += ' AND s.semester = ?';
+        params.push(studentSemester);
+      } else if (filters.semester) {
+        query += ' AND s.semester = ?';
+        params.push(filters.semester);
+      }
+
+      if (filters.subjectId) {
+        query += ' AND n.subject_id = ?';
+        params.push(filters.subjectId);
+      }
     }
     if (filters.careerId) {
       query += ' AND s.career_id = ?';

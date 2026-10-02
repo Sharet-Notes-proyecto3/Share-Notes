@@ -10,7 +10,6 @@ export default function AuthModal() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role] = useState('student');
 
   const [programType, setProgramType] = useState('');
   const [semester, setSemester] = useState('');
@@ -86,26 +85,30 @@ export default function AuthModal() {
 
         if (password.length < 8) {
           throw new Error(
-            'La contraseña debe contener al menos 8 caracteres.'
+            'La contraseña debe tener al menos 8 caracteres.'
           );
         }
 
-        if (role === 'student') {
-          if (!programType) {
-            throw new Error('Por favor selecciona tu tipo de programa académico.');
-          }
-          if (!semester) {
-            throw new Error('Por favor selecciona tu semestre actual.');
-          }
+        if (password.length > 72) {
+          throw new Error(
+            'La contraseña no puede exceder los 72 caracteres.'
+          );
+        }
+
+        if (!programType) {
+          throw new Error('Por favor selecciona tu tipo de programa académico.');
+        }
+        if (!semester) {
+          throw new Error('Por favor selecciona tu semestre actual.');
         }
 
         await register(
           name.trim(),
           email.trim(),
           password,
-          role,
-          role === 'student' ? programType : null,
-          role === 'student' && semester ? Number(semester) : null
+          'student',
+          programType,
+          Number(semester)
         );
 
         setSuccess(
@@ -374,7 +377,7 @@ export default function AuthModal() {
                 )}
               </div>
 
-              {!isLogin && role === 'student' && (
+              {!isLogin && (
                 <>
                   <div className="auth-field">
                     <label htmlFor="programType">
@@ -423,6 +426,16 @@ export default function AuthModal() {
                           </option>
                         ))}
                       </select>
+                    </div>
+                  </div>
+
+                  <div className="auth-teacher-notice">
+                    <span className="notice-icon">ℹ️</span>
+                    <div>
+                      <strong>¿Eres docente?</strong>
+                      <p>
+                        El registro público crea cuentas de estudiante. Para habilitar permisos y acceso al panel docente, un administrador asignará tu rol una vez registrado.
+                      </p>
                     </div>
                   </div>
                 </>

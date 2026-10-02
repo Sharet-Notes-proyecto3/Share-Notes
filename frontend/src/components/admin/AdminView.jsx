@@ -11,9 +11,10 @@ import ReportsTable from './ReportsTable';
 import SanctionsModal from './SanctionsModal';
 import MicroservicesCard from './MicroservicesCard';
 import AcademicCatalog from './AcademicCatalog';
+import StaffAccountManager from './StaffAccountManager';
 
 export default function AdminView() {
-  const { token, isModerator } = useAuth();
+  const { token, isModerator, isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState([]);
   const [reports, setReports] = useState([]);
@@ -228,6 +229,24 @@ export default function AdminView() {
         >
           🚨 Reportes de Moderación {metrics.pendingReports > 0 && `(${metrics.pendingReports})`}
         </button>
+
+        {isAdmin && (
+          <button
+            onClick={() => setActiveTab('staff')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '13px',
+              background: activeTab === 'staff' ? 'var(--primary-color)' : 'transparent',
+              color: activeTab === 'staff' ? 'var(--primary-contrast)' : 'var(--text-secondary)',
+            }}
+          >
+            👔 Cuentas de Personal
+          </button>
+        )}
       </div>
 
       {/* Contenido según pestaña */}
@@ -245,6 +264,11 @@ export default function AdminView() {
         />
       ) : activeTab === 'catalog' ? (
         <AcademicCatalog />
+      ) : activeTab === 'staff' ? (
+        <StaffAccountManager
+          token={token}
+          onAccountCreated={loadAdminData}
+        />
       ) : (
         <ReportsTable
           reports={reports}

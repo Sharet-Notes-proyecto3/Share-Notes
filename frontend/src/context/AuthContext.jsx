@@ -1,38 +1,43 @@
 // =============================================================================
 // CONTEXTO GLOBAL DE AUTENTICACIÓN, SESIÓN Y ROLES
-// Integración con AccountService, AccountStore y JWT Pattern
+// Fuente única de verdad del estado de sesión en React
 // =============================================================================
 
 import { createContext, useContext, useEffect, useState } from 'react';
-
-import { accountService } from '../services/account.service';
-import accountStore from '../store/account-store';
+import {
+  getStoredToken,
+  setStoredToken,
+  clearStoredToken,
+  getStoredUser,
+  setStoredUser,
+  clearStoredUser,
+  setUnauthorizedHandler,
+} from '../services/api';
 import { authService } from '../services/auth.service';
-import { setUnauthorizedHandler } from '../services/api';
 import OnboardingModal from '../components/auth/OnboardingModal';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   // ---------------------------------------------------------------------------
-  // ESTADO DE SESIÓN DESDE ACCOUNT SERVICE / STORE
+  // ESTADO DE SESIÓN REACTIVO DESDE ALMACENAMIENTO LOCAL / API
   // loading inicia en true si hay un token guardado para evitar destellos de AuthModal
   // ---------------------------------------------------------------------------
 
-  const [token, setToken] = useState(() => accountService.getToken());
-  const [user, setUser] = useState(() => accountStore.getters.account());
-  const [loading, setLoading] = useState(
-    () => Boolean(accountService.getToken()),
-  );
+  const [token, setToken] = useState(() => getStoredToken());
+  const [user, setUser] = useState(() => getStoredUser());
+  const [loading, setLoading] = useState(() => Boolean(getStoredToken()));
 
   // ---------------------------------------------------------------------------
   // CERRAR SESIÓN
   // ---------------------------------------------------------------------------
 
   const logout = () => {
-    accountService.logout();
+    clearStoredToken();
+    clearStoredUser();
     setToken(null);
     setUser(null);
+    setNeedsOnboarding(false);
   };
 
   // ---------------------------------------------------------------------------
@@ -64,13 +69,16 @@ export const AuthProvider = ({ children }) => {
 
   const completeOnboarding = async ({ careerId, semester, programType }) => {
     if (!user) return;
+    const currentToken = token || getStoredToken();
     const updatedProfile = await authService.updateAcademicProfile(
-      accountService.getToken(),
+      currentToken,
       careerId,
       semester,
       programType
     );
+    // Sincronización inmediata: React State + Almacenamiento persistente
     setUser(updatedProfile);
+    setStoredUser(updatedProfile);
     setNeedsOnboarding(false);
   };
 
@@ -91,7 +99,7 @@ export const AuthProvider = ({ children }) => {
     let isActive = true;
 
     const loadSession = async () => {
-      const currentToken = accountService.getToken();
+      const currentToken = getStoredToken();
 
       if (!currentToken) {
         if (isActive) {
@@ -105,23 +113,20 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
 
       try {
-        const success = await accountService.loadAccount();
+        const freshProfile = await authService.getProfile(currentToken);
         if (!isActive) return;
 
-        if (success) {
-          const currentUser = accountStore.getters.account();
-          setUser(currentUser);
-          setToken(accountService.getToken());
-          checkOnboarding(currentUser);
+        if (freshProfile && (freshProfile.email || freshProfile.id)) {
+          setUser(freshProfile);
+          setStoredUser(freshProfile);
+          setToken(currentToken);
+          checkOnboarding(freshProfile);
         } else {
-          setUser(null);
-          setToken(null);
+          logout();
         }
       } catch {
         if (!isActive) return;
-        accountService.logout();
-        setUser(null);
-        setToken(null);
+        logout();
       } finally {
         if (isActive) {
           setLoading(false);
@@ -141,13 +146,15 @@ export const AuthProvider = ({ children }) => {
   // ---------------------------------------------------------------------------
 
   const login = async (email, password, rememberMe = true) => {
-    const data = await accountService.login(email, password, rememberMe);
-    const storedToken = accountService.getToken();
-    const currentUser = accountStore.getters.account();
+    const data = await authService.login(email, password);
 
-    setToken(storedToken);
-    setUser(currentUser);
-    checkOnboarding(currentUser);
+    if (data?.token && data?.user) {
+      setStoredToken(data.token, rememberMe);
+      setStoredUser(data.user, rememberMe);
+      setToken(data.token);
+      setUser(data.user);
+      checkOnboarding(data.user);
+    }
 
     return data;
   };
@@ -165,25 +172,40 @@ export const AuthProvider = ({ children }) => {
   // Roles unificados con backend: admin | moderator | teacher | student
   // ---------------------------------------------------------------------------
 
-  const userRole = (accountStore.getters.userRole() || user?.role || 'student')
-    .toString()
-    .toLowerCase();
+  const userRole = (user?.role || 'student').toString().toLowerCase();
   const isAdmin = userRole === 'admin';
   const isModerator = isAdmin || userRole === 'moderator';
   const isTeacher = isAdmin || userRole === 'teacher';
   const isStudent =
     userRole === 'student' || (!isAdmin && !isModerator && !isTeacher);
 
+  const checkAuthorities = (authorities) => {
+    if (!token || !user) {
+      return false;
+    }
+    if (!authorities) {
+      return true;
+    }
+    const authList = Array.isArray(authorities) ? authorities : [authorities];
+    if (authList.length === 0) {
+      return true;
+    }
+
+    const current = (user?.role || '').toString().toLowerCase();
+    if (current === 'admin') return true;
+
+    return authList.some((req) => req.toString().toLowerCase() === current);
+  };
+
   const hasAnyAuthority = (authorities) => {
-    return accountService.checkAuthorities(authorities);
+    return checkAuthorities(authorities);
   };
 
   // ---------------------------------------------------------------------------
   // ESTADO DE AUTENTICACIÓN
   // ---------------------------------------------------------------------------
 
-  const isAuthenticated =
-    Boolean(token) && Boolean(user) && accountStore.getters.isAuthenticated();
+  const isAuthenticated = Boolean(token) && Boolean(user);
 
   // ---------------------------------------------------------------------------
   // CONTEXTO GLOBAL
@@ -203,6 +225,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated,
         userRole,
         hasAnyAuthority,
+        checkAuthorities,
 
         isAdmin,
         isModerator,

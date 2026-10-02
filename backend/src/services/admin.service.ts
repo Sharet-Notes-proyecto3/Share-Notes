@@ -1,8 +1,9 @@
 // src/services/admin.service.ts
 import pool from '../config/database';
 import { AppError } from '../middlewares/error.middleware';
-import { RowDataPacket } from 'mysql2';
+import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import QRCode from 'qrcode';
+import bcrypt from 'bcryptjs';
 import { logAuditAction } from './audit.service';
 
 export class AdminService {
@@ -14,6 +15,190 @@ export class AdminService {
       `SELECT id, name, email, role, is_active, created_at FROM users ORDER BY created_at DESC`
     );
     return rows;
+  }
+
+  async createStaffUser(
+    data: {
+      name?: string;
+      email?: string;
+      password?: string;
+      role?: string;
+      subjectIds?: number[];
+    },
+    adminId: number
+  ) {
+    if (!data.name || typeof data.name !== 'string' || data.name.trim().length < 2) {
+      throw new AppError(400, 'El nombre debe tener al menos 2 caracteres');
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!data.email || typeof data.email !== 'string' || !emailRegex.test(data.email.trim())) {
+      throw new AppError(400, 'Correo electrónico inválido');
+    }
+    const normalizedEmail = data.email.toLowerCase().trim();
+
+    if (!data.password || typeof data.password !== 'string' || data.password.length < 8) {
+      throw new AppError(400, 'La contraseña debe tener al menos 8 caracteres');
+    }
+    if (data.password.length > 72) {
+      throw new AppError(400, 'La contraseña no puede exceder 72 caracteres');
+    }
+
+    if (!data.role || (data.role !== 'teacher' && data.role !== 'moderator')) {
+      throw new AppError(400, 'Solo se pueden crear cuentas de docente o moderador desde este panel');
+    }
+
+    const [existing] = await pool.query<RowDataPacket[]>(
+      'SELECT id FROM users WHERE email = ?',
+      [normalizedEmail]
+    );
+    if (existing.length > 0) {
+      throw new AppError(409, 'El correo electrónico ya está registrado');
+    }
+
+    const cleanSubjectIds: number[] = [];
+    if (data.role === 'teacher') {
+      if (data.subjectIds !== undefined) {
+        if (!Array.isArray(data.subjectIds)) {
+          throw new AppError(400, 'subjectIds debe ser una lista de números');
+        }
+        for (const sid of data.subjectIds) {
+          const num = Number(sid);
+          if (!Number.isInteger(num) || num <= 0) {
+            throw new AppError(400, 'ID de materia inválido');
+          }
+          if (!cleanSubjectIds.includes(num)) {
+            cleanSubjectIds.push(num);
+          }
+        }
+        if (cleanSubjectIds.length > 0) {
+          const [foundSubjects] = await pool.query<RowDataPacket[]>(
+            `SELECT id FROM subjects WHERE id IN (${cleanSubjectIds.map(() => '?').join(', ')})`,
+            cleanSubjectIds
+          );
+          if (foundSubjects.length !== cleanSubjectIds.length) {
+            throw new AppError(400, 'Una o más materias seleccionadas no existen');
+          }
+        }
+      }
+    }
+
+    const hashedPassword = await bcrypt.hash(data.password, 12);
+
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+      const [insertRes] = await conn.query<ResultSetHeader>(
+        'INSERT INTO users (name, email, password_hash, role, is_active) VALUES (?, ?, ?, ?, 1)',
+        [data.name.trim(), normalizedEmail, hashedPassword, data.role]
+      );
+      const newUserId = insertRes.insertId;
+
+      if (data.role === 'teacher' && cleanSubjectIds.length > 0) {
+        const values = cleanSubjectIds.map((sid) => [newUserId, sid]);
+        await conn.query(
+          'INSERT INTO teacher_courses (teacher_id, subject_id) VALUES ?',
+          [values]
+        );
+      }
+
+      await conn.commit();
+
+      await logAuditAction({
+        userId: adminId,
+        userRole: 'admin',
+        action: 'CREATE_STAFF_USER',
+        targetResource: 'user',
+        targetId: newUserId,
+        details: {
+          role: data.role,
+          email: normalizedEmail,
+          assignedSubjectsCount: cleanSubjectIds.length,
+        },
+      });
+
+      return {
+        id: newUserId,
+        name: data.name.trim(),
+        email: normalizedEmail,
+        role: data.role,
+        assignedSubjects: cleanSubjectIds,
+        message: `Cuenta de ${data.role === 'teacher' ? 'docente' : 'moderador'} creada exitosamente`,
+      };
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async updateTeacherCourses(teacherId: number, subjectIds: any, adminId: number) {
+    if (!Number.isInteger(teacherId) || teacherId <= 0) {
+      throw new AppError(400, 'ID de docente inválido');
+    }
+    if (!Array.isArray(subjectIds)) {
+      throw new AppError(400, 'subjectIds debe ser una lista de IDs de materias');
+    }
+
+    const [users] = await pool.query<RowDataPacket[]>('SELECT id, role FROM users WHERE id = ?', [teacherId]);
+    const user = users[0];
+    if (!user) throw new AppError(404, 'Docente no encontrado');
+    if (user.role !== 'teacher') {
+      throw new AppError(400, 'El usuario no tiene el rol de docente');
+    }
+
+    const cleanSubjectIds: number[] = [];
+    for (const sid of subjectIds) {
+      const num = Number(sid);
+      if (!Number.isInteger(num) || num <= 0) {
+        throw new AppError(400, 'ID de materia inválido');
+      }
+      if (!cleanSubjectIds.includes(num)) {
+        cleanSubjectIds.push(num);
+      }
+    }
+
+    if (cleanSubjectIds.length > 0) {
+      const [foundSubjects] = await pool.query<RowDataPacket[]>(
+        `SELECT id FROM subjects WHERE id IN (${cleanSubjectIds.map(() => '?').join(', ')})`,
+        cleanSubjectIds
+      );
+      if (foundSubjects.length !== cleanSubjectIds.length) {
+        throw new AppError(400, 'Una o más materias seleccionadas no existen');
+      }
+    }
+
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+      await conn.query('DELETE FROM teacher_courses WHERE teacher_id = ?', [teacherId]);
+      if (cleanSubjectIds.length > 0) {
+        const values = cleanSubjectIds.map((sid) => [teacherId, sid]);
+        await conn.query('INSERT INTO teacher_courses (teacher_id, subject_id) VALUES ?', [values]);
+      }
+      await conn.commit();
+
+      await logAuditAction({
+        userId: adminId,
+        userRole: 'admin',
+        action: 'UPDATE_TEACHER_COURSES',
+        targetResource: 'user',
+        targetId: teacherId,
+        details: { newSubjectIds: cleanSubjectIds },
+      });
+
+      return {
+        message: 'Materias asignadas actualizadas exitosamente',
+        teacherId,
+        assignedSubjects: cleanSubjectIds,
+      };
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
   }
 
   async toggleUserStatus(userId: number, adminId: number) {

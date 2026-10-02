@@ -46,11 +46,7 @@ export const teacherService = {
    * Obtener las materias asignadas al docente actual
    */
   async getTeacherCourses(token) {
-    try {
-      return await api.get('/teacher/courses', token);
-    } catch {
-      return await api.get('/notes/subjects', token);
-    }
+    return await api.get('/teacher/courses', token);
   },
 };
 
