@@ -12,7 +12,7 @@ router.use(authMiddleware);
 // Cualquier usuario puede ver sus propios permisos
 router.get('/my-permissions', ctrl.getMyPermissions);
 
-// Solo moderador o superior puede ver la lista de usuarios con roles
+// Solo administrador puede ver la lista de usuarios con roles
 router.get('/users', requirePermission('users:view_list'), ctrl.listUsersWithRoles);
 
 // Endpoint unificado para cambio de roles: delega directamente al controlador oficial de administración

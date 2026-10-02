@@ -15,36 +15,33 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       res.status(400).json({ message: 'Nombre, email y contraseña son requeridos' });
       return;
     }
+    if (typeof password !== 'string') {
+      res.status(400).json({ message: 'La contraseña debe ser una cadena de texto válida' });
+      return;
+    }
     if (password.length < 8) {
-      res.status(400).json({ message: 'La contraseña debe tener mínimo 8 caracteres' });
+      res.status(400).json({ message: 'La contraseña debe tener al menos 8 caracteres' });
+      return;
+    }
+    if (password.length > 72) {
+      res.status(400).json({ message: 'La contraseña no puede exceder los 72 caracteres' });
       return;
     }
 
-    const assignedRole = role || 'student';
+    // En el registro público todas las cuentas se crean como 'student'.
+    // Exigir validación académica obligatoria en todo registro público:
+    if (!programType || semester === undefined || semester === null || semester === '') {
+      res.status(400).json({
+        message: "El tipo de programa ('tecnologo' o 'ingenieria') y el semestre son requeridos",
+      });
+      return;
+    }
 
-    // Validación de negocio para estudiantes:
-    if (assignedRole === 'student') {
-      if (!programType || semester === undefined || semester === null || semester === '') {
-        res.status(400).json({
-          message: "Para estudiantes, el tipo de programa ('tecnologo' o 'ingenieria') y el semestre son requeridos",
-        });
-        return;
-      }
-
-      if (!isValidSemesterForProgram(programType, semester)) {
-        res.status(400).json({
-          message: getSemesterRangeErrorMessage(programType),
-        });
-        return;
-      }
-    } else if (programType && semester !== undefined && semester !== null && semester !== '') {
-      // Para otros roles (teacher, moderator, admin), validar consistencia si se proveen
-      if (!isValidSemesterForProgram(programType, semester)) {
-        res.status(400).json({
-          message: getSemesterRangeErrorMessage(programType),
-        });
-        return;
-      }
+    if (!isValidSemesterForProgram(programType, semester)) {
+      res.status(400).json({
+        message: getSemesterRangeErrorMessage(programType),
+      });
+      return;
     }
 
     // Forzar rol 'student' en registro público para evitar escalada de privilegios
@@ -53,10 +50,21 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       email,
       password,
       'student',
-      programType || null,
-      semester !== undefined && semester !== null && semester !== '' ? Number(semester) : null
+      programType,
+      Number(semester)
     );
-    res.status(201).json({ message: 'Registro exitoso', user });
+
+    const responsePayload: Record<string, any> = {
+      message: 'Registro exitoso',
+      user,
+    };
+
+    if (role && role !== 'student') {
+      responsePayload.roleNotice =
+        'El registro público solo crea cuentas de estudiante. Para solicitar rol docente, contacta a un administrador.';
+    }
+
+    res.status(201).json(responsePayload);
   } catch (err) { next(err); }
 };
 
