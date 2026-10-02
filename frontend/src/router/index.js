@@ -1,9 +1,9 @@
 // =============================================================================
-// ENRUTADOR Y GUARD DE RUTAS DE NAVEGACIÓN (VUE ROUTER GUARD / ROUTE GUARD)
-// Referencia del Patrón: Intercepción beforeEach con hasAnyAuthorityAndCheckAuth()
+// ENRUTADOR Y GUARD DE RUTAS DE NAVEGACIÓN (ROUTE GUARD)
+// Intercepción beforeEach basada en autenticación pura y roles
 // =============================================================================
 
-import { accountService } from '../services/account.service';
+import { getStoredToken, getStoredUser } from '../services/api';
 
 /**
  * Definición de rutas con metadatos de autoridades requeridas
@@ -59,9 +59,8 @@ export const routes = [
   },
 ];
 
-
 /**
- * Función de Guard de Navegación de Rutas (equivalente a router.beforeEach de Vue Router)
+ * Función de Guard de Navegación de Rutas
  */
 export async function beforeEachRouteGuard(to, from, next) {
   // Si la ruta es pública, permitir navegación libre
@@ -70,16 +69,31 @@ export async function beforeEachRouteGuard(to, from, next) {
     return true;
   }
 
-  const requiredAuthorities = to?.meta?.authorities || [];
+  const token = getStoredToken();
+  const user = getStoredUser();
 
-  // Intenta recuperar sesión y evalúa permisos con el servicio de cuenta
-  const hasPermission = await accountService.hasAnyAuthorityAndCheckAuth(requiredAuthorities);
+  if (!token || !user) {
+    const redirectTarget = { name: 'Home', query: { redirect: to?.fullPath || '/' } };
+    if (typeof next === 'function') next(redirectTarget);
+    return false;
+  }
+
+  const requiredAuthorities = to?.meta?.authorities || [];
+  if (requiredAuthorities.length === 0) {
+    if (typeof next === 'function') next();
+    return true;
+  }
+
+  const userRole = (user?.role || '').toString().toLowerCase();
+  const hasPermission =
+    userRole === 'admin' ||
+    requiredAuthorities.map((a) => a.toString().toLowerCase()).includes(userRole);
 
   if (hasPermission) {
     if (typeof next === 'function') next();
     return true;
   } else {
-    // Si no está autenticado o no posee los permisos requeridos, redirigir
+    // Si no posee los permisos requeridos, redirigir
     const redirectTarget = { name: 'Home', query: { redirect: to?.fullPath || '/' } };
     if (typeof next === 'function') next(redirectTarget);
     return false;

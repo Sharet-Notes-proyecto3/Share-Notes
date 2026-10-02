@@ -49,9 +49,15 @@ export const authService = {
       throw new Error('La contraseña es obligatoria.');
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       throw new Error(
-        'La contraseña debe tener al menos 6 caracteres.'
+        'La contraseña debe tener al menos 8 caracteres.'
+      );
+    }
+
+    if (password.length > 72) {
+      throw new Error(
+        'La contraseña no puede exceder los 72 caracteres.'
       );
     }
 
