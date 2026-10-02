@@ -29,13 +29,13 @@ const options: swaggerJsdoc.Options = {
         // ── Auth ────────────────────────────────────────────────────────
         RegisterBody: {
           type: 'object',
-          required: ['name', 'email', 'password'],
+          required: ['name', 'email', 'password', 'programType', 'semester'],
           properties: {
             name:        { type: 'string', example: 'Paula Ayala' },
             email:       { type: 'string', example: 'paula@uniputumayo.edu.co' },
             password:    { type: 'string', minLength: 8, example: 'MiPass123' },
-            role:        { type: 'string', enum: ['student', 'teacher', 'moderator', 'admin'], example: 'student' },
-            programType: { type: 'string', enum: ['tecnologo', 'ingenieria'], example: 'tecnologo', description: 'Requerido para estudiantes (tecnologo: semestres 1-6, ingenieria: semestres 7-10)' },
+            role:        { type: 'string', enum: ['student'], example: 'student', description: 'El registro público asigna automáticamente el rol student. Las cuentas docentes o administrativas son gestionadas por un administrador.' },
+            programType: { type: 'string', enum: ['tecnologo', 'ingenieria'], example: 'tecnologo', description: 'Requerido (tecnologo: semestres 1-6, ingenieria: semestres 7-10)' },
             semester:    { type: 'integer', minimum: 1, maximum: 10, example: 3, description: 'Semestre acorde al tipo de programa' },
           },
         },
@@ -189,6 +189,35 @@ const options: swaggerJsdoc.Options = {
           },
         },
 
+        CreateStaffUserBody: {
+          type: 'object',
+          required: ['name', 'email', 'password', 'role'],
+          properties: {
+            name: { type: 'string', example: 'Prof. Carlos Delgado' },
+            email: { type: 'string', example: 'carlos.delgado@uniputumayo.edu.co' },
+            password: { type: 'string', minLength: 8, maxLength: 72, example: 'Docente2026!' },
+            role: { type: 'string', enum: ['teacher', 'moderator'], example: 'teacher' },
+            subjectIds: {
+              type: 'array',
+              items: { type: 'integer' },
+              example: [1, 2],
+              description: 'IDs de las materias asignadas (solo para docente)',
+            },
+          },
+        },
+        UpdateTeacherCoursesBody: {
+          type: 'object',
+          required: ['subjectIds'],
+          properties: {
+            subjectIds: {
+              type: 'array',
+              items: { type: 'integer' },
+              example: [1, 2, 5],
+              description: 'Lista de IDs de materias asignadas al docente',
+            },
+          },
+        },
+
         // ── Común ───────────────────────────────────────────────────────
         MessageResponse: {
           type: 'object',
@@ -312,7 +341,7 @@ const options: swaggerJsdoc.Options = {
         },
         post: {
           tags: ['2. Apuntes'],
-          summary: 'Subir un nuevo apunte (PDF, JPG o PNG — máx. 100 MB)',
+          summary: 'Subir un nuevo apunte (PDF, JPG o PNG — máx. 25 MB)',
           security: [{ bearerAuth: [] }],
           requestBody: {
             required: true,
@@ -750,6 +779,22 @@ const options: swaggerJsdoc.Options = {
             403: { description: 'Acceso denegado: se requiere rol admin' },
           },
         },
+        post: {
+          tags: ['4. Administración'],
+          summary: 'Crear cuenta de personal (docente o moderador) (requiere users:create)',
+          security: [{ bearerAuth: [] }],
+          requestBody: {
+            required: true,
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/CreateStaffUserBody' } } },
+          },
+          responses: {
+            201: { description: 'Cuenta de personal creada exitosamente' },
+            400: { description: 'Datos inválidos o materias inexistentes' },
+            401: { description: 'No autenticado' },
+            403: { description: 'Acceso denegado: se requiere permiso users:create' },
+            409: { description: 'El correo electrónico ya está registrado' },
+          },
+        },
       },
       '/admin/users/{id}/toggle': {
         patch: {
@@ -782,6 +827,25 @@ const options: swaggerJsdoc.Options = {
             401: { description: 'No autenticado' },
             403: { description: 'Acceso denegado: se requiere rol admin' },
             404: { description: 'Usuario no encontrado' },
+          },
+        },
+      },
+      '/admin/users/{id}/courses': {
+        patch: {
+          tags: ['4. Administración'],
+          summary: 'Asignar o actualizar materias a un docente (requiere users:assign_courses)',
+          security: [{ bearerAuth: [] }],
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+          requestBody: {
+            required: true,
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/UpdateTeacherCoursesBody' } } },
+          },
+          responses: {
+            200: { description: 'Materias asignadas actualizadas exitosamente' },
+            400: { description: 'Datos inválidos o el usuario no es docente' },
+            401: { description: 'No autenticado' },
+            403: { description: 'Acceso denegado: se requiere permiso users:assign_courses' },
+            404: { description: 'Docente no encontrado' },
           },
         },
       },

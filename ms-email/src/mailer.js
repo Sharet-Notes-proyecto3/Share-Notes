@@ -9,6 +9,8 @@ let transporter = null;
 async function getTransporter() {
   if (transporter) return transporter;
 
+  const isProduction = process.env.NODE_ENV === 'production';
+
   // Si hay configuración SMTP real en las variables de entorno, usarla
   if (process.env.SMTP_HOST) {
     transporter = nodemailer.createTransport({
@@ -24,7 +26,15 @@ async function getTransporter() {
     return transporter;
   }
 
-  // Si no hay configuración, crear cuenta de prueba con Ethereal
+  // En producción, bloquear y fallar explícitamente si no hay SMTP configurado
+  if (isProduction) {
+    const errorMsg = 'FATAL: Configuración SMTP ausente en producción (SMTP_HOST no definido). Envío de correos bloqueado para evitar fuga de información.';
+    logger.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+
+  // Si no hay configuración en desarrollo/test, advertir y crear cuenta de prueba con Ethereal
+  logger.warn('⚠️ SMTP no configurado en entorno de desarrollo. Creando cuenta temporal en Ethereal...');
   const testAccount = await nodemailer.createTestAccount();
   transporter = nodemailer.createTransport({
     host: 'smtp.ethereal.email',

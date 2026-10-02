@@ -22,6 +22,34 @@ export const changeUserRole = async (req: Request, res: Response, next: NextFunc
   } catch (err) { next(err); }
 };
 
+export const createStaffUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { name, email, password, role, subjectIds } = req.body;
+    const result = await service.createStaffUser(
+      { name, email, password, role, subjectIds },
+      req.user!.userId
+    );
+    res.status(201).json(result);
+  } catch (err) { next(err); }
+};
+
+export const updateTeacherCourses = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const teacherId = parseInt(req.params.id);
+    if (isNaN(teacherId)) {
+      res.status(400).json({ message: 'ID de docente inválido' });
+      return;
+    }
+    const { subjectIds } = req.body;
+    const result = await service.updateTeacherCourses(
+      teacherId,
+      subjectIds,
+      req.user!.userId
+    );
+    res.json(result);
+  } catch (err) { next(err); }
+};
+
 export const listReports = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await service.listReports(req.query.status as string | undefined);

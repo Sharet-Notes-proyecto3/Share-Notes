@@ -21,6 +21,7 @@ jest.mock('../utils/microservicesClient', () => ({
 }));
 
 import pool from '../config/database';
+import { generatePdfReport } from '../utils/microservicesClient';
 
 function mockReq(userRole: 'student' | 'teacher' | 'admin', userId = 10, params = {}, body = {}, baseUrl = '/api/notes', path = '/1/verify') {
   return {
@@ -123,6 +124,24 @@ describe('🧪 Suite de Pruebas Unitarias — Rol TEACHER (RBAC + ABAC)', () => 
     const pdfBuffer = await teacherService.generateCourseReport(5, 10, 'teacher', 'test-cid-teacher');
     expect(pdfBuffer).toBeInstanceOf(Buffer);
     expect(pdfBuffer.length).toBeGreaterThan(0);
+  });
+
+  test('TEA-04-B | Debería lanzar AppError 503 si el microservicio MS-PDF no está disponible (devuelve null)', async () => {
+    (pool.query as jest.Mock)
+      .mockResolvedValueOnce([[{ id: 5, name: 'Cálculo I' }]]) // subjects
+      .mockResolvedValueOnce([[{ name: 'Prof. Carlos' }]]) // users
+      .mockResolvedValueOnce([[{ student_id: 1, student_name: 'Ana', notes_count: 3, verified_notes: 2 }]]) // notesStats
+      .mockResolvedValueOnce([[{ total_verified: 2 }]]) // total verified
+      .mockResolvedValueOnce([[{ student_id: 1, student_name: 'Ana', threads_count: 1, replies_count: 4 }]]); // forumStats
+
+    (generatePdfReport as jest.Mock).mockResolvedValueOnce(null);
+
+    await expect(
+      teacherService.generateCourseReport(5, 10, 'teacher', 'test-cid-teacher')
+    ).rejects.toMatchObject({
+      statusCode: 503,
+      message: 'El servicio de generación de PDFs no está disponible en este momento. Intenta más tarde.',
+    });
   });
 
   // 5. Denegación de acceso (403) a endpoints de administración (/api/admin/*)

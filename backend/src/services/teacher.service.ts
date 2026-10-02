@@ -182,12 +182,13 @@ export class TeacherService {
       })),
     };
 
-    let pdfBuffer = await generatePdfReport(pdfData, correlationId);
+    const pdfBuffer = await generatePdfReport(pdfData, correlationId);
 
-    // Fallback local en Buffer PDF estándar si MS-PDF no está disponible
     if (!pdfBuffer) {
-      const pdfText = `%PDF-1.4\n1 0 obj <</Type /Catalog /Pages 2 0 R>> endobj\n2 0 obj <</Type /Pages /Kids [3 0 R] /Count 1>> endobj\n3 0 obj <</Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R>> endobj\n4 0 obj <</Length 120>> stream\nBT /F1 12 Tf 50 750 Td (Reporte Analitico del Curso: ${subjectName}) Tj 0 -20 Td (Docente: ${teacherName}) Tj 0 -20 Td (Apuntes Verificados: ${totalVerified}) Tj ET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000216 00000 n \ntrailer <</Size 5 /Root 1 0 R>>\nstartxref\n386\n%%EOF`;
-      pdfBuffer = Buffer.from(pdfText);
+      throw new AppError(
+        503,
+        'El servicio de generación de PDFs no está disponible en este momento. Intenta más tarde.'
+      );
     }
 
     // Registrar en auditoría

@@ -5,18 +5,22 @@
 //              apuntes de materias correspondientes a su semestre registrado.
 // =============================================================================
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { notesService } from '../../services/notes.service';
+import { teacherService } from '../../services/teacher.service';
 import { useAuth } from '../../context/AuthContext';
+import { useFilteredSubjects } from '../../hooks/useFilteredSubjects';
 import NoteCard from './NoteCard';
 import UploadModal from './UploadModal';
 import QRModal from './QRModal';
 import PreviewModal from './PreviewModal';
 
 export default function NotesGrid() {
-  const { token, user } = useAuth();
+  const { token, isTeacher } = useAuth();
   const [notes, setNotes] = useState([]);
   const [subjects, setSubjects] = useState([]);
+  const [teacherCourses, setTeacherCourses] = useState([]);
+  const [teacherCoursesLoaded, setTeacherCoursesLoaded] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -29,28 +33,13 @@ export default function NotesGrid() {
 
   const [selectedSemester, setSelectedSemester] = useState('');
 
-  // Identificar si aplica la restricción de semestre para estudiantes
-  const isStudent = (user?.role || '').toLowerCase() === 'student';
-  const hasAcademicProfile =
-    Boolean(user?.program_type || user?.programType) &&
-    user?.semester !== null &&
-    user?.semester !== undefined &&
-    user?.semester !== '';
-
-  const isRestrictedStudent = isStudent && hasAcademicProfile;
-  const studentSemester = isRestrictedStudent ? Number(user.semester) : null;
-  const programTypeLabel =
-    (user?.program_type || user?.programType) === 'ingenieria'
-      ? 'Ingeniería'
-      : 'Tecnólogo';
-
-  // Filtrado de materias: Si es estudiante restringido, solo materias de su propio semestre
-  const filteredSubjects = useMemo(() => {
-    if (isRestrictedStudent) {
-      return (subjects || []).filter((sub) => Number(sub.semester) === studentSemester);
-    }
-    return subjects || [];
-  }, [subjects, isRestrictedStudent, studentSemester]);
+  // Restricción académica mediante hook compartido
+  const {
+    filteredSubjects,
+    isRestrictedStudent,
+    studentSemester,
+    programTypeLabel,
+  } = useFilteredSubjects(subjects);
 
   // Si la materia seleccionada previamente no pertenece a las materias permitidas, resetear
   useEffect(() => {
@@ -59,15 +48,57 @@ export default function NotesGrid() {
       if (!isValid) {
         setSelectedSubject('');
       }
+    } else if (selectedSubject && isTeacher && teacherCoursesLoaded) {
+      const isValid = teacherCourses.some((s) => String(s.id) === String(selectedSubject));
+      if (!isValid) {
+        setSelectedSubject('');
+      }
     }
-  }, [filteredSubjects, selectedSubject, isRestrictedStudent]);
+  }, [filteredSubjects, selectedSubject, isRestrictedStudent, isTeacher, teacherCoursesLoaded, teacherCourses]);
+
+  // Cargar materias asignadas si el usuario es docente
+  useEffect(() => {
+    if (!token || !isTeacher) return;
+    let isMounted = true;
+    teacherService
+      .getTeacherCourses(token)
+      .then((res) => {
+        if (isMounted) {
+          const list = Array.isArray(res) ? res : res.data || [];
+          setTeacherCourses(list);
+          setTeacherCoursesLoaded(true);
+        }
+      })
+      .catch((err) => {
+        console.error('Error al cargar materias asignadas del docente:', err);
+        if (isMounted) {
+          setTeacherCourses([]);
+          setTeacherCoursesLoaded(true);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [token, isTeacher]);
 
   const refreshNotes = useCallback(async () => {
     if (!token) return;
+    // Si es docente y ya cargaron sus materias pero no tiene ninguna asignada, no consulta y muestra vacío
+    if (isTeacher && teacherCoursesLoaded && teacherCourses.length === 0) {
+      setNotes([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      // Para estudiantes restringidos, la consulta siempre enfoca su semestre
-      const effectiveSemester = isRestrictedStudent ? studentSemester : selectedSemester;
+      // Para estudiantes restringidos, la consulta enfoca su semestre
+      // Para docentes, no se envía semester (el backend filtra en tiempo real por teacher_courses)
+      const effectiveSemester = isRestrictedStudent
+        ? studentSemester
+        : isTeacher
+        ? ''
+        : selectedSemester;
       const notesRes = await notesService.getNotes(token, selectedSubject, searchTerm, effectiveSemester, '');
       setNotes(Array.isArray(notesRes) ? notesRes : notesRes.data || []);
     } catch (err) {
@@ -76,7 +107,7 @@ export default function NotesGrid() {
     } finally {
       setLoading(false);
     }
-  }, [token, selectedSubject, searchTerm, selectedSemester, isRestrictedStudent, studentSemester]);
+  }, [token, selectedSubject, searchTerm, selectedSemester, isRestrictedStudent, studentSemester, isTeacher, teacherCoursesLoaded, teacherCourses.length]);
 
   useEffect(() => {
     if (!token) return;
@@ -171,6 +202,31 @@ export default function NotesGrid() {
         </div>
       </div>
 
+      {/* Banner de advertencia si el docente no tiene materias asignadas */}
+      {isTeacher && teacherCoursesLoaded && teacherCourses.length === 0 && (
+        <div
+          style={{
+            marginBottom: '20px',
+            background: 'var(--color-danger-bg, #fee2e2)',
+            border: '1px solid var(--color-danger-border, #fca5a5)',
+            color: 'var(--color-danger-text, #991b1b)',
+            borderRadius: '12px',
+            padding: '16px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+          }}
+        >
+          <div style={{ fontSize: '24px' }}>⚠️</div>
+          <div>
+            <strong style={{ display: 'block', fontSize: '15px' }}>No tienes materias asignadas</strong>
+            <span style={{ fontSize: '13px' }}>
+              Actualmente tu cuenta de docente no tiene asignaturas asignadas en el sistema. Comunícate con un administrador para que configure tus materias.
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Barra de Filtros y Búsqueda */}
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '24px' }}>
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px', flex: '1 1 300px' }}>
@@ -186,23 +242,66 @@ export default function NotesGrid() {
           </button>
         </form>
 
-        <select
-          className="form-input"
-          style={{ flex: '1 1 200px' }}
-          value={selectedSubject}
-          onChange={(e) => setSelectedSubject(e.target.value)}
-        >
-          <option value="">
-            {isRestrictedStudent ? `Todas las materias (Semestre ${studentSemester}°)` : 'Todas las materias'}
-          </option>
-          {filteredSubjects.map((sub) => (
-            <option key={sub.id} value={sub.id}>
-              {sub.name} (Semestre {sub.semester})
+        {/* Selector de Materias: docentes solo ven sus asignadas */}
+        {isTeacher ? (
+          <select
+            className="form-input"
+            style={{ flex: '1 1 200px' }}
+            value={selectedSubject}
+            onChange={(e) => setSelectedSubject(e.target.value)}
+            disabled={teacherCourses.length === 0}
+          >
+            <option value="">
+              {teacherCourses.length === 0
+                ? 'Sin materias asignadas'
+                : teacherCourses.length === 1
+                ? 'Materia asignada'
+                : `Todas mis materias asignadas (${teacherCourses.length})`}
             </option>
-          ))}
-        </select>
+            {teacherCourses.map((sub) => (
+              <option key={sub.id} value={sub.id}>
+                {sub.name} {sub.semester ? `(Semestre ${sub.semester})` : ''}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <select
+            className="form-input"
+            style={{ flex: '1 1 200px' }}
+            value={selectedSubject}
+            onChange={(e) => setSelectedSubject(e.target.value)}
+          >
+            <option value="">
+              {isRestrictedStudent ? `Todas las materias (Semestre ${studentSemester}°)` : 'Todas las materias'}
+            </option>
+            {filteredSubjects.map((sub) => (
+              <option key={sub.id} value={sub.id}>
+                {sub.name} (Semestre {sub.semester})
+              </option>
+            ))}
+          </select>
+        )}
 
-        {isRestrictedStudent ? (
+        {isTeacher ? (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '9px 14px',
+              borderRadius: '8px',
+              background: 'rgba(79, 70, 229, 0.12)',
+              border: '1px solid rgba(79, 70, 229, 0.3)',
+              color: '#818cf8',
+              fontSize: '13px',
+              fontWeight: '600',
+              whiteSpace: 'nowrap',
+            }}
+            title="Materias asignadas a tu cuenta de docente"
+          >
+            <span>👨‍🏫 Asignadas: {teacherCourses.length} materia{teacherCourses.length === 1 ? '' : 's'}</span>
+          </div>
+        ) : isRestrictedStudent ? (
           <div
             style={{
               display: 'flex',
@@ -281,7 +380,9 @@ export default function NotesGrid() {
           <div style={{ fontSize: '40px', marginBottom: '12px' }}>📭</div>
           <h3 style={{ color: 'var(--text-primary)', margin: '0 0 6px' }}>No se encontraron apuntes</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>
-            {isRestrictedStudent
+            {isTeacher && teacherCourses.length === 0
+              ? 'No tienes materias asignadas actualmente. Comunícate con un administrador para que configure tus asignaturas.'
+              : isRestrictedStudent
               ? `Aún no hay apuntes disponibles para tu semestre actual (${studentSemester}°). ¡Sé el primero en subir uno!`
               : 'Sé el primero en subir un apunte para esta materia.'}
           </p>
