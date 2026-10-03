@@ -86,8 +86,6 @@ export default function CourseReportGenerator({ subjects = [], selectedCourseId,
             gap: '6px',
             padding: '9px 16px',
             fontSize: '13px',
-            background: 'var(--color-success)',
-            color: 'var(--text-inverse)',
           }}
         >
           {loading ? '⏳ Generando PDF...' : '📄 Descargar Reporte PDF del Curso'}

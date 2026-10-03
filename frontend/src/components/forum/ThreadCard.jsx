@@ -214,25 +214,16 @@ export default function ThreadCard({ thread, onRefresh }) {
         return (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span
-                style={{
-                  fontSize: '11px',
-                  padding: '3px 8px',
-                  borderRadius: '6px',
-                  background: 'var(--secondary-bg)',
-                  border: '1px solid var(--secondary-border)',
-                  color: 'var(--secondary-color)',
-                  fontWeight: '600',
-                }}
-              >
-                📖 {thread.subject_name || 'Materia General'}
+              <span className="subject-chip">
+                <span className="subject-chip-dot"></span>
+                {thread.subject_name || 'Materia General'}
               </span>
               <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                 💬 {thread.reply_count || replies.length || 0} respuestas
               </span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <CloseThreadButton thread={thread} onClosed={onRefresh} />
               <ContentModerateButton contentType="post" contentId={thread.id} onSuccess={onRefresh} />
 
@@ -250,7 +241,7 @@ export default function ThreadCard({ thread, onRefresh }) {
                     gap: '4px',
                     opacity: 0.9,
                   }}
-                  title="Borrar este debate"
+                  title="Borrar este debate (destructivo)"
                 >
                   🗑️ Borrar
                 </button>
@@ -261,7 +252,7 @@ export default function ThreadCard({ thread, onRefresh }) {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: 'var(--color-danger-text)',
+                  color: 'var(--text-secondary)',
                   cursor: 'pointer',
                   fontSize: '12px',
                   display: 'flex',
@@ -429,7 +420,7 @@ export default function ThreadCard({ thread, onRefresh }) {
                           style={{
                             background: 'transparent',
                             border: 'none',
-                            color: 'var(--color-danger-text)',
+                            color: 'var(--text-secondary)',
                             cursor: 'pointer',
                             fontSize: '11px',
                             padding: '2px 6px',
