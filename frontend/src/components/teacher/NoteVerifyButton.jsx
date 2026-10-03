@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTeacherPermissions } from '../../composables/useTeacherPermissions';
 import { teacherService } from '../../services/teacher.service';
 
-export default function NoteVerifyButton({ note, onVerified }) {
+export default function NoteVerifyButton({ note, onVerified, style = {} }) {
   const { token } = useAuth();
   const { canVerify } = useTeacherPermissions();
   const [loading, setLoading] = useState(false);
@@ -36,20 +36,11 @@ export default function NoteVerifyButton({ note, onVerified }) {
     <button
       onClick={handleVerify}
       disabled={loading}
+      className="btn-outline"
       style={{
-        background: 'var(--color-success-bg)',
-        border: '1px solid var(--color-success-border)',
-        color: 'var(--color-success-text)',
-        padding: '6px 12px',
-        borderRadius: '8px',
-        fontSize: '12px',
-        fontWeight: '600',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '4px',
-        transition: 'all 0.2s ease',
+        width: '100%',
+        padding: '7px 12px',
+        ...style,
       }}
       title="Marcar apunte como verificado / recurso oficial"
     >
