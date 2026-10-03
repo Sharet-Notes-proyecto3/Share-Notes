@@ -263,22 +263,13 @@ export default function StaffAccountManager({ token, onAccountCreated }) {
           <div>
             <strong style={{ color: 'var(--text-secondary)' }}>Rol: </strong>
             <span
+              className="subject-chip"
               style={{
-                display: 'inline-block',
-                padding: '2px 8px',
-                borderRadius: '6px',
                 fontSize: '12px',
                 fontWeight: 'bold',
-                background:
-                  createdAccount.role === 'teacher'
-                    ? 'rgba(79, 70, 229, 0.15)'
-                    : 'rgba(245, 158, 11, 0.15)',
-                color:
-                  createdAccount.role === 'teacher'
-                    ? '#4f46e5'
-                    : '#d97706',
               }}
             >
+              <span className="subject-chip-dot"></span>
               {createdAccount.role === 'teacher' ? '👨‍🏫 Docente' : '🛡️ Moderador'}
             </span>
           </div>
@@ -682,7 +673,7 @@ export default function StaffAccountManager({ token, onAccountCreated }) {
                               padding: '8px 10px',
                               borderRadius: '6px',
                               border: isChecked ? '1px solid var(--primary-color)' : '1px solid var(--border-color)',
-                              background: isChecked ? 'rgba(79, 70, 229, 0.08)' : 'var(--card-bg)',
+                              background: isChecked ? 'var(--primary-bg)' : 'var(--card-bg)',
                               cursor: 'pointer',
                               fontSize: '12px',
                               transition: 'all 0.15s ease',
@@ -745,18 +736,10 @@ export default function StaffAccountManager({ token, onAccountCreated }) {
                         return (
                           <span
                             key={sid}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              padding: '4px 8px',
-                              borderRadius: '6px',
-                              background: 'rgba(79, 70, 229, 0.15)',
-                              color: 'var(--primary-color)',
-                              fontSize: '12px',
-                              fontWeight: '500',
-                            }}
+                            className="subject-chip"
+                            style={{ padding: '4px 8px', fontSize: '12px' }}
                           >
+                            <span className="subject-chip-dot"></span>
                             {s ? s.name : `Materia #${sid}`}
                             <button
                               type="button"
@@ -764,12 +747,15 @@ export default function StaffAccountManager({ token, onAccountCreated }) {
                               style={{
                                 background: 'transparent',
                                 border: 'none',
-                                color: 'inherit',
+                                color: 'var(--text-muted)',
                                 cursor: 'pointer',
                                 padding: 0,
                                 fontSize: '14px',
                                 lineHeight: 1,
+                                marginLeft: '2px',
                               }}
+                              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-danger-text)')}
+                              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
                               title="Remover"
                             >
                               ×

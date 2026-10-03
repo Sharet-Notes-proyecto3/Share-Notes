@@ -174,21 +174,16 @@ export default function NotesGrid() {
               <button
                 onClick={handleDownloadReport}
                 disabled={downloadingReport}
+                className="btn-outline"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  background: 'var(--color-danger-bg)',
-                  border: '1px solid var(--color-danger-border)',
-                  color: 'var(--color-danger-text)',
-                  padding: '10px 16px',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
+                  padding: '9px 16px',
                   fontSize: '13px',
                 }}
               >
-                {downloadingReport ? '⏳ Generando PDF...' : '📑 Reporte PDF (MS-PDF)'}
+                {downloadingReport ? '⏳ Generando PDF...' : '📑 Reporte PDF'}
               </button>
 
               <button
@@ -207,9 +202,9 @@ export default function NotesGrid() {
         <div
           style={{
             marginBottom: '20px',
-            background: 'var(--color-danger-bg, #fee2e2)',
-            border: '1px solid var(--color-danger-border, #fca5a5)',
-            color: 'var(--color-danger-text, #991b1b)',
+            background: 'var(--color-danger-bg)',
+            border: '1px solid var(--color-danger-border)',
+            color: 'var(--color-danger-text)',
             borderRadius: '12px',
             padding: '16px 20px',
             display: 'flex',
@@ -288,18 +283,18 @@ export default function NotesGrid() {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '9px 14px',
+              padding: '8px 14px',
               borderRadius: '8px',
-              background: 'rgba(79, 70, 229, 0.12)',
-              border: '1px solid rgba(79, 70, 229, 0.3)',
-              color: '#818cf8',
+              background: 'var(--color-chip-bg)',
+              border: '1px solid var(--color-chip-border)',
+              color: 'var(--text-secondary)',
               fontSize: '13px',
-              fontWeight: '600',
+              fontWeight: '500',
               whiteSpace: 'nowrap',
             }}
             title="Materias asignadas a tu cuenta de docente"
           >
-            <span>👨‍🏫 Asignadas: {teacherCourses.length} materia{teacherCourses.length === 1 ? '' : 's'}</span>
+            <span>👨‍🏫 Asignadas: <strong style={{ color: 'var(--text-primary)' }}>{teacherCourses.length}</strong> materia{teacherCourses.length === 1 ? '' : 's'}</span>
           </div>
         ) : isRestrictedStudent ? (
           <div
@@ -307,18 +302,18 @@ export default function NotesGrid() {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '9px 14px',
+              padding: '8px 14px',
               borderRadius: '8px',
-              background: 'rgba(59, 130, 246, 0.12)',
-              border: '1px solid rgba(59, 130, 246, 0.3)',
-              color: '#60a5fa',
+              background: 'var(--color-chip-bg)',
+              border: '1px solid var(--color-chip-border)',
+              color: 'var(--text-secondary)',
               fontSize: '13px',
-              fontWeight: '600',
+              fontWeight: '500',
               whiteSpace: 'nowrap',
             }}
             title={`Restringido a tu semestre académico (${programTypeLabel})`}
           >
-            <span>🎓 Mostrando: Semestre {studentSemester}° ({programTypeLabel})</span>
+            <span>🎓 Semestre <strong style={{ color: 'var(--text-primary)' }}>{studentSemester}°</strong> ({programTypeLabel})</span>
           </div>
         ) : (
           <select

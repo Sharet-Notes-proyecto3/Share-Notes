@@ -3,13 +3,26 @@
 // Responsable: Integrante 4 (Administración & Control de Acceso)
 // =============================================================================
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { adminService } from '../../services/admin.service';
 import { useAuth } from '../../context/AuthContext';
 
 export default function UsersTable({ users = [], onRefresh, onToggleUser, onChangeRole, onOpenSanction }) {
   const { token, user: currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeMenuUserId, setActiveMenuUserId] = useState(null);
+  const menuContainerRef = useRef(null);
+
+  // Cerrar menú de 3 puntos al hacer clic fuera
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (menuContainerRef.current && !menuContainerRef.current.contains(e.target)) {
+        setActiveMenuUserId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
 
   const filteredUsers = useMemo(() => {
     if (!searchTerm.trim()) return users;
@@ -23,6 +36,7 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
   }, [users, searchTerm]);
 
   const handleToggle = async (userId) => {
+    setActiveMenuUserId(null);
     if (onToggleUser) {
       return onToggleUser(userId);
     }
@@ -49,9 +63,18 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
   };
 
   return (
-    <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: 'var(--card-shadow)' }}>
+    <div
+      ref={menuContainerRef}
+      style={{
+        background: 'var(--card-bg)',
+        borderRadius: '12px',
+        border: '1px solid var(--border-color)',
+        overflow: 'visible',
+        boxShadow: 'var(--card-shadow)',
+      }}
+    >
       {/* Barra de Filtro */}
-      <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
         <input
           type="text"
           placeholder="🔍 Buscar por nombre, correo o rol..."
@@ -67,7 +90,7 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
         </span>
       </div>
 
-      <div style={{ overflowX: 'auto' }}>
+      <div style={{ overflowX: 'auto', overflowY: 'visible' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
           <thead>
             <tr style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border-color)' }}>
@@ -89,11 +112,13 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
             ) : (
               filteredUsers.map((u) => {
                 const isSelf = u.id === currentUser?.id;
+                const isMenuOpen = activeMenuUserId === u.id;
+
                 return (
                   <tr key={u.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                     <td style={{ padding: '14px 16px', color: 'var(--text-secondary)' }}>#{u.id}</td>
                     <td style={{ padding: '14px 16px', fontWeight: '600', color: 'var(--text-primary)' }}>
-                      {u.name} {isSelf && <span style={{ fontSize: '10px', color: 'var(--primary-color)' }}>(Tú)</span>}
+                      {u.name} {isSelf && <span style={{ fontSize: '10px', color: 'var(--primary-color)', marginLeft: '4px' }}>(Tú)</span>}
                     </td>
                     <td style={{ padding: '14px 16px', color: 'var(--text-secondary)' }}>{u.email}</td>
                     <td style={{ padding: '14px 16px' }}>
@@ -102,12 +127,18 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
                         disabled={isSelf}
                         onChange={(e) => handleRoleChange(u.id, e.target.value)}
                         className="form-input"
-                        style={{ padding: '4px 8px', fontSize: '12px', width: 'auto' }}
+                        style={{
+                          padding: '5px 10px',
+                          fontSize: '12px',
+                          width: 'auto',
+                          color: 'var(--text-secondary)',
+                          cursor: isSelf ? 'not-allowed' : 'pointer',
+                        }}
                       >
-                        <option value="student">🎓 Estudiante</option>
-                        <option value="teacher">👩‍🏫 Docente</option>
-                        <option value="moderator">🛡️ Moderador</option>
-                        <option value="admin">👑 Administrador</option>
+                        <option value="student">Estudiante</option>
+                        <option value="teacher">Docente</option>
+                        <option value="moderator">Moderador</option>
+                        <option value="admin">Administrador</option>
                       </select>
                     </td>
                     <td style={{ padding: '14px 16px' }}>
@@ -120,45 +151,112 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
                           background: u.is_active ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
                           border: `1px solid ${u.is_active ? 'var(--color-success-border)' : 'var(--color-danger-border)'}`,
                           color: u.is_active ? 'var(--color-success-text)' : 'var(--color-danger-text)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
                         }}
                       >
-                        {u.is_active ? '● Activo' : '● Suspendido'}
+                        ● {u.is_active ? 'Activo' : 'Suspendido'}
                       </span>
                     </td>
-                    <td style={{ padding: '14px 16px', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                    <td style={{ padding: '14px 16px', textAlign: 'right', position: 'relative' }}>
+                      <div style={{ display: 'inline-block', position: 'relative' }}>
                         <button
-                          onClick={() => onOpenSanction?.(u)}
+                          type="button"
+                          onClick={() => setActiveMenuUserId(isMenuOpen ? null : u.id)}
+                          className="btn-outline"
                           style={{
-                            padding: '6px 10px',
+                            padding: '4px 10px',
+                            fontSize: '16px',
+                            lineHeight: 1,
                             borderRadius: '6px',
-                            border: '1px solid var(--color-warning-border)',
-                            cursor: 'pointer',
-                            fontSize: '11px',
-                            fontWeight: '600',
-                            background: 'var(--color-warning-bg)',
-                            color: 'var(--color-warning-text)',
+                            minWidth: '32px',
                           }}
+                          title="Opciones de usuario"
+                          aria-label="Opciones de usuario"
                         >
-                          ⚠️ Sanción
+                          ⋮
                         </button>
-                        <button
-                          onClick={() => handleToggle(u.id)}
-                          disabled={isSelf}
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: '6px',
-                            border: `1px solid ${u.is_active ? 'var(--color-danger-border)' : 'var(--color-success-border)'}`,
-                            cursor: isSelf ? 'not-allowed' : 'pointer',
-                            fontSize: '12px',
-                            fontWeight: '600',
-                            background: u.is_active ? 'var(--color-danger-bg)' : 'var(--color-success-bg)',
-                            color: u.is_active ? 'var(--color-danger-text)' : 'var(--color-success-text)',
-                            opacity: isSelf ? 0.5 : 1,
-                          }}
-                        >
-                          {u.is_active ? '🚫 Suspender' : '✅ Reactivar'}
-                        </button>
+
+                        {isMenuOpen && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              right: 0,
+                              top: 'calc(100% + 4px)',
+                              background: 'var(--bg-surface)',
+                              border: '1px solid var(--border-color)',
+                              borderRadius: '8px',
+                              boxShadow: 'var(--card-shadow)',
+                              minWidth: '180px',
+                              zIndex: 100,
+                              padding: '4px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '2px',
+                              textAlign: 'left',
+                            }}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveMenuUserId(null);
+                                onOpenSanction?.(u);
+                              }}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                width: '100%',
+                                padding: '8px 10px',
+                                borderRadius: '6px',
+                                border: 'none',
+                                background: 'transparent',
+                                color: 'var(--text-primary)',
+                                fontSize: '12px',
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                                transition: 'background 0.15s ease',
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-elevated)')}
+                              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                            >
+                              <span>⚠️</span>
+                              <span>Aplicar Sanción</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={isSelf}
+                              onClick={() => handleToggle(u.id)}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                width: '100%',
+                                padding: '8px 10px',
+                                borderRadius: '6px',
+                                border: 'none',
+                                background: 'transparent',
+                                color: isSelf
+                                  ? 'var(--text-muted)'
+                                  : u.is_active
+                                  ? 'var(--color-danger-text)'
+                                  : 'var(--color-success-text)',
+                                fontSize: '12px',
+                                cursor: isSelf ? 'not-allowed' : 'pointer',
+                                textAlign: 'left',
+                                transition: 'background 0.15s ease',
+                                opacity: isSelf ? 0.5 : 1,
+                              }}
+                              onMouseEnter={(e) => !isSelf && (e.currentTarget.style.background = 'var(--bg-elevated)')}
+                              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                            >
+                              <span>{u.is_active ? '🚫' : '✅'}</span>
+                              <span>{u.is_active ? 'Suspender Usuario' : 'Reactivar Usuario'}</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </td>
                   </tr>
