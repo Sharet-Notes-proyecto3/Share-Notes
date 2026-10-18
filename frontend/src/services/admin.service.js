@@ -160,6 +160,20 @@ export const adminService = {
   async deleteCareer(token, careerId) {
     return await api.delete(`/admin/catalog/careers/${careerId}`, token);
   },
+
+  /**
+   * Crea una cuenta de personal (docente o moderador) con o sin asignación de materias
+   */
+  async createStaffAccount(token, data) {
+    return await api.post('/admin/users', data, token);
+  },
+
+  /**
+   * Actualiza las materias asignadas a un docente
+   */
+  async updateTeacherCourses(token, userId, subjectIds) {
+    return await api.patch(`/admin/users/${userId}/courses`, { subjectIds }, token);
+  },
 };
 
 export default adminService;

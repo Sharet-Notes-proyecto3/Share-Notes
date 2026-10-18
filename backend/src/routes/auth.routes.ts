@@ -21,4 +21,10 @@ router.patch('/profile', authMiddleware, ctrl.updateProfile);
 router.post('/profile/photo', authMiddleware, uploadProfilePhoto, ctrl.uploadProfilePhoto);
 router.delete('/profile/photo', authMiddleware, ctrl.deleteProfilePhoto);
 
+// GET   /api/auth/careers          (requiere token)
+router.get('/careers', authMiddleware, ctrl.getCareers);
+
+// PATCH /api/auth/profile/academic (requiere token) — guarda carrera y semestre del onboarding
+router.patch('/profile/academic', authMiddleware, ctrl.updateAcademicProfile);
+
 export default router;

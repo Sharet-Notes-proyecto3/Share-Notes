@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const logger = require('./logger');
 
 // Crear el transporter reutilizable
 // Usa Ethereal (servicio de pruebas gratuito) por defecto,
@@ -7,6 +8,8 @@ let transporter = null;
 
 async function getTransporter() {
   if (transporter) return transporter;
+
+  const isProduction = process.env.NODE_ENV === 'production';
 
   // Si hay configuración SMTP real en las variables de entorno, usarla
   if (process.env.SMTP_HOST) {
@@ -19,11 +22,19 @@ async function getTransporter() {
         pass: process.env.SMTP_PASS,
       },
     });
-    console.log(`📧 Transporter configurado con SMTP real: ${process.env.SMTP_HOST}`);
+    logger.info(`Transporter configurado con SMTP real: ${process.env.SMTP_HOST}`);
     return transporter;
   }
 
-  // Si no hay configuración, crear cuenta de prueba con Ethereal
+  // En producción, bloquear y fallar explícitamente si no hay SMTP configurado
+  if (isProduction) {
+    const errorMsg = 'FATAL: Configuración SMTP ausente en producción (SMTP_HOST no definido). Envío de correos bloqueado para evitar fuga de información.';
+    logger.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+
+  // Si no hay configuración en desarrollo/test, advertir y crear cuenta de prueba con Ethereal
+  logger.warn('⚠️ SMTP no configurado en entorno de desarrollo. Creando cuenta temporal en Ethereal...');
   const testAccount = await nodemailer.createTestAccount();
   transporter = nodemailer.createTransport({
     host: 'smtp.ethereal.email',
@@ -34,8 +45,7 @@ async function getTransporter() {
       pass: testAccount.pass,
     },
   });
-  console.log('📧 Transporter configurado con Ethereal (modo pruebas)');
-  console.log(`   Usuario Ethereal: ${testAccount.user}`);
+  logger.info('Transporter configurado con Ethereal (modo pruebas)', { etherealUser: testAccount.user });
   return transporter;
 }
 

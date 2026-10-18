@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { notesService } from '../../services/notes.service';
-import { teacherService } from '../../services/teacher.service';
 import CourseReportGenerator from './CourseReportGenerator';
 import NoteVerifyButton from './NoteVerifyButton';
 import VerifiedBadge from './VerifiedBadge';
@@ -60,7 +59,7 @@ export default function TeacherDashboard({ courseIdProp }) {
     <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h2 style={{ margin: '0 0 4px', color: '#fff', fontSize: '24px' }}>👩‍🏫 Panel de Control Docente</h2>
+          <h2 style={{ margin: '0 0 4px', color: 'var(--text-primary)', fontSize: '24px' }}>👩‍🏫 Panel de Control Docente</h2>
           <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>
             Bienvenido, <strong>{user?.name || 'Docente'}</strong>. Administra la certificación de recursos y métricas de tus asignaturas.
           </p>
@@ -86,8 +85,8 @@ export default function TeacherDashboard({ courseIdProp }) {
       <CourseReportGenerator subjects={subjects} selectedCourseId={selectedCourseId} />
 
       {/* Resumen del Curso */}
-      <div style={{ background: 'var(--sidebar-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
-        <h3 style={{ margin: '0 0 12px 0', color: '#fff', fontSize: '18px' }}>
+      <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
+        <h3 style={{ margin: '0 0 12px 0', color: 'var(--text-primary)', fontSize: '18px' }}>
           Gestión de Apuntes — {selectedSubjectObj ? selectedSubjectObj.name : 'Asignatura Seleccionada'}
         </h3>
         <p style={{ margin: '0 0 16px 0', color: 'var(--text-secondary)', fontSize: '13px' }}>
@@ -104,7 +103,7 @@ export default function TeacherDashboard({ courseIdProp }) {
               <div
                 key={note.id}
                 style={{
-                  background: 'rgba(255,255,255,0.03)',
+                  background: 'var(--bg-elevated)',
                   border: '1px solid var(--border-color)',
                   borderRadius: '10px',
                   padding: '16px',
@@ -115,11 +114,11 @@ export default function TeacherDashboard({ courseIdProp }) {
               >
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    {note.verified ? <VerifiedBadge /> : <span style={{ fontSize: '11px', color: '#94a3b8' }}>Pendiente de verificación</span>}
+                    {note.verified ? <VerifiedBadge /> : <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Pendiente de verificación</span>}
                   </div>
-                  <h4 style={{ margin: '0 0 6px', color: '#fff', fontSize: '15px' }}>{note.title}</h4>
+                  <h4 style={{ margin: '0 0 6px', color: 'var(--text-primary)', fontSize: '15px' }}>{note.title}</h4>
                   <p style={{ margin: '0 0 10px', color: 'var(--text-secondary)', fontSize: '12px' }}>{note.description || 'Sin descripción'}</p>
-                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>👤 Estudiante: {note.uploader_name || 'Compañero'}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>👤 Estudiante: {note.uploader_name || 'Compañero'}</div>
                 </div>
 
                 <div style={{ marginTop: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>

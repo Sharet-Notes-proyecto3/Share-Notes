@@ -2,6 +2,7 @@
 // Ejecutar con: npm run db:migrate
 import pool from './database';
 import bcrypt from 'bcryptjs';
+import logger from '../utils/logger';
 
 const SQL_TABLES = `
 
@@ -12,7 +13,13 @@ CREATE TABLE IF NOT EXISTS users (
   email            VARCHAR(150) NOT NULL UNIQUE,
   password_hash    VARCHAR(255) NOT NULL,
   role             ENUM('student','teacher','moderator','admin') NOT NULL DEFAULT 'student',
+<<<<<<< HEAD
   avatar_url       VARCHAR(255) NULL DEFAULT NULL,
+=======
+  program_type     ENUM('tecnologo','ingenieria') NULL DEFAULT NULL,
+  semester         TINYINT UNSIGNED NULL DEFAULT NULL,
+  career_id        INT UNSIGNED NULL DEFAULT NULL,
+>>>>>>> origin/main
   restricted_until TIMESTAMP NULL DEFAULT NULL,
   is_active        BOOLEAN NOT NULL DEFAULT TRUE,
   created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -171,18 +178,22 @@ const ALTER_QUERIES = [
   `ALTER TABLE reports MODIFY COLUMN status ENUM('pending','reviewed','resolved','dismissed') NOT NULL DEFAULT 'pending'`,
   `ALTER TABLE reports ADD COLUMN resolved_by INT UNSIGNED NULL DEFAULT NULL`,
   `ALTER TABLE reports ADD COLUMN resolved_at TIMESTAMP NULL DEFAULT NULL`,
+    `ALTER TABLE users ADD COLUMN career_id INT UNSIGNED NULL DEFAULT NULL`,
+  `ALTER TABLE users ADD COLUMN semester TINYINT UNSIGNED NULL DEFAULT NULL`,
+  `ALTER TABLE users ADD COLUMN program_type ENUM('tecnologo','ingenieria') NULL DEFAULT NULL`,
 ];
 
 async function migrate() {
   const conn = await pool.getConnection();
   try {
-    console.log('🔄  Ejecutando migraciones de base de datos para ShareNotes...');
+    logger.info(
+      '🔄  Ejecutando migraciones de base de datos para ShareNotes...',
+    );
 
     // Dividir por ; para ejecutar cada instrucción por separado
-    const statements = SQL_TABLES
-      .split(';')
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
+    const statements = SQL_TABLES.split(';')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
 
     for (const stmt of statements) {
       await conn.query(stmt);
@@ -205,7 +216,7 @@ async function migrate() {
         (2, 'Profesor Carlos',       'teacher@sharenotes.edu', ?, 'teacher'),
         (3, 'Moderador',             'moderator@sharenotes.edu', ?, 'moderator'),
         (4, 'Estudiante Juan',       'student@sharenotes.edu', ?, 'student')`,
-      [passHash, passHash, passHash, passHash]
+      [passHash, passHash, passHash, passHash],
     );
     await conn.query(
       `UPDATE users
@@ -217,17 +228,19 @@ async function migrate() {
     // Asignar docente inicial a materias (1, 2, 3, 4)
     await conn.query(
       `INSERT IGNORE INTO teacher_courses (teacher_id, subject_id) VALUES
-        (2, 1), (2, 2), (2, 3), (2, 4)`
+        (2, 1), (2, 2), (2, 3), (2, 4)`,
     );
 
-    console.log('✅  Migración completada exitosamente.');
-    console.log('👥  Usuarios semilla de prueba creados (Contraseña para todos: password123):');
-    console.log('    - Admin:     admin@sharenotes.edu');
-    console.log('    - Docente:   teacher@sharenotes.edu');
-    console.log('    - Moderador: moderator@sharenotes.edu');
-    console.log('    - Alumno:    student@sharenotes.edu');
+    logger.info('✅  Migración completada exitosamente.');
+    logger.info(
+      '👥  Usuarios semilla de prueba creados (Contraseña para todos: password123):',
+    );
+    logger.info('    - Admin:     admin@sharenotes.edu');
+    logger.info('    - Docente:   teacher@sharenotes.edu');
+    logger.info('    - Moderador: moderator@sharenotes.edu');
+    logger.info('    - Alumno:    student@sharenotes.edu');
   } catch (err) {
-    console.error('❌  Error en migración:', err);
+    logger.error('❌  Error en migración:', err);
   } finally {
     conn.release();
     process.exit(0);

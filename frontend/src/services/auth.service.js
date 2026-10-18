@@ -33,7 +33,9 @@ export const authService = {
     name,
     email,
     password,
-    role = 'student'
+    role = 'student',
+    programType = null,
+    semester = null
   ) {
     if (!name?.trim()) {
       throw new Error('El nombre es obligatorio.');
@@ -47,21 +49,34 @@ export const authService = {
       throw new Error('La contraseña es obligatoria.');
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       throw new Error(
-        'La contraseña debe tener al menos 6 caracteres.'
+        'La contraseña debe tener al menos 8 caracteres.'
+      );
+    }
+
+    if (password.length > 72) {
+      throw new Error(
+        'La contraseña no puede exceder los 72 caracteres.'
       );
     }
 
     const normalizedName = name.trim();
     const normalizedEmail = email.trim().toLowerCase();
 
-    return await api.post('/auth/register', {
+    const payload = {
       name: normalizedName,
       email: normalizedEmail,
       password,
       role,
-    });
+    };
+
+    if (programType) payload.programType = programType;
+    if (semester !== null && semester !== undefined && semester !== '') {
+      payload.semester = Number(semester);
+    }
+
+    return await api.post('/auth/register', payload);
   },
 
   /**
@@ -97,5 +112,29 @@ export const authService = {
   async getRelatedTopic(tema) {
     const query = tema ? `?tema=${encodeURIComponent(tema)}` : '';
     return await api.get(`/auth/profile/related-topic${query}`);
+  },
+
+    /**
+   * Lista las carreras disponibles del catálogo (para el Onboarding).
+   */
+  async getCareers(token) {
+    return await api.get('/auth/careers', token);
+  },
+
+  /**
+   * Guarda los datos académicos del estudiante (carrera, semestre y tipo de programa).
+   */
+  async updateAcademicProfile(token, careerId, semester, programType = null) {
+    const payload = {};
+    if (careerId !== undefined && careerId !== null && careerId !== '') {
+      payload.careerId = Number(careerId);
+    }
+    if (semester !== undefined && semester !== null && semester !== '') {
+      payload.semester = Number(semester);
+    }
+    if (programType) {
+      payload.programType = programType;
+    }
+    return await api.patch('/auth/profile/academic', payload, token);
   },
 };
