@@ -62,11 +62,7 @@ export class AuthService {
 
   async login(email: string, password: string) {
     const [rows] = await pool.query<UserRow[]>(
-<<<<<<< HEAD
-      'SELECT id, name, email, password_hash, role, is_active, avatar_url FROM users WHERE email = ?',
-=======
-      'SELECT id, name, email, password_hash, role, is_active, career_id, semester, program_type FROM users WHERE email = ?',
->>>>>>> origin/main
+      'SELECT id, name, email, password_hash, role, is_active, avatar_url, career_id, semester, program_type FROM users WHERE email = ?',
       [email]
     );
 
@@ -107,24 +103,17 @@ export class AuthService {
         name: user.name,
         email: user.email,
         role: user.role,
-<<<<<<< HEAD
         avatar_url: user.avatar_url,
-=======
         program_type: user.program_type || null,
         semester: user.semester || null,
         career_id: user.career_id || null,
->>>>>>> origin/main
       },
     };
   }
 
   async getProfile(userId: number) {
     const [rows] = await pool.query<UserRow[]>(
-<<<<<<< HEAD
-      'SELECT id, name, email, role, is_active, avatar_url, created_at FROM users WHERE id = ?',
-=======
-      'SELECT id, name, email, role, is_active, career_id, semester, program_type, created_at FROM users WHERE id = ?',
->>>>>>> origin/main
+      'SELECT id, name, email, role, is_active, avatar_url, career_id, semester, program_type, created_at FROM users WHERE id = ?',
       [userId]
     );
     if (!rows[0]) throw new AppError(404, 'Usuario no encontrado');

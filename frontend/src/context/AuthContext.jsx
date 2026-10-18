@@ -3,16 +3,23 @@
 // Fuente única de verdad del estado de sesión en React
 // =============================================================================
 
-import { createContext, useContext, useEffect, useState } from 'react';
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
 } from 'react';
 
-import { accountService } from '../services/account.service';
-import accountStore from '../store/account-store';
+import {
+  clearStoredToken,
+  clearStoredUser,
+  getStoredToken,
+  getStoredUser,
+  setStoredToken,
+  setStoredUser,
+  setUnauthorizedHandler,
+} from '../services/api';
 import { authService } from '../services/auth.service';
 import OnboardingModal from '../components/auth/OnboardingModal';
 
@@ -27,6 +34,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => getStoredToken());
   const [user, setUser] = useState(() => getStoredUser());
   const [loading, setLoading] = useState(() => Boolean(getStoredToken()));
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   // ---------------------------------------------------------------------------
   // CERRAR SESIÓN
@@ -54,8 +62,6 @@ export const AuthProvider = ({ children }) => {
   // ---------------------------------------------------------------------------
   // ONBOARDING ACADÉMICO (Carrera y Semestre) — primer inicio de sesión
   // ---------------------------------------------------------------------------
-
-  const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   const checkOnboarding = (u) => {
     const role = (u?.role || '').toString().toLowerCase();
@@ -92,8 +98,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateUser = useCallback((updatedUser) => {
-    accountStore.actions.setAuthentication(updatedUser);
     setUser(updatedUser);
+    const rememberMe = Boolean(
+      localStorage.getItem('jhi-authenticationToken') || localStorage.getItem('token')
+    );
+    setStoredUser(updatedUser, rememberMe);
   }, []);
 
   // ---------------------------------------------------------------------------
