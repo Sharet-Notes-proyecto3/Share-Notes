@@ -17,7 +17,7 @@ const getPhotoKey = (userId) => `sharenotes-avatar-${userId}`;
 const getNameKey  = (userId) => `sharenotes-name-${userId}`;
 
 export default function ProfileModal({ onClose }) {
-  const { user, isAdmin, isModerator, isTeacher, updateUser } = useAuth();
+  const { user, isAdmin, isModerator, isTeacher, isStudent, updateUser } = useAuth();
   if (!user) return null;
   return (
     <ProfileModalInner
@@ -25,13 +25,14 @@ export default function ProfileModal({ onClose }) {
       isAdmin={isAdmin}
       isModerator={isModerator}
       isTeacher={isTeacher}
+      isStudent={isStudent}
       updateUser={updateUser}
       onClose={onClose}
     />
   );
 }
 
-function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, updateUser, onClose }) {
+function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, isStudent, updateUser, onClose }) {
   // ── Nombre editable ────────────────────────────────────────────────────────
   const savedName = localStorage.getItem(getNameKey(user.id)) || user.name || '';
   const [editingName, setEditingName] = useState(false);
@@ -190,7 +191,9 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, updateUser, 
   // ── Campos del perfil ─────────────────────────────────────────────────────
   const fields = [
     { label: 'Correo electrónico', value: user.email || '—',   icon: '@' },
-    { label: 'ID de estudiante',   value: user.id != null ? `#${user.id}` : '—', icon: '#' },
+    ...(isStudent
+      ? [{ label: 'ID de estudiante', value: user.id != null ? `#${user.id}` : '—', icon: '#' }]
+      : []),
     { label: 'Rol académico',      value: getRoleName(),         icon: '◆' },
     { label: 'Institución',        value: INSTITUTION_NAME,      icon: '🏛' },
   ];
