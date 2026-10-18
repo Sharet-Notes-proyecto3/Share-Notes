@@ -6,6 +6,9 @@ import { JwtPayload, UserRole } from '../types';
 import { AppError } from '../middlewares/error.middleware';
 import { RowDataPacket } from 'mysql2';
 import { getRelatedArticle } from '../integrations/wikipedia.api';
+import fs from 'fs/promises';
+import path from 'path';
+import { PROFILE_PHOTO_DIR } from '../middlewares/upload.middleware';
 
 interface UserRow extends RowDataPacket {
   id: number;
@@ -14,6 +17,7 @@ interface UserRow extends RowDataPacket {
   password_hash: string;
   role: UserRole;
   is_active: boolean;
+  avatar_url: string | null;
   created_at?: string;
 }
 
@@ -41,7 +45,7 @@ export class AuthService {
 
   async login(email: string, password: string) {
     const [rows] = await pool.query<UserRow[]>(
-      'SELECT id, name, email, password_hash, role, is_active FROM users WHERE email = ?',
+      'SELECT id, name, email, password_hash, role, is_active, avatar_url FROM users WHERE email = ?',
       [email]
     );
 
@@ -69,17 +73,73 @@ export class AuthService {
 
     return {
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar_url: user.avatar_url,
+      },
     };
   }
 
   async getProfile(userId: number) {
     const [rows] = await pool.query<UserRow[]>(
-      'SELECT id, name, email, role, is_active, created_at FROM users WHERE id = ?',
+      'SELECT id, name, email, role, is_active, avatar_url, created_at FROM users WHERE id = ?',
       [userId]
     );
     if (!rows[0]) throw new AppError(404, 'Usuario no encontrado');
     return rows[0];
+  }
+
+  async updateProfileName(userId: number, name: string) {
+    const normalizedName = name.trim();
+    if (!normalizedName || normalizedName.length > 100) {
+      throw new AppError(400, 'El nombre debe tener entre 1 y 100 caracteres');
+    }
+
+    await pool.query('UPDATE users SET name = ? WHERE id = ?', [normalizedName, userId]);
+    return this.getProfile(userId);
+  }
+
+  async updateProfilePhoto(userId: number, filename: string) {
+    const [rows] = await pool.query<UserRow[]>(
+      'SELECT id, avatar_url FROM users WHERE id = ?',
+      [userId]
+    );
+    const user = rows[0];
+    if (!user) throw new AppError(404, 'Usuario no encontrado');
+
+    const avatarUrl = `/uploads/profile-photos/${filename}`;
+    await pool.query('UPDATE users SET avatar_url = ? WHERE id = ?', [avatarUrl, userId]);
+    await this.removeStoredProfilePhoto(user.avatar_url);
+    return this.getProfile(userId);
+  }
+
+  async removeProfilePhoto(userId: number) {
+    const [rows] = await pool.query<UserRow[]>(
+      'SELECT id, avatar_url FROM users WHERE id = ?',
+      [userId]
+    );
+    const user = rows[0];
+    if (!user) throw new AppError(404, 'Usuario no encontrado');
+
+    await pool.query('UPDATE users SET avatar_url = NULL WHERE id = ?', [userId]);
+    await this.removeStoredProfilePhoto(user.avatar_url);
+    return this.getProfile(userId);
+  }
+
+  private async removeStoredProfilePhoto(avatarUrl: string | null) {
+    const filename = avatarUrl?.match(/^\/uploads\/profile-photos\/([a-zA-Z0-9-]+\.(?:jpg|png|webp))$/i)?.[1];
+    if (!filename) return;
+
+    try {
+      await fs.unlink(path.join(PROFILE_PHOTO_DIR, filename));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        console.error('No se pudo eliminar la foto de perfil anterior:', error);
+      }
+    }
   }
 
   /**
