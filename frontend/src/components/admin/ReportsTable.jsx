@@ -116,30 +116,22 @@ export default function ReportsTable({ reports = [], onRefresh, onResolveReport 
                     </button>
                     <button
                       onClick={() => handleResolve(r.id, 'resolved')}
+                      className="btn-outline"
                       style={{
-                        padding: '6px 10px',
-                        borderRadius: '6px',
-                        border: '1px solid var(--color-success-border)',
-                        cursor: 'pointer',
+                        padding: '5px 10px',
                         fontSize: '11px',
                         fontWeight: '600',
-                        background: 'var(--color-success-bg)',
-                        color: 'var(--color-success-text)',
                       }}
                     >
                       ✓ Resolver
                     </button>
                     <button
                       onClick={() => handleResolve(r.id, 'dismissed')}
+                      className="btn-outline"
                       style={{
-                        padding: '6px 10px',
-                        borderRadius: '6px',
-                        border: '1px solid var(--border-color)',
-                        cursor: 'pointer',
+                        padding: '5px 10px',
                         fontSize: '11px',
                         fontWeight: '600',
-                        background: 'var(--bg-elevated)',
-                        color: 'var(--text-secondary)',
                       }}
                     >
                       ✕ Descartar
