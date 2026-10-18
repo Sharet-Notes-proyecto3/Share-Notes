@@ -4,12 +4,13 @@
 // Restricción: Estudiantes solo pueden seleccionar materias de su propio semestre.
 // =============================================================================
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { notesService } from '../../services/notes.service';
 import { useAuth } from '../../context/AuthContext';
+import { useFilteredSubjects } from '../../hooks/useFilteredSubjects';
 
 export default function UploadModal({ subjects = [], onClose, onNoteUploaded }) {
-  const { token, user } = useAuth();
+  const { token } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [subjectId, setSubjectId] = useState('');
@@ -17,26 +18,13 @@ export default function UploadModal({ subjects = [], onClose, onNoteUploaded }) 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Identificar si aplica la restricción de semestre para estudiantes:
-  const isStudent = (user?.role || '').toLowerCase() === 'student';
-  const hasAcademicProfile =
-    Boolean(user?.program_type || user?.programType) &&
-    user?.semester !== null &&
-    user?.semester !== undefined &&
-    user?.semester !== '';
-
-  const isRestrictedStudent = isStudent && hasAcademicProfile;
-  const studentSemester = isRestrictedStudent ? Number(user.semester) : null;
-
-  // Filtrar materias: si es estudiante con perfil, SOLO materias de su semestre exacto
-  const filteredSubjects = useMemo(() => {
-    if (isRestrictedStudent) {
-      return (subjects || []).filter((sub) => Number(sub.semester) === studentSemester);
-    }
-    return subjects || [];
-  }, [subjects, isRestrictedStudent, studentSemester]);
-
-  const hasNoSubjectsForSemester = isRestrictedStudent && filteredSubjects.length === 0;
+  // Restricción académica de materias mediante hook compartido
+  const {
+    filteredSubjects,
+    isRestrictedStudent,
+    studentSemester,
+    hasNoSubjectsForSemester,
+  } = useFilteredSubjects(subjects);
 
   const selectedSubject = filteredSubjects.find((subject) => String(subject.id) === String(subjectId));
 
@@ -60,9 +48,9 @@ export default function UploadModal({ subjects = [], onClose, onNoteUploaded }) 
       return;
     }
 
-    // Validación de tamaño (Máx 100 MB)
-    if (selectedFile.size > 100 * 1024 * 1024) {
-      setError('El archivo excede el tamaño máximo permitido de 100 MB.');
+    // Validación de tamaño (Máx 25 MB)
+    if (selectedFile.size > 25 * 1024 * 1024) {
+      setError('El archivo excede el tamaño máximo permitido de 25 MB.');
       setFile(null);
       return;
     }
@@ -91,8 +79,6 @@ export default function UploadModal({ subjects = [], onClose, onNoteUploaded }) 
         title: title.trim(),
         description: description ? description.trim() : undefined,
         subjectId,
-        careerId: selectedSubject?.career_id || selectedSubject?.careerId || user?.career_id || user?.careerId,
-        semester: selectedSubject?.semester || user?.semester || user?.semestre,
         file,
       });
 
@@ -219,7 +205,7 @@ export default function UploadModal({ subjects = [], onClose, onNoteUploaded }) 
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Archivo adjunto (PDF, JPG, PNG — Máx 100MB) *</label>
+            <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Archivo adjunto (PDF, JPG, PNG — Máx 25MB) *</label>
             <input
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
