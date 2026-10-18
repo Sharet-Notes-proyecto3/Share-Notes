@@ -7,11 +7,20 @@ import fs from 'fs';
 
 const ALLOWED_MIMETYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 const MAX_SIZE_MB = parseInt(process.env.MAX_FILE_SIZE_MB || '10');
-const UPLOAD_DIR  = process.env.UPLOAD_DIR || 'uploads';
+export const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || 'uploads');
+export const PROFILE_PHOTO_DIR = path.join(UPLOAD_DIR, 'profile-photos');
+const PROFILE_PHOTO_EXTENSIONS: Record<string, string> = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+};
 
 // Crear directorio si no existe
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+if (!fs.existsSync(PROFILE_PHOTO_DIR)) {
+  fs.mkdirSync(PROFILE_PHOTO_DIR, { recursive: true });
 }
 
 const storage = multer.diskStorage({
@@ -39,3 +48,24 @@ export const uploadNote = multer({
     fileSize: MAX_SIZE_MB * 1024 * 1024,
   },
 }).single('file');
+
+const profilePhotoStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, PROFILE_PHOTO_DIR);
+  },
+  filename: (_req, file, cb) => {
+    cb(null, `${uuidv4()}${PROFILE_PHOTO_EXTENSIONS[file.mimetype]}`);
+  },
+});
+
+export const uploadProfilePhoto = multer({
+  storage: profilePhotoStorage,
+  fileFilter: (_req, file, cb) => {
+    if (PROFILE_PHOTO_EXTENSIONS[file.mimetype]) {
+      cb(null, true);
+      return;
+    }
+    cb(null, false);
+  },
+  limits: { fileSize: 5 * 1024 * 1024 },
+}).single('photo');

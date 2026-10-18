@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
   email            VARCHAR(150) NOT NULL UNIQUE,
   password_hash    VARCHAR(255) NOT NULL,
   role             ENUM('student','teacher','moderator','admin') NOT NULL DEFAULT 'student',
+  avatar_url       VARCHAR(255) NULL DEFAULT NULL,
   restricted_until TIMESTAMP NULL DEFAULT NULL,
   is_active        BOOLEAN NOT NULL DEFAULT TRUE,
   created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -155,6 +156,7 @@ INSERT IGNORE INTO subjects (id, name, semester, career_id) VALUES
 
 const ALTER_QUERIES = [
   `ALTER TABLE users MODIFY COLUMN role ENUM('student','teacher','moderator','admin') NOT NULL DEFAULT 'student'`,
+  `ALTER TABLE users ADD COLUMN avatar_url VARCHAR(255) NULL DEFAULT NULL`,
   `ALTER TABLE users ADD COLUMN restricted_until TIMESTAMP NULL DEFAULT NULL`,
   `ALTER TABLE notes ADD COLUMN verified BOOLEAN NOT NULL DEFAULT FALSE`,
   `ALTER TABLE notes ADD COLUMN verified_by INT UNSIGNED NULL DEFAULT NULL`,
@@ -201,9 +203,15 @@ async function migrate() {
       `INSERT IGNORE INTO users (id, name, email, password_hash, role) VALUES
         (1, 'Administrador General', 'admin@sharenotes.edu', ?, 'admin'),
         (2, 'Profesor Carlos',       'teacher@sharenotes.edu', ?, 'teacher'),
-        (3, 'Moderadora Ana',        'moderator@sharenotes.edu', ?, 'moderator'),
+        (3, 'Moderador',             'moderator@sharenotes.edu', ?, 'moderator'),
         (4, 'Estudiante Juan',       'student@sharenotes.edu', ?, 'student')`,
       [passHash, passHash, passHash, passHash]
+    );
+    await conn.query(
+      `UPDATE users
+       SET name = 'Moderador'
+       WHERE id = 3 AND email = 'moderator@sharenotes.edu'
+         AND name IN ('Moderadora Ana', 'Moderadora Ana Silva')`
     );
 
     // Asignar docente inicial a materias (1, 2, 3, 4)

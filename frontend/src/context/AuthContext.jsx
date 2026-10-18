@@ -5,6 +5,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -34,6 +35,11 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setUser(null);
   };
+
+  const updateUser = useCallback((updatedUser) => {
+    accountStore.actions.setAuthentication(updatedUser);
+    setUser(updatedUser);
+  }, []);
 
   // ---------------------------------------------------------------------------
   // RECUPERAR SESIÓN AL INICIAR LA APLICACIÓN
@@ -145,6 +151,7 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
+        updateUser,
 
         isAuthenticated,
         userRole,

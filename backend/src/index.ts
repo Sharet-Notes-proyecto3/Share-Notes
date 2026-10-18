@@ -20,6 +20,7 @@ import { rolesRouter } from "./roles";
 
 // Importar middleware de errores
 import { errorHandler } from "./middlewares/error.middleware";
+import { PROFILE_PHOTO_DIR } from "./middlewares/upload.middleware";
 
 // Inicializar conexión a la DB (importar activa el pool y muestra el log)
 import "./config/database";
@@ -62,6 +63,11 @@ const authLimiter = rateLimit({
 
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
+app.use(
+  "/uploads/profile-photos",
+  helmet.crossOriginResourcePolicy({ policy: "cross-origin" }),
+  express.static(PROFILE_PHOTO_DIR),
+);
 
 // Swagger UI
 app.use(

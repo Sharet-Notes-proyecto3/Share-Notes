@@ -57,6 +57,16 @@ El servidor queda disponible en `http://localhost:3000/api`
 curl http://localhost:3000/api/health
 ```
 
+### Perfil de usuario
+
+El nombre y la URL de la foto de perfil se guardan en la base de datos. Las
+fotos JPG, PNG y WEBP (máximo 5 MB) se guardan en
+`UPLOAD_DIR/profile-photos` y se sirven desde `/uploads/profile-photos`.
+En producción, configura `UPLOAD_DIR` en almacenamiento persistente compartido
+para que la foto siga disponible tras reinicios y sea visible para todos los
+clientes conectados a este backend. Los archivos subidos no se incluyen en Git.
+La migración crea al moderador de prueba con el nombre `Moderador`.
+
 ---
 
 ## Estructura del proyecto
@@ -101,6 +111,9 @@ src/
 | POST | `/register` | No | Registrar nuevo estudiante |
 | POST | `/login` | No | Iniciar sesión, devuelve JWT |
 | GET | `/profile` | Sí | Ver perfil del usuario autenticado |
+| PATCH | `/profile` | Sí | Actualizar el nombre del usuario autenticado |
+| POST | `/profile/photo` | Sí | Subir o reemplazar foto (`photo`, JPG/PNG/WEBP, máx. 5 MB) |
+| DELETE | `/profile/photo` | Sí | Quitar la foto del usuario autenticado |
 
 **Registro** `POST /api/auth/register`
 ```json
