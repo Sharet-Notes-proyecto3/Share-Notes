@@ -4,8 +4,10 @@
 // Nuevas funciones: editar nombre + foto de perfil personalizada
 // =============================================================================
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { authService } from '../../services/auth.service';
+import { getApiAssetUrl } from '../../services/api';
 
 // Nombre de la institución que aparece en la tarjeta del estudiante.
 const INSTITUTION_NAME = 'Institución Universitaria del Putumayo';
@@ -15,7 +17,7 @@ const getPhotoKey = (userId) => `sharenotes-avatar-${userId}`;
 const getNameKey  = (userId) => `sharenotes-name-${userId}`;
 
 export default function ProfileModal({ onClose }) {
-  const { user, isAdmin, isModerator, isTeacher } = useAuth();
+  const { user, isAdmin, isModerator, isTeacher, updateUser } = useAuth();
   if (!user) return null;
   return (
     <ProfileModalInner
@@ -23,12 +25,13 @@ export default function ProfileModal({ onClose }) {
       isAdmin={isAdmin}
       isModerator={isModerator}
       isTeacher={isTeacher}
+      updateUser={updateUser}
       onClose={onClose}
     />
   );
 }
 
-function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, onClose }) {
+function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, updateUser, onClose }) {
   // ── Nombre editable ────────────────────────────────────────────────────────
   const savedName = localStorage.getItem(getNameKey(user.id)) || user.name || '';
   const [editingName, setEditingName] = useState(false);
@@ -38,9 +41,57 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, onClose }) {
 
   // ── Foto de perfil ────────────────────────────────────────────────────────
   const [avatar, setAvatar] = useState(
-    () => localStorage.getItem(getPhotoKey(user.id)) || null
+    () => getApiAssetUrl(user.avatar_url) || localStorage.getItem(getPhotoKey(user.id))
   );
   const fileInputRef = useRef(null);
+  const legacyNameSyncStarted = useRef(false);
+  const legacyPhotoSyncStarted = useRef(false);
+  const [savingName, setSavingName] = useState(false);
+  const [savingPhoto, setSavingPhoto] = useState(false);
+  const [profileError, setProfileError] = useState('');
+
+  useEffect(() => {
+    const legacyName = localStorage.getItem(getNameKey(user.id))?.trim();
+    if (!legacyNameSyncStarted.current && legacyName && legacyName !== user.name) {
+      legacyNameSyncStarted.current = true;
+      authService.updateProfile(legacyName)
+        .then((profile) => {
+          updateUser(profile);
+          setDisplayName(profile.name);
+          setDraftName(profile.name);
+          localStorage.removeItem(getNameKey(user.id));
+        })
+        .catch((error) => setProfileError(`No se pudo sincronizar el nombre: ${error.message}`));
+    }
+
+    const legacyPhoto = localStorage.getItem(getPhotoKey(user.id));
+    if (user.avatar_url && legacyPhoto) {
+      localStorage.removeItem(getPhotoKey(user.id));
+    }
+    if (!legacyPhotoSyncStarted.current && !user.avatar_url && legacyPhoto?.startsWith('data:image/')) {
+      legacyPhotoSyncStarted.current = true;
+      setSavingPhoto(true);
+      setProfileError('');
+      (async () => {
+        try {
+          const blob = await fetch(legacyPhoto).then((response) => response.blob());
+          if (!['image/jpeg', 'image/png', 'image/webp'].includes(blob.type)) {
+            throw new Error('La foto guardada debe ser JPG, PNG o WEBP');
+          }
+          const extension = blob.type.split('/')[1].replace('jpeg', 'jpg');
+          const file = new File([blob], `profile.${extension}`, { type: blob.type });
+          const profile = await authService.uploadProfilePhoto(file);
+          updateUser(profile);
+          setAvatar(getApiAssetUrl(profile.avatar_url));
+          localStorage.removeItem(getPhotoKey(user.id));
+        } catch (error) {
+          setProfileError(`No se pudo sincronizar la foto guardada: ${error.message}`);
+        } finally {
+          setSavingPhoto(false);
+        }
+      })();
+    }
+  }, [user.id, user.name, user.avatar_url, updateUser]);
 
   // ─────────────────────────────────────────────────────────────────────────
   const getRoleName = () => {
@@ -71,14 +122,25 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, onClose }) {
   const joinDate = formatJoinDate();
 
   // ── Guardar nombre ────────────────────────────────────────────────────────
-  const handleSaveName = () => {
+  const handleSaveName = async () => {
     const trimmed = draftName.trim();
-    if (!trimmed) return;
-    setDisplayName(trimmed);
-    localStorage.setItem(getNameKey(user.id), trimmed);
-    setEditingName(false);
-    setNameSaved(true);
-    setTimeout(() => setNameSaved(false), 2000);
+    if (!trimmed || savingName) return;
+    setSavingName(true);
+    setProfileError('');
+    try {
+      const profile = await authService.updateProfile(trimmed);
+      updateUser(profile);
+      setDisplayName(profile.name);
+      setDraftName(profile.name);
+      localStorage.removeItem(getNameKey(user.id));
+      setEditingName(false);
+      setNameSaved(true);
+      setTimeout(() => setNameSaved(false), 2000);
+    } catch (error) {
+      setProfileError(`No se pudo guardar el nombre: ${error.message}`);
+    } finally {
+      setSavingName(false);
+    }
   };
 
   const handleCancelName = () => {
@@ -87,21 +149,42 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, onClose }) {
   };
 
   // ── Foto de perfil ────────────────────────────────────────────────────────
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
-    if (!file || !file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target.result;
-      setAvatar(dataUrl);
-      localStorage.setItem(getPhotoKey(user.id), dataUrl);
-    };
-    reader.readAsDataURL(file);
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setProfileError('Usa una imagen JPG, PNG o WEBP');
+      e.target.value = '';
+      return;
+    }
+    setSavingPhoto(true);
+    setProfileError('');
+    try {
+      const profile = await authService.uploadProfilePhoto(file);
+      updateUser(profile);
+      setAvatar(getApiAssetUrl(profile.avatar_url));
+      localStorage.removeItem(getPhotoKey(user.id));
+    } catch (error) {
+      setProfileError(`No se pudo subir la foto: ${error.message}`);
+    } finally {
+      setSavingPhoto(false);
+      e.target.value = '';
+    }
   };
 
-  const handleRemovePhoto = () => {
-    setAvatar(null);
-    localStorage.removeItem(getPhotoKey(user.id));
+  const handleRemovePhoto = async () => {
+    setSavingPhoto(true);
+    setProfileError('');
+    try {
+      const profile = await authService.deleteProfilePhoto();
+      updateUser(profile);
+      setAvatar(null);
+      localStorage.removeItem(getPhotoKey(user.id));
+    } catch (error) {
+      setProfileError(`No se pudo quitar la foto: ${error.message}`);
+    } finally {
+      setSavingPhoto(false);
+    }
   };
 
   // ── Campos del perfil ─────────────────────────────────────────────────────
@@ -211,7 +294,7 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, onClose }) {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 style={{ display: 'none' }}
                 onChange={handleFileChange}
                 id="profile-photo-input"
@@ -243,6 +326,7 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, onClose }) {
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <button
                       onClick={handleSaveName}
+                      disabled={savingName}
                       style={{
                         flex: 1, padding: '4px 0', borderRadius: '6px',
                         background: 'var(--color-success-bg)', border: '1px solid var(--color-success-border)',
@@ -322,6 +406,18 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, onClose }) {
           </div>
 
           {/* Resto de campos */}
+          {profileError && (
+            <p role="alert" style={{ color: '#f87171', fontSize: '12px', margin: '0 0 12px' }}>
+              {profileError}
+            </p>
+          )}
+
+          {savingPhoto && (
+            <p role="status" style={{ color: '#60a5fa', fontSize: '12px', margin: '0 0 12px' }}>
+              Guardando foto en el servidor...
+            </p>
+          )}
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {fields.map((field) => (
               <div key={field.label} style={cardStyle}>
@@ -340,6 +436,7 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, onClose }) {
           <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
             <button
               onClick={() => fileInputRef.current?.click()}
+              disabled={savingPhoto}
               style={{
                 flex: 1, padding: '8px 0', borderRadius: '8px',
                 background: 'var(--primary-bg)',
@@ -353,6 +450,7 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, onClose }) {
             {avatar && (
               <button
                 onClick={handleRemovePhoto}
+                disabled={savingPhoto}
                 style={{
                   padding: '8px 14px', borderRadius: '8px',
                   background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger-border)',

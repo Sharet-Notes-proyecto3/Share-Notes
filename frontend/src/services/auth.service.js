@@ -92,6 +92,20 @@ export const authService = {
     return await api.get('/auth/profile', token);
   },
 
+  async updateProfile(name) {
+    return await api.patch('/auth/profile', { name });
+  },
+
+  async uploadProfilePhoto(file) {
+    const formData = new FormData();
+    formData.append('photo', file);
+    return await api.post('/auth/profile/photo', formData);
+  },
+
+  async deleteProfilePhoto() {
+    return await api.delete('/auth/profile/photo');
+  },
+
   /**
    * Obtiene un artículo de Wikipedia relacionado con un tema o carrera.
    */
