@@ -43,6 +43,8 @@ export type Permission =
   | 'users:view_list'
   | 'users:toggle_status'
   | 'users:assign_roles'
+  | 'users:create'
+  | 'users:assign_courses'
   | 'users:restrict'
 
   // Sanciones / Moderación
@@ -108,6 +110,8 @@ const ADMIN_PERMISSIONS: Permission[] = Array.from(
     'users:view_list',
     'users:toggle_status',
     'users:assign_roles',
+    'users:create',
+    'users:assign_courses',
     'sanctions:apply_warning',
     'sanctions:apply_temp_ban',
     'sanctions:apply_perm_ban',
@@ -133,9 +137,10 @@ export const ROLE_PERMISSION_SETS: Record<Role, Set<Permission>> = {
   admin: new Set(ADMIN_PERMISSIONS),
 };
 
+// Jerarquía de 4 niveles reales y distintos
 export const ROLE_HIERARCHY: Record<Role, number> = {
   student: 1,
   teacher: 2,
-  moderator: 2,
-  admin: 3,
+  moderator: 3,
+  admin: 4,
 };

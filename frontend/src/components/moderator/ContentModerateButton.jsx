@@ -6,8 +6,9 @@ import useModeration from '../../composables/useModeration';
 export function ContentModerateButton({
   contentType = 'note', // 'note' | 'post'
   contentId,
-  currentStatus = 'visible',
   onSuccess,
+  style = {},
+  containerStyle = {},
 }) {
   const { moderateNote, moderatePost, loading, error } = useModeration();
   const [isOpen, setIsOpen] = useState(false);
@@ -32,22 +33,15 @@ export function ContentModerateButton({
   };
 
   return (
-    <RoleGate allow={['MODERATOR', 'FRONT_DESK_CS', 'ADMIN']}>
-      <div style={{ display: 'inline-block', position: 'relative' }}>
+    <RoleGate allow={['moderator', 'admin']}>
+      <div style={{ display: 'inline-block', position: 'relative', ...containerStyle }}>
         <button
           onClick={() => setIsOpen(true)}
+          className="btn-outline"
           style={{
             padding: '4px 10px',
             fontSize: '12px',
-            fontWeight: '600',
-            color: '#B45309',
-            backgroundColor: '#FEF3C7',
-            border: '1px solid #FCD34D',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px',
+            ...style,
           }}
           title="Opciones de moderación"
         >
@@ -62,7 +56,7 @@ export function ContentModerateButton({
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              backgroundColor: 'var(--modal-backdrop)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -71,7 +65,8 @@ export function ContentModerateButton({
           >
             <div
               style={{
-                backgroundColor: 'white',
+                backgroundColor: 'var(--card-bg)',
+                border: '1px solid var(--border-color)',
                 borderRadius: '8px',
                 padding: '24px',
                 maxWidth: '440px',
@@ -79,19 +74,19 @@ export function ContentModerateButton({
                 boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
               }}
             >
-              <h3 style={{ margin: '0 0 12px 0', fontSize: '18px', color: '#1F2937' }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '18px', color: 'var(--text-primary)' }}>
                 🛡️ Moderación de Contenido ({contentType === 'note' ? 'Apunte' : 'Publicación'})
               </h3>
 
               {error && (
-                <div style={{ padding: '10px', backgroundColor: '#FEE2E2', color: '#991B1B', borderRadius: '4px', fontSize: '13px', marginBottom: '12px' }}>
+                <div style={{ padding: '10px', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger-text)', border: '1px solid var(--color-danger-border)', borderRadius: '4px', fontSize: '13px', marginBottom: '12px' }}>
                   {error}
                 </div>
               )}
 
               {contentType === 'note' ? (
                 <div style={{ marginBottom: '14px' }}>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px', color: '#374151' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px', color: 'var(--text-secondary)' }}>
                     Acción sobre el estado:
                   </label>
                   <select
@@ -101,7 +96,9 @@ export function ContentModerateButton({
                       width: '100%',
                       padding: '8px',
                       borderRadius: '4px',
-                      border: '1px solid #D1D5DB',
+                      border: '1px solid var(--border-color)',
+                      backgroundColor: 'var(--bg-elevated)',
+                      color: 'var(--text-primary)',
                       fontSize: '14px',
                     }}
                   >
@@ -111,13 +108,13 @@ export function ContentModerateButton({
                   </select>
                 </div>
               ) : (
-                <p style={{ fontSize: '14px', color: '#4B5563', marginBottom: '14px' }}>
+                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '14px' }}>
                   Se procederá a realizar la <strong>moderación/eliminación</strong> de esta publicación por infracción de normas.
                 </p>
               )}
 
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px', color: '#374151' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px', color: 'var(--text-secondary)' }}>
                   Motivo de la moderación (opcional):
                 </label>
                 <textarea
@@ -129,7 +126,9 @@ export function ContentModerateButton({
                     width: '100%',
                     padding: '8px',
                     borderRadius: '4px',
-                    border: '1px solid #D1D5DB',
+                    border: '1px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-elevated)',
+                    color: 'var(--text-primary)',
                     fontSize: '13px',
                     boxSizing: 'border-box',
                   }}
@@ -144,9 +143,9 @@ export function ContentModerateButton({
                   style={{
                     padding: '8px 16px',
                     fontSize: '14px',
-                    backgroundColor: '#E5E7EB',
-                    color: '#374151',
-                    border: 'none',
+                    backgroundColor: 'var(--bg-elevated)',
+                    color: 'var(--text-secondary)',
+                    border: '1px solid var(--border-color)',
                     borderRadius: '4px',
                     cursor: 'pointer',
                   }}
@@ -161,8 +160,8 @@ export function ContentModerateButton({
                     padding: '8px 16px',
                     fontSize: '14px',
                     fontWeight: 'bold',
-                    backgroundColor: '#DC2626',
-                    color: 'white',
+                    backgroundColor: 'var(--color-danger)',
+                    color: 'var(--text-inverse)',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: loading ? 'not-allowed' : 'pointer',

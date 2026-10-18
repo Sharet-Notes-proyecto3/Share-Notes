@@ -22,6 +22,34 @@ export const changeUserRole = async (req: Request, res: Response, next: NextFunc
   } catch (err) { next(err); }
 };
 
+export const createStaffUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { name, email, password, role, subjectIds } = req.body;
+    const result = await service.createStaffUser(
+      { name, email, password, role, subjectIds },
+      req.user!.userId
+    );
+    res.status(201).json(result);
+  } catch (err) { next(err); }
+};
+
+export const updateTeacherCourses = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const teacherId = parseInt(req.params.id);
+    if (isNaN(teacherId)) {
+      res.status(400).json({ message: 'ID de docente inválido' });
+      return;
+    }
+    const { subjectIds } = req.body;
+    const result = await service.updateTeacherCourses(
+      teacherId,
+      subjectIds,
+      req.user!.userId
+    );
+    res.json(result);
+  } catch (err) { next(err); }
+};
+
 export const listReports = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await service.listReports(req.query.status as string | undefined);
@@ -32,11 +60,13 @@ export const listReports = async (req: Request, res: Response, next: NextFunctio
 export const resolveReport = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { status } = req.body;
-    if (!['reviewed', 'dismissed'].includes(status)) {
-      res.status(400).json({ message: 'Estado inválido. Use: reviewed | dismissed' });
+    const validStatuses = ['resolved', 'dismissed', 'reviewed'];
+    if (!status || !validStatuses.includes(status)) {
+      res.status(400).json({ message: 'Estado inválido. Use: resolved | dismissed' });
       return;
     }
-    const result = await service.resolveReport(parseInt(req.params.id), status);
+    const normalizedStatus = status === 'reviewed' ? 'resolved' : (status as 'resolved' | 'dismissed');
+    const result = await service.resolveReport(parseInt(req.params.id), normalizedStatus, req.user!.userId);
     res.json(result);
   } catch (err) { next(err); }
 };

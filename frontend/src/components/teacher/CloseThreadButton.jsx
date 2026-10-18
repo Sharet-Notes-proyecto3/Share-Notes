@@ -37,18 +37,10 @@ export default function CloseThreadButton({ thread, onClosed }) {
     <button
       onClick={handleCloseThread}
       disabled={loading}
+      className="btn-outline"
       style={{
-        background: 'rgba(239, 68, 68, 0.15)',
-        border: '1px solid rgba(239, 68, 68, 0.35)',
-        color: '#f87171',
         padding: '4px 10px',
-        borderRadius: '6px',
         fontSize: '12px',
-        fontWeight: '600',
-        cursor: 'pointer',
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '4px',
       }}
       title="Cerrar hilo de discusión en la materia asignada"
     >

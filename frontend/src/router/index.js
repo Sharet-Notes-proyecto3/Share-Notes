@@ -1,9 +1,9 @@
 // =============================================================================
-// ENRUTADOR Y GUARD DE RUTAS DE NAVEGACIÓN (VUE ROUTER GUARD / ROUTE GUARD)
-// Referencia del Patrón: Intercepción beforeEach con hasAnyAuthorityAndCheckAuth()
+// ENRUTADOR Y GUARD DE RUTAS DE NAVEGACIÓN (ROUTE GUARD)
+// Intercepción beforeEach basada en autenticación pura y roles
 // =============================================================================
 
-import { accountService } from '../services/account.service';
+import { getStoredToken, getStoredUser } from '../services/api';
 
 /**
  * Definición de rutas con metadatos de autoridades requeridas
@@ -19,55 +19,102 @@ export const routes = [
     path: '/notes',
     name: 'Notes',
     component: 'NotesGrid',
-    meta: { authorities: ['student', 'teacher', 'moderator', 'admin', 'USER', 'FUNCTIONARY', 'TEACHER', 'FRONT_DESK_CS', 'MODERATOR', 'ADMIN'] },
+    meta: { authorities: ['student', 'teacher', 'moderator', 'admin'] },
   },
   {
     path: '/forum',
     name: 'Forum',
     component: 'ForumView',
-    meta: { authorities: ['student', 'teacher', 'moderator', 'admin', 'USER', 'FUNCTIONARY', 'TEACHER', 'FRONT_DESK_CS', 'MODERATOR', 'ADMIN'] },
+    meta: { authorities: ['student', 'teacher', 'moderator', 'admin'] },
   },
   {
     path: '/admin',
     name: 'Admin',
     component: 'AdminView',
-    meta: { authorities: ['admin', 'ADMIN'] },
+    meta: { authorities: ['admin'] },
   },
   {
     path: '/teacher/courses/:courseId/dashboard',
     name: 'TeacherDashboard',
     component: 'TeacherDashboard',
-    meta: { authorities: ['teacher', 'admin', 'TEACHER', 'FUNCTIONARY', 'ADMIN'] },
+    meta: { authorities: ['teacher', 'admin'] },
   },
   {
     path: '/moderator/dashboard',
     name: 'ModeratorDashboard',
     component: 'ModeratorDashboard',
-    meta: { authorities: ['moderator', 'admin', 'MODERATOR', 'FRONT_DESK_CS', 'ADMIN'] },
+    meta: { authorities: ['moderator', 'admin'] },
   },
   {
     path: '/moderator/reports',
     name: 'ModeratorReports',
     component: 'ModeratorDashboard',
-    meta: { authorities: ['moderator', 'admin', 'MODERATOR', 'FRONT_DESK_CS', 'ADMIN'] },
+    meta: { authorities: ['moderator', 'admin'] },
   },
   {
     path: '/moderator/logs',
     name: 'ModeratorLogs',
     component: 'ModeratorDashboard',
-    meta: { authorities: ['moderator', 'admin', 'MODERATOR', 'FRONT_DESK_CS', 'ADMIN'] },
+    meta: { authorities: ['moderator', 'admin'] },
+  },
+  {
+    path: '/forbidden',
+    name: 'Forbidden',
+    component: 'ForbiddenView',
+    meta: { public: true },
+  },
+  {
+    path: '/not-found',
+    name: 'NotFound',
+    component: 'NotFoundView',
+    meta: { public: true },
+  },
+  {
+    path: '*',
+    name: 'CatchAll',
+    component: 'NotFoundView',
+    meta: { public: true },
   },
 ];
-
 
 /**
  * Función de Guard de Navegación de Rutas (equivalente a router.beforeEach de Vue Router)
  */
 export async function beforeEachRouteGuard(to, from, next) {
-  // Si la ruta es pública, permitir navegación libre
-  if (to?.meta?.public) {
+  const target = to || {};
+  const targetPath = target.path || target.fullPath || '/';
+
+  if (!targetPath || targetPath === 'undefined') {
+    if (typeof next === 'function') next({ path: '/not-found' });
+    return false;
+  }
+
+  const routeExists = routes.some((route) => {
+    if (route.path === '*') return true;
+    if (route.path === targetPath) return true;
+    if (route.path.includes(':') && targetPath.startsWith(route.path.split('/:')[0])) {
+      return true;
+    }
+    return false;
+  });
+
+  if (!routeExists && targetPath !== '/forbidden' && targetPath !== '/not-found') {
+    if (typeof next === 'function') next({ path: '/not-found' });
+    return false;
+  }
+
+  if (target?.meta?.public || targetPath === '/forbidden' || targetPath === '/not-found') {
     if (typeof next === 'function') next();
     return true;
+  }
+
+  const token = getStoredToken();
+  const user = getStoredUser();
+
+  if (!token || !user) {
+    const redirectTarget = { name: 'Home', query: { redirect: to?.fullPath || '/' } };
+    if (typeof next === 'function') next(redirectTarget);
+    return false;
   }
 
   const requiredAuthorities = to?.meta?.authorities || [];
