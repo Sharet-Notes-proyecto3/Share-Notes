@@ -28,6 +28,8 @@ interface NoteRow extends RowDataPacket {
   uploader_id: number;
   uploader_name: string;
   is_active: boolean;
+  verified: boolean;
+  verified_by: number | null;
   created_at: Date;
 }
 
@@ -84,6 +86,27 @@ export class NoteService {
     correlationId: string;
   }): Promise<void> {
     const correlationId = data.correlationId;
+
+    
+    // Respetar la preferencia del destinatario (Preferencias > Notificaciones por correo)
+    try {
+      const [prefRows] = await pool.query<RowDataPacket[]>(
+        'SELECT email_notifications FROM users WHERE email = ? LIMIT 1',
+        [data.notifyTo],
+      );
+      if (prefRows[0] && !prefRows[0].email_notifications) {
+        logger.info('Correo omitido: el destinatario desactivó las notificaciones', {
+          correlationId,
+          recipient: data.notifyTo,
+        });
+        return;
+      }
+    } catch (prefErr: any) {
+      logger.error('No se pudo consultar la preferencia de correo; se envía de todas formas', {
+        correlationId,
+        error: prefErr?.message,
+      });
+    }
 
     try {
       const emailResult = await sendEmailNotification(
@@ -195,6 +218,7 @@ export class NoteService {
     let query = `
       SELECT n.id, n.title, n.description, n.original_name, n.mimetype,
              n.file_size, n.created_at, n.uploader_id,
+             n.subject_id, n.verified, n.verified_by,
              s.name AS subject_name, s.semester,
              c.name AS career_name,
              u.name AS uploader_name
@@ -226,6 +250,13 @@ export class NoteService {
     } else if (filters.semester) {
       query += ' AND s.semester = ?';
       params.push(filters.semester);
+    }
+
+        // Docente: solo ve apuntes de las materias que tiene asignadas
+    if (user?.role === 'teacher' && user?.userId) {
+      query +=
+        ' AND n.subject_id IN (SELECT subject_id FROM teacher_courses WHERE teacher_id = ?)';
+      params.push(user.userId);
     }
 
     if (filters.subjectId) {
