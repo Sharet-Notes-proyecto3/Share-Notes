@@ -6,8 +6,7 @@ import { Request } from 'express';
 import fs from 'fs';
 
 const ALLOWED_MIMETYPES = ['application/pdf', 'image/jpeg', 'image/png'];
-<<<<<<< HEAD
-const MAX_SIZE_MB = parseInt(process.env.MAX_FILE_SIZE_MB || '10');
+const MAX_SIZE_MB = parseInt(process.env.MAX_FILE_SIZE_MB || '25');
 export const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || 'uploads');
 export const PROFILE_PHOTO_DIR = path.join(UPLOAD_DIR, 'profile-photos');
 const PROFILE_PHOTO_EXTENSIONS: Record<string, string> = {
@@ -15,10 +14,6 @@ const PROFILE_PHOTO_EXTENSIONS: Record<string, string> = {
   'image/png': '.png',
   'image/webp': '.webp',
 };
-=======
-const MAX_SIZE_MB = parseInt(process.env.MAX_FILE_SIZE_MB || '25');
-const UPLOAD_DIR  = process.env.UPLOAD_DIR || 'uploads';
->>>>>>> origin/main
 
 // Crear directorio si no existe
 if (!fs.existsSync(UPLOAD_DIR)) {
@@ -54,7 +49,6 @@ export const uploadNote = multer({
   },
 }).single('file');
 
-<<<<<<< HEAD
 const profilePhotoStorage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     cb(null, PROFILE_PHOTO_DIR);
@@ -75,7 +69,7 @@ export const uploadProfilePhoto = multer({
   },
   limits: { fileSize: 5 * 1024 * 1024 },
 }).single('photo');
-=======
+
 /**
  * Valida los magic bytes (firmas binarias) de los primeros bytes del archivo en disco.
  * Soporta exclusivamente:
@@ -151,5 +145,3 @@ export const validateMagicBytes = (filePath: string): boolean => {
     }
   }
 };
-
->>>>>>> origin/main

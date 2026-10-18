@@ -13,13 +13,10 @@ CREATE TABLE IF NOT EXISTS users (
   email            VARCHAR(150) NOT NULL UNIQUE,
   password_hash    VARCHAR(255) NOT NULL,
   role             ENUM('student','teacher','moderator','admin') NOT NULL DEFAULT 'student',
-<<<<<<< HEAD
   avatar_url       VARCHAR(255) NULL DEFAULT NULL,
-=======
   program_type     ENUM('tecnologo','ingenieria') NULL DEFAULT NULL,
   semester         TINYINT UNSIGNED NULL DEFAULT NULL,
   career_id        INT UNSIGNED NULL DEFAULT NULL,
->>>>>>> origin/main
   restricted_until TIMESTAMP NULL DEFAULT NULL,
   is_active        BOOLEAN NOT NULL DEFAULT TRUE,
   created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -178,7 +175,7 @@ const ALTER_QUERIES = [
   `ALTER TABLE reports MODIFY COLUMN status ENUM('pending','reviewed','resolved','dismissed') NOT NULL DEFAULT 'pending'`,
   `ALTER TABLE reports ADD COLUMN resolved_by INT UNSIGNED NULL DEFAULT NULL`,
   `ALTER TABLE reports ADD COLUMN resolved_at TIMESTAMP NULL DEFAULT NULL`,
-    `ALTER TABLE users ADD COLUMN career_id INT UNSIGNED NULL DEFAULT NULL`,
+  `ALTER TABLE users ADD COLUMN career_id INT UNSIGNED NULL DEFAULT NULL`,
   `ALTER TABLE users ADD COLUMN semester TINYINT UNSIGNED NULL DEFAULT NULL`,
   `ALTER TABLE users ADD COLUMN program_type ENUM('tecnologo','ingenieria') NULL DEFAULT NULL`,
 ];

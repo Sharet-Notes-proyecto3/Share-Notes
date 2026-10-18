@@ -27,7 +27,7 @@ describe('AuthService profile updates', () => {
     expect(queryMock).toHaveBeenNthCalledWith(1, 'UPDATE users SET name = ? WHERE id = ?', ['Moderador', 3]);
     expect(queryMock).toHaveBeenNthCalledWith(
       2,
-      'SELECT id, name, email, role, is_active, avatar_url, created_at FROM users WHERE id = ?',
+      'SELECT id, name, email, role, is_active, avatar_url, career_id, semester, program_type, created_at FROM users WHERE id = ?',
       [3]
     );
   });

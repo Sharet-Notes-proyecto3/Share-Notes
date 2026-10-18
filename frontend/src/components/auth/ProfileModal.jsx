@@ -17,11 +17,7 @@ const getPhotoKey = (userId) => `sharenotes-avatar-${userId}`;
 const getNameKey  = (userId) => `sharenotes-name-${userId}`;
 
 export default function ProfileModal({ onClose }) {
-<<<<<<< HEAD
   const { user, isAdmin, isModerator, isTeacher, updateUser } = useAuth();
-=======
-  const { user, isAdmin, isModerator, isTeacher } = useAuth();
->>>>>>> origin/main
   if (!user) return null;
   return (
     <ProfileModalInner
@@ -29,20 +25,13 @@ export default function ProfileModal({ onClose }) {
       isAdmin={isAdmin}
       isModerator={isModerator}
       isTeacher={isTeacher}
-<<<<<<< HEAD
       updateUser={updateUser}
-=======
->>>>>>> origin/main
       onClose={onClose}
     />
   );
 }
 
-<<<<<<< HEAD
 function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, updateUser, onClose }) {
-=======
-function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, onClose }) {
->>>>>>> origin/main
   // ── Nombre editable ────────────────────────────────────────────────────────
   const savedName = localStorage.getItem(getNameKey(user.id)) || user.name || '';
   const [editingName, setEditingName] = useState(false);
