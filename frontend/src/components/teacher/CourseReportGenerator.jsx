@@ -12,7 +12,7 @@ export default function CourseReportGenerator({ subjects = [], selectedCourseId,
   const handleGenerateReport = async (e) => {
     e?.preventDefault();
 
-    const targetCourse = courseId || selectedCourseId;
+    const targetCourse = selectedCourseId || courseId;
     if (!targetCourse) {
       alert('Por favor selecciona una asignatura para generar el reporte PDF.');
       return;

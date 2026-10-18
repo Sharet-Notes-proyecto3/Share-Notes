@@ -7,6 +7,7 @@ import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 import logger from "./utils/logger";
 import { correlationMiddleware } from "./middlewares/correlation.middleware";
+import preferencesRoutes from './routes/preferences.routes';
 
 // Validación en producción: evitar que origin quede undefined en CORS
 if (process.env.NODE_ENV === "production" && !process.env.APP_PUBLIC_URL) {
@@ -102,6 +103,7 @@ app.get("/api/health", (req, res) => {
 // Rutas
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/notes", noteRoutes);
+app.use('/api/preferences', preferencesRoutes);
 app.use("/api/forum", forumRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api", teacherRoutes);

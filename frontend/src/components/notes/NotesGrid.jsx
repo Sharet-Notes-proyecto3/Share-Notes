@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { notesService } from '../../services/notes.service';
+import { teacherService } from '../../services/teacher.service';
 import { useAuth } from '../../context/AuthContext';
 import NoteCard from './NoteCard';
 import UploadModal from './UploadModal';
@@ -14,7 +15,7 @@ import QRModal from './QRModal';
 import PreviewModal from './PreviewModal';
 
 export default function NotesGrid() {
-  const { token, user } = useAuth();
+    const { token, user, userRole } = useAuth();
   const [notes, setNotes] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState('');
@@ -81,7 +82,9 @@ export default function NotesGrid() {
   useEffect(() => {
     if (!token) return;
     let isMounted = true;
-    notesService.getSubjects(token)
+    (userRole === 'teacher'
+      ? teacherService.getTeacherCourses(token)
+      : notesService.getSubjects(token))
       .then((subjectsRes) => {
         if (isMounted) {
           const availableSubjects = Array.isArray(subjectsRes) ? subjectsRes : subjectsRes.data || [];
@@ -90,7 +93,7 @@ export default function NotesGrid() {
       })
       .catch((err) => console.error('Error al cargar materias:', err));
     return () => { isMounted = false; };
-  }, [token]);
+    }, [token, userRole]);
 
   // Cargar apuntes cuando cambie el filtro de materias o término de búsqueda
   useEffect(() => {
@@ -229,7 +232,10 @@ export default function NotesGrid() {
             onChange={(e) => setSelectedSemester(e.target.value)}
           >
             <option value="">Todos los semestres</option>
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((sem) => (
+            {(userRole === 'teacher'
+              ? [...new Set(subjects.map((s) => Number(s.semester)))].sort((a, b) => a - b)
+              : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+            ).map((sem) => (
               <option key={sem} value={sem}>
                 Semestre {sem}
               </option>

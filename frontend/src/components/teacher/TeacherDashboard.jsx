@@ -5,6 +5,7 @@ import { notesService } from '../../services/notes.service';
 import CourseReportGenerator from './CourseReportGenerator';
 import NoteVerifyButton from './NoteVerifyButton';
 import VerifiedBadge from './VerifiedBadge';
+import { teacherService } from '../../services/teacher.service';
 
 export default function TeacherDashboard({ courseIdProp }) {
   const { token, user } = useAuth();
@@ -13,19 +14,21 @@ export default function TeacherDashboard({ courseIdProp }) {
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!token) return;
-    notesService
-      .getSubjects(token)
-      .then((res) => {
-        const list = Array.isArray(res) ? res : res?.data || [];
-        setSubjects(list);
-        if (!selectedCourseId && list.length > 0) {
-          setSelectedCourseId(list[0].id);
-        }
-      })
-      .catch((err) => console.error('Error al cargar materias:', err));
-  }, [token, selectedCourseId]);
+ useEffect(() => {
+  if (!token) return;
+  let isMounted = true;
+  teacherService.getTeacherCourses(token)
+    .then((res) => {
+      if (!isMounted) return;
+      const list = Array.isArray(res) ? res : res?.data || [];
+      setSubjects(list);
+      setSelectedCourseId((prev) => prev || list[0]?.id || '');
+    })
+    .catch((err) => console.error('Error al cargar materias:', err));
+  return () => {
+    isMounted = false;
+  };
+}, [token]);
 
   useEffect(() => {
     if (!token || !selectedCourseId) return;

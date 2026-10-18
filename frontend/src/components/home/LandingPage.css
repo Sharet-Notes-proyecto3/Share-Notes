@@ -1,0 +1,441 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&display=swap');
+
+/* =============================================================================
+   LANDING — SHARENOTES
+   Usa las variables de index.css (modo día / noche). Todo está dentro de .lp
+   para no chocar con los estilos globales de la app.
+   ============================================================================= */
+
+.lp {
+  --lp-display: 'Bricolage Grotesque', 'Inter', sans-serif;
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+}
+
+.lp a,
+.lp button {
+  font-family: inherit;
+}
+
+.lp :focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* ── Botones ── */
+.lp .lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.lp .lp-btn-primary {
+  background: var(--primary-color);
+  color: var(--primary-contrast);
+}
+.lp .lp-btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+.lp .lp-btn-ghost {
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+.lp .lp-btn-ghost:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* ── Header ── */
+.lp .lp-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.lp .lp-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 12px 24px;
+}
+
+.lp .lp-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.lp .lp-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--theme-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.lp .lp-nav {
+  flex: 1;
+  display: flex;
+  gap: 22px;
+  margin-left: 8px;
+}
+
+.lp .lp-nav a {
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+.lp .lp-nav a:hover {
+  color: var(--text-primary);
+}
+
+.lp .lp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── Hero ── */
+.lp .lp-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 56px;
+  align-items: center;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 72px 24px 64px;
+}
+
+.lp .lp-h1 {
+  font-family: var(--lp-display);
+  font-size: clamp(2.25rem, 4.6vw, 3.6rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  margin: 0 0 20px;
+}
+
+.lp .lp-lead {
+  max-width: 52ch;
+  margin: 0 0 28px;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.lp .lp-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* ── Hoja de apunte (elemento principal del hero) ── */
+.lp .lp-sheet {
+  justify-self: center;
+  width: 100%;
+  max-width: 380px;
+  padding: 24px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow);
+  transform: rotate(1.5deg);
+}
+
+.lp .lp-sheet-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.lp .lp-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--primary-bg);
+  border: 1px solid var(--primary-border);
+  color: var(--color-info-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.lp .lp-stamp {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1.5px solid var(--color-success);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  font-size: 12px;
+  font-weight: 700;
+  transform: rotate(-4deg);
+  animation: lp-stamp 0.5s ease-out 0.4s both;
+}
+
+@keyframes lp-stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.6) rotate(-12deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(-4deg);
+  }
+}
+
+.lp .lp-sheet-title {
+  margin-bottom: 6px;
+  font-family: var(--lp-display);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.lp .lp-sheet-meta {
+  margin-bottom: 18px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.lp .lp-sheet-lines span {
+  display: block;
+  height: 8px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  background: var(--bg-elevated);
+}
+.lp .lp-sheet-lines span:nth-child(2) { width: 88%; }
+.lp .lp-sheet-lines span:nth-child(3) { width: 94%; }
+.lp .lp-sheet-lines span:nth-child(4) { width: 60%; }
+
+.lp .lp-sheet-foot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--border-strong);
+}
+
+/* El QR siempre es negro sobre blanco, en modo día y noche */
+.lp .lp-qr {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  width: 84px;
+  height: 84px;
+  padding: 6px;
+  border-radius: 6px;
+  background: #ffffff;
+}
+.lp .lp-qr i {
+  display: block;
+  aspect-ratio: 1 / 1;
+}
+.lp .lp-qr i.on {
+  background: #0f172a;
+}
+
+.lp .lp-sheet-hint {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+/* ── Secciones ── */
+.lp .lp-section {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 64px 24px;
+}
+
+.lp .lp-h2 {
+  margin: 0 0 28px;
+  font-family: var(--lp-display);
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.lp .lp-h2-tight {
+  margin-bottom: 8px;
+}
+
+/* Funciones: lista con filas, no tarjetas */
+.lp .lp-features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lp .lp-feature {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 32px;
+  padding: 20px 0;
+  border-top: 1px solid var(--border-color);
+}
+.lp .lp-feature:last-child {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.lp .lp-feature h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.lp .lp-feature p {
+  max-width: 60ch;
+  margin: 0;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* Roles */
+.lp .lp-band {
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.lp .lp-roles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 32px;
+}
+
+.lp .lp-role {
+  padding-top: 16px;
+  border-top: 3px solid var(--role, var(--primary-color));
+}
+
+.lp .lp-role h3 {
+  margin: 0 0 8px;
+  font-family: var(--lp-display);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.lp .lp-role p {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* Llamado final */
+.lp .lp-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 36px;
+  border-radius: 14px;
+  background: var(--primary-bg);
+  border: 1px solid var(--primary-border);
+}
+
+.lp .lp-cta-text {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+/* Footer */
+.lp .lp-footer {
+  border-top: 1px solid var(--border-color);
+}
+
+.lp .lp-footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px 32px;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 28px 24px 40px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.lp .lp-footer-inner strong {
+  color: var(--text-primary);
+}
+
+.lp .lp-team {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 860px) {
+  .lp .lp-nav {
+    display: none;
+  }
+  .lp .lp-header-inner {
+    justify-content: space-between;
+    padding: 10px 16px;
+  }
+  .lp .lp-hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+    padding: 40px 20px 48px;
+  }
+  .lp .lp-sheet {
+    justify-self: start;
+    transform: none;
+  }
+  .lp .lp-section {
+    padding: 48px 20px;
+  }
+  .lp .lp-feature {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+  .lp .lp-roles {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+  .lp .lp-cta {
+    padding: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp {
+    scroll-behavior: auto;
+  }
+  .lp .lp-stamp {
+    animation: none;
+  }
+}
