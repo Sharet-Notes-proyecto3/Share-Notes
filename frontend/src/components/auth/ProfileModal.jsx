@@ -190,8 +190,6 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, updateUser, 
   // ── Campos del perfil ─────────────────────────────────────────────────────
   const fields = [
     { label: 'Correo electrónico', value: user.email || '—',   icon: '@' },
-    { label: 'ID de estudiante',   value: user.id != null ? `#${user.id}` : '—', icon: '#' },
-    { label: 'Rol académico',      value: getRoleName(),         icon: '◆' },
     { label: 'Institución',        value: INSTITUTION_NAME,      icon: '🏛' },
   ];
 
@@ -364,9 +362,6 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, updateUser, 
                   )}
                 </div>
               )}
-              <p style={{ margin: '3px 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                {getRoleName()}
-              </p>
             </div>
           </div>
 
