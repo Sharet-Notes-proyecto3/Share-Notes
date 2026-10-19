@@ -16,7 +16,6 @@ export const PERMISSIONS_MATRIX = {
   moderator: {
     notes: ['view', 'create', 'edit', 'delete', 'export'],
     forum: ['view', 'create', 'reply', 'moderate'],
-    admin: ['view'],
     profile: ['view', 'edit'],
   },
   teacher: {
