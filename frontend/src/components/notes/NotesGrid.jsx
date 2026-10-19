@@ -25,6 +25,7 @@ export default function NotesGrid() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [downloadingReport, setDownloadingReport] = useState(false);
+  const [searching, setSearching] = useState(false);
 
   // Modales
   const [showUpload, setShowUpload] = useState(false);
@@ -130,9 +131,14 @@ export default function NotesGrid() {
     return () => window.clearTimeout(timeoutId);
   }, [refreshNotes, searchTerm, selectedSubject, selectedSemester, token]);
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
-    refreshNotes();
+    setSearching(true);
+    try {
+      await refreshNotes();
+    } finally {
+      setSearching(false);
+    }
   };
 
   const handleDownloadReport = async () => {
@@ -232,8 +238,13 @@ export default function NotesGrid() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <button type="submit" className="primary-btn" style={{ padding: '0 16px' }}>
-            🔍
+          <button
+            type="submit"
+            className="primary-btn"
+            disabled={searching}
+            style={{ padding: '0 16px', opacity: searching ? 0.7 : 1 }}
+          >
+            {searching ? '🔍 Buscando...' : '🔍'}
           </button>
         </form>
 
