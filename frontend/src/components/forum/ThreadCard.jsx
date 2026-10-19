@@ -43,6 +43,15 @@ export default function ThreadCard({ thread, onRefresh }) {
     setExpanded(!expanded);
   };
 
+  const reloadReplies = async () => {
+    try {
+      const data = await forumService.getThreadDetails(token, thread.id);
+      setReplies(data.replies || data.data?.replies || []);
+    } catch (err) {
+      console.error('Error al recargar respuestas:', err);
+    }
+  };
+
   const handleStartReplyToUser = (authorName) => {
     setReplyingTo(authorName);
     if (!expanded) setExpanded(true);
@@ -350,7 +359,7 @@ export default function ThreadCard({ thread, onRefresh }) {
                           </span>
                         )}
 
-                        <MarkSolutionButton thread={thread} reply={reply} onMarked={() => toggleExpand()} />
+                        <MarkSolutionButton thread={thread} reply={reply} onMarked={reloadReplies}/>
 
                         {/* Botón Responder al Compañero */}
                         <button

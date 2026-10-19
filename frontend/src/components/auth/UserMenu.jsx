@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/auth.service';
 import { getApiAssetUrl } from '../../services/api';
 import ProfileModal from './ProfileModal';
+import PreferencesModal from './PreferencesModal';
 
 // Reutiliza la misma clave que ProfileModal (Integrante 1 – Anna)
 const getPhotoKey = (userId) => `sharenotes-avatar-${userId}`;
@@ -14,6 +15,7 @@ export default function UserMenu() {
 
   const [open, setOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+    const [showPreferences, setShowPreferences] = useState(false);
   const [wikiTopic, setWikiTopic] = useState('Desarrollo de software');
   const [wikiUrl, setWikiUrl] = useState('');
   const [loadingWiki, setLoadingWiki] = useState(false);
@@ -264,7 +266,10 @@ export default function UserMenu() {
             <button
               type="button"
               className="profile-action"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false);
+                setShowPreferences(true);
+              }}
             >
               <span className="action-icon">⚙</span>
 
@@ -298,6 +303,10 @@ export default function UserMenu() {
 
       {showProfile && (
         <ProfileModal onClose={() => setShowProfile(false)} />
+      )}
+
+            {showPreferences && (
+        <PreferencesModal onClose={() => setShowPreferences(false)} />
       )}
     </div>
   );

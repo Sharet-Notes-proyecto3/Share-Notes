@@ -3,10 +3,10 @@ import { useAuth } from '../../context/AuthContext';
 import PaletteSwitcher from '../common/PaletteSwitcher';
 import './Auth.css';
 
-export default function AuthModal() {
+export default function AuthModal({ initialMode = 'login', onBack }) {
   const { login, register } = useAuth();
 
-  const [isLogin, setIsLogin] = useState(true);
+    const [isLogin, setIsLogin] = useState(initialMode !== 'register');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -141,7 +141,35 @@ export default function AuthModal() {
   return (
     <div className="auth-page">
       {/* Selector de Paleta de Colores en Pantalla de Login */}
-      <div style={{ position: 'absolute', top: '24px', right: '24px', zIndex: 10 }}>
+            <div
+        style={{
+          position: 'absolute',
+          top: '24px',
+          right: '24px',
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+        }}
+      >
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            style={{
+              padding: '7px 14px',
+              borderRadius: '999px',
+              border: '1px solid var(--border-strong)',
+              background: 'var(--bg-surface)',
+              color: 'var(--text-primary)',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            ← Volver al inicio
+          </button>
+        )}
         <PaletteSwitcher />
       </div>
 
@@ -221,7 +249,7 @@ export default function AuthModal() {
               </div>
 
               <span className="auth-eyebrow">
-                {isLogin ? 'BIENVENIDO DE NUEVO' : 'ÚNETE A SHAREDNOTES'}
+                {isLogin ? 'BIENVENIDO DE NUEVO' : 'ÚNETE A SHARENOTES'}
               </span>
 
               <h2>
