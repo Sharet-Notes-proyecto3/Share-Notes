@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { adminService } from '../../services/admin.service';
+import { notesService } from '../../services/notes.service';
 import { useAuth } from '../../context/AuthContext';
 import UsersTable from './UsersTable';
 import ReportsTable from './ReportsTable';
@@ -21,6 +22,7 @@ export default function AdminView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedUserForSanction, setSelectedUserForSanction] = useState(null);
+  const [downloadingReport, setDownloadingReport] = useState(false);
 
   const loadAdminData = async () => {
     try {
@@ -114,6 +116,17 @@ export default function AdminView() {
     }
   };
 
+  const handleDownloadPdfReport = async () => {
+    try {
+      setDownloadingReport(true);
+      await notesService.downloadNotesReport(token);
+    } catch (err) {
+      setError(err.message || 'No se pudo descargar el reporte PDF.');
+    } finally {
+      setDownloadingReport(false);
+    }
+  };
+
   if (!isModerator) {
     return (
       <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--color-danger-text)' }}>
@@ -126,11 +139,30 @@ export default function AdminView() {
   return (
     <div style={{ padding: '24px' }} className="animate-fade-in">
       {/* Encabezado */}
-      <div style={{ marginBottom: '24px' }}>
-        <h2 style={{ margin: '0 0 4px', color: 'var(--text-primary)', fontSize: '24px' }}>🛡️ Panel de Administración y Moderación</h2>
-        <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>
-          Gestión de usuarios, asignación de roles académicos, catálogo y resolución de reportes
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
+        <div>
+          <h2 style={{ margin: '0 0 4px', color: 'var(--text-primary)', fontSize: '24px' }}>🛡️ Panel de Administración y Moderación</h2>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>
+            Gestión de usuarios, asignación de roles académicos, catálogo y resolución de reportes
+          </p>
+        </div>
+
+        {isAdmin && (
+          <button
+            onClick={handleDownloadPdfReport}
+            disabled={downloadingReport}
+            className="btn-outline"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '9px 16px',
+              fontSize: '13px',
+            }}
+          >
+            {downloadingReport ? '⏳ Generando PDF...' : '📑 Reporte PDF del Sistema'}
+          </button>
+        )}
       </div>
 
       {error && (
