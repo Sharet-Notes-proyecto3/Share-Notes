@@ -119,8 +119,12 @@ export async function beforeEachRouteGuard(to, from, next) {
 
   const requiredAuthorities = to?.meta?.authorities || [];
 
-  // Intenta recuperar sesión y evalúa permisos con el servicio de cuenta
-  const hasPermission = await accountService.hasAnyAuthorityAndCheckAuth(requiredAuthorities);
+  // Evalúa permisos con el rol del usuario almacenado en la sesión
+  const userRole = (user?.role || '').toString().toLowerCase();
+  const hasPermission =
+    requiredAuthorities.length === 0 ||
+    userRole === 'admin' ||
+    requiredAuthorities.some((req) => req.toString().toLowerCase() === userRole);
 
   if (hasPermission) {
     if (typeof next === 'function') next();

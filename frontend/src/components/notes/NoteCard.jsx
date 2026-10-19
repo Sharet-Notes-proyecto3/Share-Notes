@@ -9,7 +9,7 @@ import VerifiedBadge from '../teacher/VerifiedBadge';
 import NoteVerifyButton from '../teacher/NoteVerifyButton';
 import ContentModerateButton from '../moderator/ContentModerateButton';
 
-export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, onVerifiedNote = () => {} }) {
+export default function NoteCard({ note, onOpenPreview, onDeleteNote, onVerifiedNote = () => {} }) {
   const { user, token, isModerator } = useAuth();
 
   const isPDF =
@@ -172,26 +172,24 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
           containerStyle={{ width: '100%' }}
         />
 
-        {/* Botones Secundarios: Descarga Directa y QR (Contorno/Outline) */}
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            onClick={handleDownloadDirect}
-            className="btn-outline"
-            style={{
-              flex: 1,
-            }}
-          >
-            ⬇️ Descargar
-          </button>
-
-          <button
-            onClick={() => onOpenQR(note)}
-            className="btn-outline"
-            title="Ver código QR para móvil"
-          >
-            📱 QR
-          </button>
-        </div>
+        {/* Botón Secundario: Descarga Directa */}
+        <button
+          onClick={handleDownloadDirect}
+          className="btn-outline"
+          style={{
+            width: '100%',
+            padding: '8px 12px',
+            borderRadius: '8px',
+            fontSize: '13px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+          }}
+        >
+          ⬇️ Descargar
+        </button>
       </div>
     </div>
   );
