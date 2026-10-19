@@ -189,6 +189,7 @@ function ProfileModalInner({ user, isAdmin, isModerator, isTeacher, updateUser, 
 
   // ── Campos del perfil ─────────────────────────────────────────────────────
   const fields = [
+    { label: 'Rol en la plataforma', value: getRoleName(), icon: '👤' },
     { label: 'Correo electrónico', value: user.email || '—',   icon: '@' },
     { label: 'Institución',        value: INSTITUTION_NAME,      icon: '🏛' },
   ];
