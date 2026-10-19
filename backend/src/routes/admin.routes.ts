@@ -19,6 +19,12 @@ router.patch('/users/:id/toggle', requirePermission('users:toggle_status'), ctrl
 // PATCH  /api/admin/users/:id/role   — cambiar rol de usuario
 router.patch('/users/:id/role', requirePermission('users:assign_roles'), ctrl.changeUserRole);
 
+// POST   /api/admin/users           — crear cuenta de personal (docente o moderador)
+router.post('/users', requirePermission('users:create'), ctrl.createStaffUser);
+
+// PATCH  /api/admin/users/:id/courses — asignar / editar materias a docente
+router.patch('/users/:id/courses', requirePermission('users:assign_courses'), ctrl.updateTeacherCourses);
+
 // ─── Reportes ──────────────────────────────────────────────────────────────
 // GET    /api/admin/reports          — listar reportes (query: ?status=pending)
 router.get('/reports', requirePermission('reports:view_all'), ctrl.listReports);

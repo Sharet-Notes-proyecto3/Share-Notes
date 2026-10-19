@@ -26,8 +26,8 @@ const studentToken = jwt.sign(
   { userId: 10, email: 'student@sharenotes.edu', role: 'student' },
   secret
 );
-const teacherToken = jwt.sign(
-  { userId: 2, email: 'teacher@sharenotes.edu', role: 'teacher' },
+const moderatorToken = jwt.sign(
+  { userId: 2, email: 'moderator@sharenotes.edu', role: 'moderator' },
   secret
 );
 
@@ -61,12 +61,12 @@ describe('Restricción de Visibilidad de Apuntes por Semestre para Estudiantes (
     expect(calledParams).not.toContain(8);
   });
 
-  test('Caso (2): NoteService.list — Docente, moderador o admin no consultan users y filtran libremente cualquier semestre', async () => {
+  test('Caso (2): NoteService.list — Moderador o admin no consultan users y filtran libremente cualquier semestre', async () => {
     (pool.query as jest.Mock).mockResolvedValueOnce([[]]); // Solo consulta a notes
 
     await service.list(
       { semester: 8 },
-      { userId: 2, role: 'teacher' }
+      { userId: 2, role: 'moderator' }
     );
 
     expect(pool.query).toHaveBeenCalledTimes(1);
@@ -136,7 +136,7 @@ describe('Restricción de Visibilidad de Apuntes por Semestre para Estudiantes (
     expect(calledParams).not.toContain(8);
   });
 
-  test('Caso (6): HTTP GET /api/notes?semester=8 con Token de Profesor ejecuta consulta con semestre 8 sin restricción', async () => {
+  test('Caso (6): HTTP GET /api/notes?semester=8 con Token de Moderador ejecuta consulta con semestre 8 sin restricción', async () => {
     (pool.query as jest.Mock).mockResolvedValueOnce([
       [
         {
@@ -150,7 +150,7 @@ describe('Restricción de Visibilidad de Apuntes por Semestre para Estudiantes (
 
     const res = await request(app)
       .get('/api/notes?semester=8')
-      .set('Authorization', `Bearer ${teacherToken}`);
+      .set('Authorization', `Bearer ${moderatorToken}`);
 
     expect(res.status).toBe(200);
     const [calledQuery, calledParams] = (pool.query as jest.Mock).mock.calls[0];

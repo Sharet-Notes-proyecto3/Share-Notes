@@ -43,6 +43,8 @@ export type Permission =
   | 'users:view_list'
   | 'users:toggle_status'
   | 'users:assign_roles'
+  | 'users:create'
+  | 'users:assign_courses'
   | 'users:restrict'
 
   // Sanciones / Moderación
@@ -108,6 +110,8 @@ const ADMIN_PERMISSIONS: Permission[] = Array.from(
     'users:view_list',
     'users:toggle_status',
     'users:assign_roles',
+    'users:create',
+    'users:assign_courses',
     'sanctions:apply_warning',
     'sanctions:apply_temp_ban',
     'sanctions:apply_perm_ban',
