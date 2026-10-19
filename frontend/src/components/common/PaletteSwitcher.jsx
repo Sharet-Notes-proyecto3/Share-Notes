@@ -28,24 +28,25 @@ export default function ThemeToggle({ style = {} }) {
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: '8px',
-        padding: '7px 14px',
-        borderRadius: '999px',
+        justifyContent: 'center',
+        width: '38px',
+        height: '38px',
+        padding: '0',
+        borderRadius: '50%',
         background: 'var(--theme-btn-bg)',
         border: '1px solid var(--theme-btn-border)',
         color: 'var(--text-primary)',
-        fontSize: '13px',
-        fontWeight: '600',
         cursor: 'pointer',
         boxShadow: 'var(--theme-btn-shadow)',
         transition: 'all 0.2s ease',
         userSelect: 'none',
+        flexShrink: 0,
         ...style,
       }}
       title={isDark ? 'Cambiar a Modo Día' : 'Cambiar a Modo Noche'}
+      aria-label={isDark ? 'Cambiar a Modo Día' : 'Cambiar a Modo Noche'}
     >
       <span className="theme-toggle-icon">{isDark ? '🌙' : '☀️'}</span>
-      <span>{isDark ? 'Modo Noche' : 'Modo Día'}</span>
     </button>
   );
 }

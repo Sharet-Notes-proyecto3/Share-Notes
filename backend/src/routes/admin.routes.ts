@@ -25,6 +25,9 @@ router.post('/users', requirePermission('users:create'), ctrl.createStaffUser);
 // PATCH  /api/admin/users/:id/courses — asignar / editar materias a docente
 router.patch('/users/:id/courses', requirePermission('users:assign_courses'), ctrl.updateTeacherCourses);
 
+// DELETE /api/admin/users/:id       — eliminar cuenta de usuario
+router.delete('/users/:id', requirePermission('users:delete'), ctrl.deleteUser);
+
 // ─── Reportes ──────────────────────────────────────────────────────────────
 // GET    /api/admin/reports          — listar reportes (query: ?status=pending)
 router.get('/reports', requirePermission('reports:view_all'), ctrl.listReports);
