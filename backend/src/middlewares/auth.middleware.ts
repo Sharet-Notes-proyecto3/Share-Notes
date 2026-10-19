@@ -13,7 +13,9 @@ if (!JWT_SECRET) {
 
 export function authMiddleware(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers && req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer <token>
+  const token =
+    (authHeader && authHeader.split(' ')[1]) ||
+    (req.query && typeof req.query.token === 'string' ? req.query.token : undefined);
   const correlationId = req.correlationId || (req.headers && (req.headers['x-correlation-id'] as string));
 
   if (!token) {
@@ -33,6 +35,28 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
   } catch {
     res.status(401).json({ message: 'Token inválido o expirado', correlationId });
   }
+}
+
+export function optionalAuthMiddleware(req: Request, _res: Response, next: NextFunction): void {
+  const authHeader = req.headers && req.headers['authorization'];
+  const token =
+    (authHeader && authHeader.split(' ')[1]) ||
+    (req.query && typeof req.query.token === 'string' ? req.query.token : undefined);
+
+  if (!token) {
+    return next();
+  }
+
+  try {
+    const secret = process.env.JWT_SECRET;
+    if (secret) {
+      const payload = jwt.verify(token, secret) as JwtPayload;
+      req.user = payload;
+    }
+  } catch {
+    // Continuar sin usuario si el token es inválido
+  }
+  next();
 }
 
 // Guard que exige rol de administrador (envoltorio delgado sobre ROLE_PERMISSION_SETS)
