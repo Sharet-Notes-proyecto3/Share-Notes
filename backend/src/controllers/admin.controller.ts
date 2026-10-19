@@ -50,6 +50,18 @@ export const updateTeacherCourses = async (req: Request, res: Response, next: Ne
   } catch (err) { next(err); }
 };
 
+export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = parseInt(req.params.id);
+    if (isNaN(userId)) {
+      res.status(400).json({ message: 'ID de usuario inválido' });
+      return;
+    }
+    const result = await service.deleteUser(userId, req.user!.userId);
+    res.json(result);
+  } catch (err) { next(err); }
+};
+
 export const listReports = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await service.listReports(req.query.status as string | undefined);

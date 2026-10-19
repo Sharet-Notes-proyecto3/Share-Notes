@@ -12,7 +12,7 @@ export class AdminService {
 
   async listUsers() {
     const [rows] = await pool.query<RowDataPacket[]>(
-      `SELECT id, name, email, role, is_active, created_at FROM users ORDER BY created_at DESC`
+      `SELECT id, name, email, role, is_active, created_at FROM users WHERE email NOT LIKE 'deleted_%@deleted.local' ORDER BY created_at DESC`
     );
     return rows;
   }
@@ -205,11 +205,14 @@ export class AdminService {
     if (userId === adminId) throw new AppError(400, 'No puedes suspenderte a ti mismo');
 
     const [rows] = await pool.query<RowDataPacket[]>(
-      'SELECT id, is_active, role FROM users WHERE id = ?',
+      'SELECT id, is_active, role, email FROM users WHERE id = ?',
       [userId]
     );
     const user = rows[0];
     if (!user) throw new AppError(404, 'Usuario no encontrado');
+    if (user.email && user.email.startsWith('deleted_') && user.email.endsWith('@deleted.local')) {
+      throw new AppError(400, 'No se puede cambiar el estado de una cuenta eliminada');
+    }
     if (user.role === 'admin') throw new AppError(403, 'No puedes suspender otro administrador');
 
     await pool.query('UPDATE users SET is_active = ? WHERE id = ?', [!user.is_active, userId]);
@@ -224,6 +227,51 @@ export class AdminService {
     });
 
     return { message: user.is_active ? 'Usuario suspendido' : 'Usuario reactivado' };
+  }
+
+  async deleteUser(userId: number, adminId: number) {
+    if (userId === adminId) {
+      throw new AppError(400, 'No puedes eliminar tu propia cuenta');
+    }
+
+    const [rows] = await pool.query<RowDataPacket[]>(
+      'SELECT id, name, email, role FROM users WHERE id = ?',
+      [userId]
+    );
+    const user = rows[0];
+    if (!user) {
+      throw new AppError(404, 'Usuario no encontrado');
+    }
+
+    if (user.role === 'admin') {
+      throw new AppError(400, 'No puedes eliminar a otro administrador');
+    }
+
+    if (user.email && user.email.startsWith('deleted_') && user.email.endsWith('@deleted.local')) {
+      throw new AppError(400, 'La cuenta ya ha sido eliminada previamente');
+    }
+
+    await pool.query(
+      `UPDATE users SET name = 'Usuario Eliminado', email = CONCAT('deleted_', id, '_', UNIX_TIMESTAMP(), '@deleted.local'), password_hash = '', avatar_url = NULL, restricted_until = NULL, is_active = FALSE WHERE id = ?`,
+      [userId]
+    );
+
+    await pool.query('DELETE FROM teacher_courses WHERE teacher_id = ?', [userId]);
+
+    await logAuditAction({
+      userId: adminId,
+      userRole: 'admin',
+      action: 'DELETE_USER',
+      targetResource: 'user',
+      targetId: userId,
+      details: {
+        originalEmail: user.email,
+        originalName: user.name,
+        originalRole: user.role,
+      },
+    });
+
+    return { message: 'Cuenta de usuario eliminada correctamente' };
   }
 
   async changeUserRole(userId: number, role: 'student' | 'teacher' | 'moderator' | 'admin', adminId: number) {

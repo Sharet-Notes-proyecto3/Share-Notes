@@ -45,6 +45,60 @@ export function ModerationLogsTable() {
     return <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: 'var(--color-warning-bg)', color: 'var(--color-warning-text)' }}>ℹ️ {action}</span>;
   };
 
+  const formatLogDetails = (log) => {
+    if (log.reason && typeof log.reason === 'string') return log.reason;
+    if (!log.details) return 'Sin motivo indicado';
+
+    let d = log.details;
+    if (typeof d === 'string') {
+      try {
+        d = JSON.parse(d);
+      } catch {
+        return d;
+      }
+    }
+
+    if (typeof d === 'object' && d !== null) {
+      if (d.reason) return d.reason;
+      if (d.motivo) return d.motivo;
+      if (d.noteTitle) return `Apunte: "${d.noteTitle}"`;
+      if (d.threadTitle) return `Hilo: "${d.threadTitle}"`;
+      if (d.replyContentSnippet) return `Fragmento: "${d.replyContentSnippet}"`;
+      if (d.userName && d.restrictedUntil) {
+        return `Restricción aplicada a ${d.userName}`;
+      }
+      return Object.entries(d)
+        .map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
+        .join(', ');
+    }
+
+    return String(d);
+  };
+
+  const formatTargetResource = (log) => {
+    if (log.target_user_name) return log.target_user_name;
+
+    let d = log.details;
+    if (typeof d === 'string') {
+      try {
+        d = JSON.parse(d);
+      } catch {
+        d = null;
+      }
+    }
+
+    if (d && typeof d === 'object') {
+      if (d.userName) return `${d.userName} (ID #${log.target_id || log.user_id})`;
+      if (d.noteTitle) return `Apunte #${log.target_id}`;
+      if (d.threadTitle) return `Hilo #${log.target_id}`;
+    }
+
+    if (log.target_resource) {
+      return `${log.target_resource} (ID #${log.target_id || log.user_id || 'N/A'})`;
+    }
+    return `ID #${log.target_id || log.user_id || 'N/A'}`;
+  };
+
   if (loading && logs.length === 0) {
     return (
       <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
@@ -109,10 +163,10 @@ export function ModerationLogsTable() {
                     {log.moderator_name || log.admin_name || `Moderador #${log.admin_id || log.moderator_id || 'N/A'}`}
                   </td>
                   <td style={{ padding: '10px 14px', color: 'var(--text-secondary)' }}>
-                    {log.target_user_name || log.target_resource || `ID: ${log.target_id || log.user_id || 'N/A'}`}
+                    {formatTargetResource(log)}
                   </td>
                   <td style={{ padding: '10px 14px', color: 'var(--text-secondary)', maxWidth: '250px' }}>
-                    {log.reason || log.details || 'Sin motivo indicado'}
+                    {formatLogDetails(log)}
                   </td>
                   <td style={{ padding: '10px 14px', color: 'var(--text-muted)', fontSize: '12px' }}>
                     {formatDate(log.created_at || log.timestamp)}

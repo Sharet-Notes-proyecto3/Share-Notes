@@ -7,7 +7,15 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { adminService } from '../../services/admin.service';
 import { useAuth } from '../../context/AuthContext';
 
-export default function UsersTable({ users = [], onRefresh, onToggleUser, onChangeRole, onOpenSanction }) {
+export default function UsersTable({
+  users = [],
+  onRefresh,
+  onToggleUser,
+  onChangeRole,
+  onOpenSanction,
+  onDeleteUser,
+  emptyMessage = 'No hay usuarios para mostrar.',
+}) {
   const { token, user: currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeMenuUserId, setActiveMenuUserId] = useState(null);
@@ -46,6 +54,25 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
       onRefresh?.();
     } catch (err) {
       alert('Error: ' + err.message);
+    }
+  };
+
+  const handleDelete = async (user) => {
+    setActiveMenuUserId(null);
+    const confirmed = window.confirm(
+      `¿Estás seguro de que deseas ELIMINAR la cuenta del usuario "${user.name}" (${user.email})?\n\nEsta acción es irreversible y desactivará permanentemente la cuenta.`
+    );
+    if (!confirmed) return;
+
+    if (onDeleteUser) {
+      return onDeleteUser(user.id);
+    }
+    try {
+      const res = await adminService.deleteUser(token, user.id);
+      alert(res.message || 'Cuenta de usuario eliminada correctamente.');
+      onRefresh?.();
+    } catch (err) {
+      alert('Error al eliminar cuenta: ' + err.message);
     }
   };
 
@@ -105,14 +132,23 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
           <tbody>
             {filteredUsers.length === 0 ? (
               <tr>
-                <td colSpan="6" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                  No se encontraron usuarios que coincidan con la búsqueda.
+                <td colSpan="6" style={{ padding: '30px 20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  {searchTerm.trim() ? (
+                    'No se encontraron usuarios que coincidan con la búsqueda.'
+                  ) : (
+                    <div style={{ padding: '8px 0' }}>
+                      <p style={{ margin: 0, fontSize: '14px', fontWeight: '500' }}>{emptyMessage}</p>
+                    </div>
+                  )}
                 </td>
               </tr>
             ) : (
               filteredUsers.map((u) => {
                 const isSelf = u.id === currentUser?.id;
                 const isMenuOpen = activeMenuUserId === u.id;
+                const isTargetAdmin = u.role === 'admin';
+                const canToggle = !isSelf && !isTargetAdmin;
+                const canDelete = !isSelf && !isTargetAdmin;
 
                 return (
                   <tr key={u.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
@@ -227,7 +263,7 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
 
                             <button
                               type="button"
-                              disabled={isSelf}
+                              disabled={!canToggle}
                               onClick={() => handleToggle(u.id)}
                               style={{
                                 display: 'flex',
@@ -238,23 +274,54 @@ export default function UsersTable({ users = [], onRefresh, onToggleUser, onChan
                                 borderRadius: '6px',
                                 border: 'none',
                                 background: 'transparent',
-                                color: isSelf
+                                color: !canToggle
                                   ? 'var(--text-muted)'
                                   : u.is_active
                                   ? 'var(--color-danger-text)'
                                   : 'var(--color-success-text)',
                                 fontSize: '12px',
-                                cursor: isSelf ? 'not-allowed' : 'pointer',
+                                cursor: !canToggle ? 'not-allowed' : 'pointer',
                                 textAlign: 'left',
                                 transition: 'background 0.15s ease',
-                                opacity: isSelf ? 0.5 : 1,
+                                opacity: !canToggle ? 0.5 : 1,
                               }}
-                              onMouseEnter={(e) => !isSelf && (e.currentTarget.style.background = 'var(--bg-elevated)')}
+                              onMouseEnter={(e) => canToggle && (e.currentTarget.style.background = 'var(--bg-elevated)')}
                               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                             >
                               <span>{u.is_active ? '🚫' : '✅'}</span>
                               <span>{u.is_active ? 'Suspender Usuario' : 'Reactivar Usuario'}</span>
                             </button>
+
+                            {canDelete && (
+                              <>
+                                <div style={{ height: '1px', background: 'var(--border-color)', margin: '4px 0' }} />
+                                <button
+                                  type="button"
+                                  onClick={() => handleDelete(u)}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    width: '100%',
+                                    padding: '8px 10px',
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    background: 'transparent',
+                                    color: 'var(--color-danger-text)',
+                                    fontSize: '12px',
+                                    cursor: 'pointer',
+                                    textAlign: 'left',
+                                    transition: 'background 0.15s ease',
+                                    fontWeight: '600',
+                                  }}
+                                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-elevated)')}
+                                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                                >
+                                  <span>🗑️</span>
+                                  <span>Eliminar cuenta</span>
+                                </button>
+                              </>
+                            )}
                           </div>
                         )}
                       </div>
