@@ -23,6 +23,15 @@ export const adminService = {
   },
 
   /**
+   * Elimina y anonimiza irreversiblemente una cuenta de usuario
+   */
+  async deleteUser(tokenOrUserId, maybeUserId) {
+    const userId = maybeUserId !== undefined ? maybeUserId : tokenOrUserId;
+    const token = maybeUserId !== undefined ? tokenOrUserId : undefined;
+    return await api.delete(`/admin/users/${userId}`, token);
+  },
+
+  /**
    * Cambia el rol de un usuario ('student' | 'teacher' | 'moderator' | 'admin')
    */
   async changeUserRole(tokenOrUserId, roleOrUserId, maybeRole) {

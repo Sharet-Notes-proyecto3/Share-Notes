@@ -15,7 +15,7 @@ export default function ReportsTable({ reports = [], onRefresh, onResolveReport 
     }
     try {
       await adminService.resolveReport(token, reportId, status);
-      alert(`Reporte marcado como: ${status}`);
+      alert(`Reporte marcado como: ${status === 'resolved' ? 'Resuelto' : 'Descartado'}`);
       onRefresh?.();
     } catch (err) {
       alert('Error: ' + err.message);
@@ -25,10 +25,12 @@ export default function ReportsTable({ reports = [], onRefresh, onResolveReport 
   const handleDirectDelete = async (report) => {
     const typeLabel = (report.target_type || 'note').toLowerCase();
     const confirmed = window.confirm(
-      `¿Deseas eliminar directamente este ${typeLabel === 'note' ? 'apunte' : typeLabel === 'thread' ? 'hilo' : 'comentario'} reportado?`
+      `¿Deseas eliminar directamente este ${typeLabel === 'note' ? 'apunte' : typeLabel === 'thread' ? 'hilo' : 'comentario'} reportado?\n\nEsta acción eliminará el contenido y resolverá el reporte.`
     );
 
     if (!confirmed) return;
+
+    let deleteFailedDueToNotFound = false;
 
     try {
       if (typeLabel === 'note') {
@@ -38,12 +40,26 @@ export default function ReportsTable({ reports = [], onRefresh, onResolveReport 
       } else {
         await adminService.deleteReply(token, report.target_id);
       }
+    } catch (err) {
+      const msg = (err.message || '').toLowerCase();
+      if (msg.includes('404') || msg.includes('no encontrado') || msg.includes('no existe')) {
+        deleteFailedDueToNotFound = true;
+      } else {
+        alert('Error al eliminar contenido reportado: ' + err.message);
+        return;
+      }
+    }
 
-      await adminService.resolveReport(token, report.id, 'dismissed');
-      alert('Contenido eliminado y reporte cerrado.');
+    try {
+      await adminService.resolveReport(token, report.id, 'resolved');
+      if (deleteFailedDueToNotFound) {
+        alert('El contenido reportado ya no existía en el sistema. El reporte fue marcado como resuelto.');
+      } else {
+        alert('Contenido eliminado exitosamente y reporte marcado como resuelto.');
+      }
       onRefresh?.();
     } catch (err) {
-      alert('Error al eliminar contenido reportado: ' + err.message);
+      alert('Error al actualizar el estado del reporte: ' + err.message);
     }
   };
 
@@ -89,54 +105,80 @@ export default function ReportsTable({ reports = [], onRefresh, onResolveReport 
                       borderRadius: '6px',
                       fontSize: '11px',
                       fontWeight: '600',
-                      background: r.status === 'pending' ? 'var(--color-warning-bg)' : 'var(--color-success-bg)',
-                      border: `1px solid ${r.status === 'pending' ? 'var(--color-warning-border)' : 'var(--color-success-border)'}`,
-                      color: r.status === 'pending' ? 'var(--color-warning-text)' : 'var(--color-success-text)',
+                      background:
+                        r.status === 'pending'
+                          ? 'var(--color-warning-bg)'
+                          : r.status === 'resolved'
+                          ? 'var(--color-success-bg)'
+                          : 'var(--bg-elevated)',
+                      border: `1px solid ${
+                        r.status === 'pending'
+                          ? 'var(--color-warning-border)'
+                          : r.status === 'resolved'
+                          ? 'var(--color-success-border)'
+                          : 'var(--border-color)'
+                      }`,
+                      color:
+                        r.status === 'pending'
+                          ? 'var(--color-warning-text)'
+                          : r.status === 'resolved'
+                          ? 'var(--color-success-text)'
+                          : 'var(--text-secondary)',
                     }}
                   >
-                    {r.status === 'pending' ? 'Pendiente' : 'Resuelto'}
+                    {r.status === 'pending'
+                      ? 'Pendiente'
+                      : r.status === 'resolved'
+                      ? 'Resuelto'
+                      : 'Descartado'}
                   </span>
                 </td>
                 <td style={{ padding: '14px 16px', textAlign: 'right' }}>
-                  <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                    <button
-                      onClick={() => handleDirectDelete(r)}
-                      style={{
-                        padding: '6px 10px',
-                        borderRadius: '6px',
-                        border: '1px solid var(--color-danger-border)',
-                        cursor: 'pointer',
-                        fontSize: '11px',
-                        fontWeight: '600',
-                        background: 'var(--color-danger-bg)',
-                        color: 'var(--color-danger-text)',
-                      }}
-                    >
-                      🗑️ Eliminar
-                    </button>
-                    <button
-                      onClick={() => handleResolve(r.id, 'resolved')}
-                      className="btn-outline"
-                      style={{
-                        padding: '5px 10px',
-                        fontSize: '11px',
-                        fontWeight: '600',
-                      }}
-                    >
-                      ✓ Resolver
-                    </button>
-                    <button
-                      onClick={() => handleResolve(r.id, 'dismissed')}
-                      className="btn-outline"
-                      style={{
-                        padding: '5px 10px',
-                        fontSize: '11px',
-                        fontWeight: '600',
-                      }}
-                    >
-                      ✕ Descartar
-                    </button>
-                  </div>
+                  {r.status !== 'pending' ? (
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                      Atendido ({r.status === 'resolved' ? 'Resuelto' : 'Descartado'})
+                    </span>
+                  ) : (
+                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                      <button
+                        onClick={() => handleDirectDelete(r)}
+                        style={{
+                          padding: '6px 10px',
+                          borderRadius: '6px',
+                          border: '1px solid var(--color-danger-border)',
+                          cursor: 'pointer',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          background: 'var(--color-danger-bg)',
+                          color: 'var(--color-danger-text)',
+                        }}
+                      >
+                        🗑️ Eliminar
+                      </button>
+                      <button
+                        onClick={() => handleResolve(r.id, 'resolved')}
+                        className="btn-outline"
+                        style={{
+                          padding: '5px 10px',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                        }}
+                      >
+                        ✓ Resolver
+                      </button>
+                      <button
+                        onClick={() => handleResolve(r.id, 'dismissed')}
+                        className="btn-outline"
+                        style={{
+                          padding: '5px 10px',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                        }}
+                      >
+                        ✕ Descartar
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}

@@ -21,6 +21,7 @@ export default function AdminView() {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [selectedUserForSanction, setSelectedUserForSanction] = useState(null);
   const [downloadingReport, setDownloadingReport] = useState(false);
 
@@ -89,18 +90,39 @@ export default function AdminView() {
     };
   }, [users, reports]);
 
+  const activeUsersList = useMemo(() => users.filter((u) => !!u.is_active), [users]);
+  const suspendedUsersList = useMemo(() => users.filter((u) => !u.is_active), [users]);
+
   const handleToggleUser = async (userId) => {
     try {
-      await adminService.toggleUserStatus(token, userId);
+      setError('');
+      setSuccessMessage('');
+      const res = await adminService.toggleUserStatus(token, userId);
+      setSuccessMessage(res.message || 'Estado de usuario actualizado correctamente.');
       await loadAdminData();
     } catch (err) {
       setError(err.message || 'No se pudo actualizar el estado del usuario.');
     }
   };
 
+  const handleDeleteUser = async (userId) => {
+    try {
+      setError('');
+      setSuccessMessage('');
+      const res = await adminService.deleteUser(token, userId);
+      setSuccessMessage(res.message || 'Cuenta de usuario eliminada correctamente.');
+      await loadAdminData();
+    } catch (err) {
+      setError(err.message || 'No se pudo eliminar la cuenta del usuario.');
+    }
+  };
+
   const handleChangeRole = async (userId, nextRole) => {
     try {
-      await adminService.changeUserRole(token, userId, nextRole);
+      setError('');
+      setSuccessMessage('');
+      const res = await adminService.changeUserRole(token, userId, nextRole);
+      setSuccessMessage(res.message || 'Rol de usuario actualizado correctamente.');
       await loadAdminData();
     } catch (err) {
       setError(err.message || 'No se pudo cambiar el rol del usuario.');
@@ -109,7 +131,10 @@ export default function AdminView() {
 
   const handleResolveReport = async (reportId, status) => {
     try {
-      await adminService.resolveReport(token, reportId, status);
+      setError('');
+      setSuccessMessage('');
+      const res = await adminService.resolveReport(token, reportId, status);
+      setSuccessMessage(res.message || `Reporte #${reportId} marcado como: ${status === 'resolved' ? 'Resuelto' : 'Descartado'}`);
       await loadAdminData();
     } catch (err) {
       setError(err.message || 'No se pudo resolver el reporte.');
@@ -175,9 +200,59 @@ export default function AdminView() {
             borderRadius: '12px',
             padding: '12px 16px',
             fontSize: '13px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
           }}
         >
-          ⚠️ {error}
+          <div>⚠️ {error}</div>
+          <button
+            type="button"
+            onClick={() => setError('')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--color-danger-text)',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 'bold',
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {successMessage && (
+        <div
+          style={{
+            marginBottom: '20px',
+            background: 'var(--color-success-bg)',
+            border: '1px solid var(--color-success-border)',
+            color: 'var(--color-success-text)',
+            borderRadius: '12px',
+            padding: '12px 16px',
+            fontSize: '13px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div>✓ {successMessage}</div>
+          <button
+            type="button"
+            onClick={() => setSuccessMessage('')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--color-success-text)',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 'bold',
+            }}
+          >
+            ✕
+          </button>
         </div>
       )}
 
@@ -227,7 +302,23 @@ export default function AdminView() {
             color: activeTab === 'users' ? 'var(--primary-contrast)' : 'var(--text-secondary)',
           }}
         >
-          👥 Gestión de Usuarios ({users.length})
+          👥 Gestión de Usuarios ({metrics.activeUsers})
+        </button>
+
+        <button
+          onClick={() => setActiveTab('suspended')}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '8px',
+            border: 'none',
+            cursor: 'pointer',
+            fontWeight: '600',
+            fontSize: '13px',
+            background: activeTab === 'suspended' ? 'var(--primary-color)' : 'transparent',
+            color: activeTab === 'suspended' ? 'var(--primary-contrast)' : 'var(--text-secondary)',
+          }}
+        >
+          🚫 Usuarios Suspendidos ({metrics.suspendedUsers})
         </button>
 
         <button
@@ -288,11 +379,23 @@ export default function AdminView() {
         </div>
       ) : activeTab === 'users' ? (
         <UsersTable
-          users={users}
+          users={activeUsersList}
+          emptyMessage="No hay usuarios activos registrados."
           onRefresh={loadAdminData}
           onToggleUser={handleToggleUser}
           onChangeRole={handleChangeRole}
           onOpenSanction={(user) => setSelectedUserForSanction(user)}
+          onDeleteUser={handleDeleteUser}
+        />
+      ) : activeTab === 'suspended' ? (
+        <UsersTable
+          users={suspendedUsersList}
+          emptyMessage="No hay usuarios suspendidos."
+          onRefresh={loadAdminData}
+          onToggleUser={handleToggleUser}
+          onChangeRole={handleChangeRole}
+          onOpenSanction={(user) => setSelectedUserForSanction(user)}
+          onDeleteUser={handleDeleteUser}
         />
       ) : activeTab === 'catalog' ? (
         <AcademicCatalog />
