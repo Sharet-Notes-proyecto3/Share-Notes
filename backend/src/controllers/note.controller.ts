@@ -136,21 +136,6 @@ export const downloadNote = async (req: Request, res: Response, next: NextFuncti
   } catch (err) { next(err); }
 };
 
-/**
- * Genera el código QR para compartir un apunte específico
- */
-export const generateNoteQR = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const noteId = parseInt(req.params.id);
-    if (isNaN(noteId)) {
-      res.status(400).json({ message: 'ID de apunte inválido', correlationId: req.correlationId });
-      return;
-    }
-    const result = await service.generateNoteQR(noteId);
-    res.json({ ...result, correlationId: req.correlationId });
-  } catch (err) { next(err); }
-};
-
 export const deleteNote = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await service.delete(

@@ -1,8 +1,7 @@
-// src/routes/note.routes.ts
 import { Router } from 'express';
 import * as ctrl from '../controllers/note.controller';
 import * as teacherCtrl from '../controllers/teacher.controller';
-import { authMiddleware } from '../middlewares/auth.middleware';
+import { authMiddleware, optionalAuthMiddleware, adminGuard } from '../middlewares/auth.middleware';
 import { requirePermission } from '../roles/roles.middleware';
 import { isTeacherOfCourse } from '../middlewares/teacher.middleware';
 import { uploadNote } from '../middlewares/upload.middleware';
@@ -10,14 +9,18 @@ import { uploadLimiter } from '../middlewares/rateLimit.middleware';
 
 const router = Router();
 
-// Todas las rutas de apuntes requieren autenticación
+// Rutas públicas / descarga (permiten autenticación opcional o descarga directa)
+// GET  /api/notes/:id/download  — descargar archivo o vista previa
+router.get('/:id/download', optionalAuthMiddleware, ctrl.downloadNote);
+
+// A partir de aquí, las rutas requieren autenticación obligatoria
 router.use(authMiddleware);
 
 // GET  /api/notes/subjects  — lista de materias disponibles
 router.get('/subjects', requirePermission('subjects:view'), ctrl.listSubjects);
 
-// GET  /api/notes/report    — generar reporte PDF de mis apuntes (vía MS-PDF)
-router.get('/report', requirePermission('notes:search'), ctrl.generateReport);
+// GET  /api/notes/report    — generar reporte PDF (vía MS-PDF) — EXCLUSIVO ADMINISTRADOR
+router.get('/report', adminGuard, ctrl.generateReport);
 
 // GET  /api/notes/microservices/status — estado de los microservicios (diagnóstico reservado a roles de gestión/auditoría: moderador y admin)
 router.get('/microservices/status', requirePermission('moderation:view_logs'), ctrl.microservicesStatus);
@@ -29,12 +32,6 @@ router.get('/', requirePermission('notes:search'), ctrl.listNotes);
 // POST /api/notes           — subir un apunte (con rate limit de 20 subidas/15min)
 // Form-data: file, title, description (opcional), subjectId
 router.post('/', requirePermission('notes:upload'), uploadLimiter, uploadNote, ctrl.uploadNote);
-
-// GET  /api/notes/:id/download  — descargar archivo
-router.get('/:id/download', requirePermission('notes:download'), ctrl.downloadNote);
-
-// GET  /api/notes/:id/qr        — generar código QR del apunte (reutiliza notes:download ya que conduce a la descarga)
-router.get('/:id/qr', requirePermission('notes:download'), ctrl.generateNoteQR);
 
 // PUT  /api/notes/:id/verify    — verificar apunte (docente asignado o admin)
 router.put('/:id/verify', requirePermission('notes:verify'), isTeacherOfCourse, teacherCtrl.verifyNote);

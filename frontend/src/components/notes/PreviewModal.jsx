@@ -14,7 +14,6 @@ export default function PreviewModal({ note, onClose }) {
   const [error, setError] = useState('');
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
-  const [downloadingReport, setDownloadingReport] = useState(false);
 
   const isPDF =
     note?.original_name?.toLowerCase().endsWith('.pdf') ||
@@ -26,7 +25,7 @@ export default function PreviewModal({ note, onClose }) {
     let isMounted = true;
 
     async function loadProtectedBlob() {
-      if (!note || !token) return;
+      if (!note) return;
       try {
         setLoading(true);
         setError('');
@@ -55,7 +54,7 @@ export default function PreviewModal({ note, onClose }) {
         URL.revokeObjectURL(currentUrl);
       }
     };
-  }, [note, token]);
+  }, [note, token, isPDF]);
 
   if (!note) return null;
 
@@ -77,19 +76,9 @@ export default function PreviewModal({ note, onClose }) {
     a.remove();
   };
 
-  const handleDownloadReport = async () => {
-    try {
-      setDownloadingReport(true);
-      await notesService.downloadNotesReport(token);
-    } catch (err) {
-      setError(err.message || 'No se pudo generar el reporte PDF.');
-    } finally {
-      setDownloadingReport(false);
-    }
-  };
-
   return (
     <div
+      onClick={onClose}
       style={{
         position: 'fixed',
         inset: 0,
@@ -103,6 +92,7 @@ export default function PreviewModal({ note, onClose }) {
       }}
     >
       <div
+        onClick={(e) => e.stopPropagation()}
         style={{
           background: 'var(--card-bg)',
           border: '1px solid var(--border-color)',
