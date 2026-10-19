@@ -28,7 +28,7 @@ interface NoteRow extends RowDataPacket {
   uploader_id: number;
   uploader_name: string;
   is_active: boolean;
-  verified: boolean;
+    verified: boolean;
   verified_by: number | null;
   created_at: Date;
 }
@@ -216,9 +216,8 @@ export class NoteService {
     }
   ) {
     let query = `
-      SELECT n.id, n.title, n.description, n.original_name, n.mimetype,
+      SELECT n.id, n.subject_id, n.verified, n.verified_by, n.title, n.description, n.original_name, n.mimetype,
              n.file_size, n.created_at, n.uploader_id,
-             n.subject_id, n.verified, n.verified_by,
              s.name AS subject_name, s.semester,
              c.name AS career_name,
              u.name AS uploader_name
@@ -230,38 +229,52 @@ export class NoteService {
     `;
     const params: (string | number)[] = [];
 
-    // Determinar si el usuario es estudiante y consultar SIEMPRE su semestre en tiempo real desde la BD
-    let studentSemester: number | null = null;
-    if (user?.role === 'student' && user?.userId) {
-      const [uRows] = await pool.query<RowDataPacket[]>(
-        'SELECT semester FROM users WHERE id = ?',
+    // Determinar si el usuario es docente y consultar sus materias asignadas en tiempo real desde la BD
+    if (user?.role === 'teacher' && user?.userId) {
+      const [cRows] = await pool.query<RowDataPacket[]>(
+        'SELECT subject_id FROM teacher_courses WHERE teacher_id = ?',
         [user.userId]
       );
-      if (uRows[0] && uRows[0].semester !== null && uRows[0].semester !== undefined) {
-        studentSemester = Number(uRows[0].semester);
+      const assignedSubjectIds = cRows.map((r: any) => Number(r.subject_id));
+      if (assignedSubjectIds.length === 0) {
+        // Docente sin materias asignadas: no ve apuntes
+        return [];
       }
-    }
 
-    if (user?.role === 'student' && studentSemester) {
-      // Regla estricta de seguridad en backend: el estudiante solo puede ver notas de su propio semestre.
-      // Se ignora y sobreescribe cualquier intento de filtrar por otro semestre desde el cliente.
-      query += ' AND s.semester = ?';
-      params.push(studentSemester);
-    } else if (filters.semester) {
-      query += ' AND s.semester = ?';
-      params.push(filters.semester);
-    }
+      if (filters.subjectId && assignedSubjectIds.includes(Number(filters.subjectId))) {
+        query += ' AND n.subject_id = ?';
+        params.push(Number(filters.subjectId));
+      } else {
+        query += ` AND n.subject_id IN (${assignedSubjectIds.map(() => '?').join(', ')})`;
+        params.push(...assignedSubjectIds);
+      }
+    } else {
+      // Determinar si el usuario es estudiante y consultar SIEMPRE su semestre en tiempo real desde la BD
+      let studentSemester: number | null = null;
+      if (user?.role === 'student' && user?.userId) {
+        const [uRows] = await pool.query<RowDataPacket[]>(
+          'SELECT semester FROM users WHERE id = ?',
+          [user.userId]
+        );
+        if (uRows[0] && uRows[0].semester !== null && uRows[0].semester !== undefined) {
+          studentSemester = Number(uRows[0].semester);
+        }
+      }
 
-        // Docente: solo ve apuntes de las materias que tiene asignadas
-    if (user?.role === 'teacher' && user?.userId) {
-      query +=
-        ' AND n.subject_id IN (SELECT subject_id FROM teacher_courses WHERE teacher_id = ?)';
-      params.push(user.userId);
-    }
+      if (user?.role === 'student' && studentSemester) {
+        // Regla estricta de seguridad en backend: el estudiante solo puede ver notas de su propio semestre.
+        // Se ignora y sobreescribe cualquier intento de filtrar por otro semestre desde el cliente.
+        query += ' AND s.semester = ?';
+        params.push(studentSemester);
+      } else if (filters.semester) {
+        query += ' AND s.semester = ?';
+        params.push(filters.semester);
+      }
 
-    if (filters.subjectId) {
-      query += ' AND n.subject_id = ?';
-      params.push(filters.subjectId);
+      if (filters.subjectId) {
+        query += ' AND n.subject_id = ?';
+        params.push(filters.subjectId);
+      }
     }
     if (filters.careerId) {
       query += ' AND s.career_id = ?';

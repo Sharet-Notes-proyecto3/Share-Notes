@@ -63,18 +63,9 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '6px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-            <span
-              style={{
-                fontSize: '11px',
-                padding: '4px 10px',
-                borderRadius: '6px',
-                background: 'var(--primary-bg)',
-                border: '1px solid var(--primary-border)',
-                color: 'var(--color-info-text)',
-                fontWeight: '600',
-              }}
-            >
-              📖 {note.subject_name || 'Materia General'}
+            <span className="subject-chip">
+              <span className="subject-chip-dot"></span>
+              {note.subject_name || 'Materia General'}
             </span>
             {Boolean(note.verified) && <VerifiedBadge />}
           </div>
@@ -85,9 +76,9 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
                 fontSize: '11px',
                 padding: '3px 8px',
                 borderRadius: '6px',
-                background: isPDF ? 'var(--color-danger-bg)' : 'var(--color-success-bg)',
-                border: `1px solid ${isPDF ? 'var(--color-danger-border)' : 'var(--color-success-border)'}`,
-                color: isPDF ? 'var(--color-danger-text)' : 'var(--color-success-text)',
+                background: 'var(--color-chip-bg)',
+                border: '1px solid var(--color-chip-border)',
+                color: 'var(--text-secondary)',
                 fontWeight: '600',
                 display: 'flex',
                 alignItems: 'center',
@@ -109,6 +100,7 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
                   fontSize: '12px',
                   cursor: 'pointer',
                   fontWeight: '600',
+                  transition: 'opacity 0.2s',
                 }}
                 title="Eliminar apunte"
               >
@@ -148,7 +140,7 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
 
       {/* Botones de Acción */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
-        {/* Botón Principal: Vista Previa Integrada */}
+        {/* Botón Principal: Vista Previa Integrada (ÚNICO sólido) */}
         <button
           onClick={() => onOpenPreview(note)}
           className="primary-btn"
@@ -168,32 +160,25 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
           👁️ Vista Previa
         </button>
 
-        {/* Botón de verificación para docente asignado */}
+        {/* Botón de verificación para docente asignado (Contorno/Outline) */}
         <NoteVerifyButton note={note} onVerified={onVerifiedNote} />
 
-        {/* Botón de moderación para moderadores y administradores */}
-        <ContentModerateButton contentType="note" contentId={note.id} currentStatus={note.moderation_status || 'visible'} />
+        {/* Botón de moderación para moderadores y administradores (Contorno/Outline) */}
+        <ContentModerateButton
+          contentType="note"
+          contentId={note.id}
+          currentStatus={note.moderation_status || 'visible'}
+          style={{ width: '100%' }}
+          containerStyle={{ width: '100%' }}
+        />
 
-        {/* Botones Secundarios: Descarga Directa y QR */}
+        {/* Botones Secundarios: Descarga Directa y QR (Contorno/Outline) */}
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
             onClick={handleDownloadDirect}
+            className="btn-outline"
             style={{
               flex: 1,
-              textAlign: 'center',
-              background: 'var(--bg-elevated)',
-              border: '1px solid var(--border-color)',
-              color: 'var(--text-primary)',
-              padding: '6px 10px',
-              borderRadius: '8px',
-              fontSize: '12px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '4px',
-              transition: 'background 0.2s',
             }}
           >
             ⬇️ Descargar
@@ -201,20 +186,7 @@ export default function NoteCard({ note, onOpenQR, onOpenPreview, onDeleteNote, 
 
           <button
             onClick={() => onOpenQR(note)}
-            style={{
-              background: 'var(--bg-elevated)',
-              border: '1px solid var(--border-color)',
-              color: 'var(--text-primary)',
-              padding: '6px 12px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '12px',
-              fontWeight: '500',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              transition: 'background 0.2s',
-            }}
+            className="btn-outline"
             title="Ver código QR para móvil"
           >
             📱 QR

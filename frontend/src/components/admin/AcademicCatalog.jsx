@@ -291,16 +291,12 @@ export default function AcademicCatalog() {
             <button
               type="submit"
               disabled={careers.length === 0}
+              className="primary-btn"
               style={{
+                width: '100%',
                 padding: '10px 16px',
-                borderRadius: '8px',
-                border: 'none',
-                background: careers.length > 0 ? 'var(--color-success)' : 'var(--bg-elevated)',
-                color: careers.length > 0 ? 'var(--text-inverse)' : 'var(--text-muted)',
-                fontWeight: '600',
                 fontSize: '13px',
                 cursor: careers.length > 0 ? 'pointer' : 'not-allowed',
-                transition: 'background 0.2s',
               }}
             >
               + Registrar Materia
@@ -350,7 +346,7 @@ export default function AcademicCatalog() {
 
         <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
           Total Materias: <strong style={{ color: 'var(--primary-color)' }}>{filteredSubjects.length}</strong> | Total Carreras:{' '}
-          <strong style={{ color: 'var(--color-success-text)' }}>{careers.length}</strong>
+          <strong style={{ color: 'var(--text-primary)' }}>{careers.length}</strong>
         </div>
       </div>
 
@@ -361,19 +357,10 @@ export default function AcademicCatalog() {
           {careers.map((c) => (
             <span
               key={c.id}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '4px 10px',
-                borderRadius: '999px',
-                background: 'var(--primary-bg)',
-                border: '1px solid var(--primary-border)',
-                color: 'var(--color-info-text)',
-                fontSize: '12px',
-                fontWeight: '600',
-              }}
+              className="subject-chip"
+              style={{ borderRadius: '999px', padding: '4px 10px' }}
             >
+              <span className="subject-chip-dot"></span>
               🎓 {c.name}
               <button
                 onClick={() => handleDeleteCareer(c.id, c.name)}
@@ -381,12 +368,15 @@ export default function AcademicCatalog() {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: 'var(--color-danger-text)',
+                  color: 'var(--text-muted)',
                   cursor: 'pointer',
                   fontSize: '12px',
                   lineHeight: 1,
                   padding: 0,
+                  marginLeft: '2px',
                 }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-danger-text)')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
               >
                 ✕
               </button>
@@ -428,9 +418,9 @@ export default function AcademicCatalog() {
                     fontSize: '11px',
                     padding: '2px 8px',
                     borderRadius: '6px',
-                    background: semSubjects.length > 0 ? 'var(--color-success-bg)' : 'var(--bg-elevated)',
-                    border: `1px solid ${semSubjects.length > 0 ? 'var(--color-success-border)' : 'var(--border-color)'}`,
-                    color: semSubjects.length > 0 ? 'var(--color-success-text)' : 'var(--text-muted)',
+                    background: semSubjects.length > 0 ? 'var(--color-chip-bg)' : 'var(--bg-elevated)',
+                    border: `1px solid ${semSubjects.length > 0 ? 'var(--color-chip-border)' : 'var(--border-color)'}`,
+                    color: semSubjects.length > 0 ? 'var(--text-secondary)' : 'var(--text-muted)',
                     fontWeight: '600',
                   }}
                 >

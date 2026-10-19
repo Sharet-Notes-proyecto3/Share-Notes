@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/auth.service';
+import { getApiAssetUrl } from '../../services/api';
 import ProfileModal from './ProfileModal';
 import PreferencesModal from './PreferencesModal';
 
@@ -21,21 +22,6 @@ export default function UserMenu() {
   const menuRef = useRef(null);
 
   // ── Foto de perfil y nombre (Integrante 1 – Anna) ─────────────────────────
-  const [avatar, setAvatar] = useState(
-    () => user ? localStorage.getItem(getPhotoKey(user.id)) || null : null
-  );
-  const [displayName, setDisplayName] = useState(
-    () => user ? localStorage.getItem(getNameKey(user.id)) || user?.name || '' : ''
-  );
-
-  // Sincroniza cuando cambia el usuario o cuando el menú se abre/cierra
-  useEffect(() => {
-    if (!user) return;
-    setAvatar(localStorage.getItem(getPhotoKey(user.id)) || null);
-    setDisplayName(localStorage.getItem(getNameKey(user.id)) || user.name || '');
-  }, [user, open]);
-  // ─────────────────────────────────────────────────────────────────────────
-
   const fetchWiki = async (topic) => {
     const query = topic || wikiTopic;
     if (!query?.trim()) return;
@@ -81,6 +67,9 @@ export default function UserMenu() {
 
   if (!user) return null;
 
+  const avatar = getApiAssetUrl(user.avatar_url) || localStorage.getItem(getPhotoKey(user.id));
+  const displayName = localStorage.getItem(getNameKey(user.id)) || user.name || '';
+
   const getRoleName = () => {
     if (isAdmin) return 'Administrador';
     if (isModerator) return 'Moderador';
@@ -89,7 +78,7 @@ export default function UserMenu() {
   };
 
   const getInitials = () => {
-    const name = user.name || user.email || 'U';
+    const name = displayName || user.email || 'U';
 
     const parts = name
       .trim()

@@ -49,9 +49,15 @@ export const authService = {
       throw new Error('La contraseña es obligatoria.');
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       throw new Error(
-        'La contraseña debe tener al menos 6 caracteres.'
+        'La contraseña debe tener al menos 8 caracteres.'
+      );
+    }
+
+    if (password.length > 72) {
+      throw new Error(
+        'La contraseña no puede exceder los 72 caracteres.'
       );
     }
 
@@ -84,6 +90,20 @@ export const authService = {
     }
 
     return await api.get('/auth/profile', token);
+  },
+
+  async updateProfile(name) {
+    return await api.patch('/auth/profile', { name });
+  },
+
+  async uploadProfilePhoto(file) {
+    const formData = new FormData();
+    formData.append('photo', file);
+    return await api.post('/auth/profile/photo', formData);
+  },
+
+  async deleteProfilePhoto() {
+    return await api.delete('/auth/profile/photo');
   },
 
   /**

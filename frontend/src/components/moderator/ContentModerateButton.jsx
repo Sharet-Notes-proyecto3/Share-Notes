@@ -7,6 +7,8 @@ export function ContentModerateButton({
   contentType = 'note', // 'note' | 'post'
   contentId,
   onSuccess,
+  style = {},
+  containerStyle = {},
 }) {
   const { moderateNote, moderatePost, loading, error } = useModeration();
   const [isOpen, setIsOpen] = useState(false);
@@ -32,21 +34,14 @@ export function ContentModerateButton({
 
   return (
     <RoleGate allow={['moderator', 'admin']}>
-      <div style={{ display: 'inline-block', position: 'relative' }}>
+      <div style={{ display: 'inline-block', position: 'relative', ...containerStyle }}>
         <button
           onClick={() => setIsOpen(true)}
+          className="btn-outline"
           style={{
             padding: '4px 10px',
             fontSize: '12px',
-            fontWeight: '600',
-            color: 'var(--color-warning-text)',
-            backgroundColor: 'var(--color-warning-bg)',
-            border: '1px solid var(--color-warning-border)',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px',
+            ...style,
           }}
           title="Opciones de moderación"
         >

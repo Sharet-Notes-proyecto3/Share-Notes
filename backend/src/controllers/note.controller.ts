@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { NoteService } from '../services/note.service';
 import { checkMicroservicesHealth } from '../utils/microservicesClient';
+import { validateMagicBytes } from '../middlewares/upload.middleware';
 import logger from '../utils/logger';
 
 const service = new NoteService();
@@ -35,6 +36,21 @@ export const uploadNote = async (req: Request, res: Response, next: NextFunction
   try {
     if (!req.file) {
       res.status(400).json({ message: 'No se adjuntó ningún archivo', correlationId: req.correlationId });
+      return;
+    }
+
+    // Validación de Magic Bytes (H-02): verificar firmas binarias reales del archivo en disco
+    if (!validateMagicBytes(req.file.path)) {
+      logger.warn(`Intento de subida con contenido no permitido o spoofing de extensión: ${req.file.originalname}`, {
+        correlationId: req.correlationId,
+        filePath: req.file.path,
+        declaredMimetype: req.file.mimetype,
+      });
+      removeUploadedFile(req.file, req.correlationId);
+      res.status(400).json({
+        message: 'El contenido del archivo no coincide con su extensión declarada',
+        correlationId: req.correlationId,
+      });
       return;
     }
 

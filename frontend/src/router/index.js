@@ -1,9 +1,9 @@
 // =============================================================================
-// ENRUTADOR Y GUARD DE RUTAS DE NAVEGACIÓN (VUE ROUTER GUARD / ROUTE GUARD)
-// Referencia del Patrón: Intercepción beforeEach con hasAnyAuthorityAndCheckAuth()
+// ENRUTADOR Y GUARD DE RUTAS DE NAVEGACIÓN (ROUTE GUARD)
+// Intercepción beforeEach basada en autenticación pura y roles
 // =============================================================================
 
-import { accountService } from '../services/account.service';
+import { getStoredToken, getStoredUser } from '../services/api';
 
 /**
  * Definición de rutas con metadatos de autoridades requeridas
@@ -57,17 +57,64 @@ export const routes = [
     component: 'ModeratorDashboard',
     meta: { authorities: ['moderator', 'admin'] },
   },
+  {
+    path: '/forbidden',
+    name: 'Forbidden',
+    component: 'ForbiddenView',
+    meta: { public: true },
+  },
+  {
+    path: '/not-found',
+    name: 'NotFound',
+    component: 'NotFoundView',
+    meta: { public: true },
+  },
+  {
+    path: '*',
+    name: 'CatchAll',
+    component: 'NotFoundView',
+    meta: { public: true },
+  },
 ];
-
 
 /**
  * Función de Guard de Navegación de Rutas (equivalente a router.beforeEach de Vue Router)
  */
 export async function beforeEachRouteGuard(to, from, next) {
-  // Si la ruta es pública, permitir navegación libre
-  if (to?.meta?.public) {
+  const target = to || {};
+  const targetPath = target.path || target.fullPath || '/';
+
+  if (!targetPath || targetPath === 'undefined') {
+    if (typeof next === 'function') next({ path: '/not-found' });
+    return false;
+  }
+
+  const routeExists = routes.some((route) => {
+    if (route.path === '*') return true;
+    if (route.path === targetPath) return true;
+    if (route.path.includes(':') && targetPath.startsWith(route.path.split('/:')[0])) {
+      return true;
+    }
+    return false;
+  });
+
+  if (!routeExists && targetPath !== '/forbidden' && targetPath !== '/not-found') {
+    if (typeof next === 'function') next({ path: '/not-found' });
+    return false;
+  }
+
+  if (target?.meta?.public || targetPath === '/forbidden' || targetPath === '/not-found') {
     if (typeof next === 'function') next();
     return true;
+  }
+
+  const token = getStoredToken();
+  const user = getStoredUser();
+
+  if (!token || !user) {
+    const redirectTarget = { name: 'Home', query: { redirect: to?.fullPath || '/' } };
+    if (typeof next === 'function') next(redirectTarget);
+    return false;
   }
 
   const requiredAuthorities = to?.meta?.authorities || [];
