@@ -13,6 +13,7 @@ import SanctionsModal from './SanctionsModal';
 import MicroservicesCard from './MicroservicesCard';
 import AcademicCatalog from './AcademicCatalog';
 import StaffAccountManager from './StaffAccountManager';
+import TeacherCourseAssignment from './TeacherCourseAssignment';
 
 export default function AdminView() {
   const { token, isModerator, isAdmin } = useAuth();
@@ -370,6 +371,24 @@ export default function AdminView() {
             👔 Cuentas de Personal
           </button>
         )}
+
+        {isAdmin && (
+          <button
+            onClick={() => setActiveTab('teacher-assignment')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '13px',
+              background: activeTab === 'teacher-assignment' ? 'var(--primary-color)' : 'transparent',
+              color: activeTab === 'teacher-assignment' ? 'var(--primary-contrast)' : 'var(--text-secondary)',
+            }}
+          >
+            👨‍🏫 Asignar Materias a Docentes
+          </button>
+        )}
       </div>
 
       {/* Contenido según pestaña */}
@@ -403,6 +422,11 @@ export default function AdminView() {
         <StaffAccountManager
           token={token}
           onAccountCreated={loadAdminData}
+        />
+      ) : activeTab === 'teacher-assignment' ? (
+        <TeacherCourseAssignment
+          token={token}
+          onAssignmentUpdated={loadAdminData}
         />
       ) : (
         <ReportsTable

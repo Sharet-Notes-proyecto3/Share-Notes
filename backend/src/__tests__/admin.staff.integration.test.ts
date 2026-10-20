@@ -225,4 +225,60 @@ describe('👔 Admin Staff Provisioning & Teacher Visibility Integration Tests',
     // Solo debe haberse ejecutado 1 consulta (a teacher_courses)
     expect((pool.query as jest.Mock).mock.calls.length).toBe(1);
   });
+
+  // ─── 9. Resumen de docentes y asignaciones ──────────────────────────────────
+  test('STAFF-09 | Admin consulta resumen de docentes y asignaciones (GET /api/admin/teacher-assignments) -> 200', async () => {
+    (pool.query as jest.Mock)
+      .mockResolvedValueOnce([[{ id: 20, name: 'Prof. Carlos', email: 'carlos@sharenotes.edu', semester: 5 }]])
+      .mockResolvedValueOnce([[{ teacher_id: 20, subject_id: 1, subject_name: 'Cálculo', semester: 1 }]]);
+
+    const res = await request(app)
+      .get('/api/admin/teacher-assignments')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.teachers).toHaveLength(1);
+    expect(res.body.assignments).toHaveLength(1);
+    expect(res.body.teachers[0].name).toBe('Prof. Carlos');
+  });
+
+  // ─── 10. Consulta de materias asignadas a un docente ─────────────────────────
+  test('STAFF-10 | Admin consulta materias asignadas a un docente (GET /api/admin/users/:id/courses) -> 200', async () => {
+    (pool.query as jest.Mock)
+      .mockResolvedValueOnce([[{ id: 20, name: 'Prof. Carlos', email: 'carlos@sharenotes.edu', role: 'teacher', semester: 3 }]])
+      .mockResolvedValueOnce([[{ id: 1, name: 'Cálculo', semester: 1, career_id: 1, career_name: 'Sistemas' }]]);
+
+    const res = await request(app)
+      .get('/api/admin/users/20/courses')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.teacher.name).toBe('Prof. Carlos');
+    expect(res.body.courses).toHaveLength(1);
+  });
+
+  // ─── 11. Actualización de materias y semestre ────────────────────────────────
+  test('STAFF-11 | Admin actualiza materias y semestre de un docente (PATCH /api/admin/users/:id/courses con semester) -> 200', async () => {
+    (pool.query as jest.Mock)
+      .mockResolvedValueOnce([[{ id: 20, role: 'teacher' }]]) // docente existe
+      .mockResolvedValueOnce([[{ id: 5 }]]); // materia existe
+
+    const res = await request(app)
+      .patch('/api/admin/users/20/courses')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        subjectIds: [5],
+        semester: 4,
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.teacherId).toBe(20);
+    expect(res.body.assignedSubjects).toEqual([5]);
+    expect(res.body.semester).toBe(4);
+    expect(mockConn.commit).toHaveBeenCalled();
+
+    // Verificamos que se ejecutó el UPDATE sobre users.semester
+    const calls = mockConn.query.mock.calls.map((c: any) => c[0]);
+    expect(calls.some((sql: string) => sql.includes('UPDATE users SET semester = ? WHERE id = ?'))).toBe(true);
+  });
 });
