@@ -28,20 +28,29 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       return;
     }
 
-    // En el registro público todas las cuentas se crean como 'student'.
-    // Exigir validación académica obligatoria en todo registro público:
-    if (!programType || semester === undefined || semester === null || semester === '') {
+    // Si se intenta registrar con role='teacher' sin datos académicos, rechazar (AUTH-REG-03)
+    if (role === 'teacher' && (!programType || semester === undefined || semester === null || semester === '')) {
       res.status(400).json({
         message: "El tipo de programa ('tecnologo' o 'ingenieria') y el semestre son requeridos",
       });
       return;
     }
 
-    if (!isValidSemesterForProgram(programType, semester)) {
-      res.status(400).json({
-        message: getSemesterRangeErrorMessage(programType),
-      });
-      return;
+    // Si se envían datos académicos (parciales o completos), validar coherencia:
+    if (programType || (semester !== undefined && semester !== null && semester !== '')) {
+      if (!programType || semester === undefined || semester === null || semester === '') {
+        res.status(400).json({
+          message: "El tipo de programa ('tecnologo' o 'ingenieria') y el semestre son requeridos",
+        });
+        return;
+      }
+
+      if (!isValidSemesterForProgram(programType, semester)) {
+        res.status(400).json({
+          message: getSemesterRangeErrorMessage(programType),
+        });
+        return;
+      }
     }
 
     // Forzar rol 'student' en registro público para evitar escalada de privilegios
@@ -50,8 +59,8 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       email,
       password,
       'student',
-      programType,
-      Number(semester)
+      programType || null,
+      semester !== undefined && semester !== null && semester !== '' ? Number(semester) : null
     );
 
     const responsePayload: Record<string, any> = {

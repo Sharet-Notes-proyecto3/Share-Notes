@@ -178,10 +178,28 @@ export const adminService = {
   },
 
   /**
-   * Actualiza las materias asignadas a un docente
+   * Obtiene resumen de asignaciones de materias de todos los docentes
    */
-  async updateTeacherCourses(token, userId, subjectIds) {
-    return await api.patch(`/admin/users/${userId}/courses`, { subjectIds }, token);
+  async getTeacherAssignments(token) {
+    return await api.get('/admin/teacher-assignments', token);
+  },
+
+  /**
+   * Obtiene las materias asignadas a un docente por su ID
+   */
+  async getTeacherCourses(token, userId) {
+    return await api.get(`/admin/users/${userId}/courses`, token);
+  },
+
+  /**
+   * Actualiza las materias y semestre asignados a un docente
+   */
+  async updateTeacherCourses(token, userId, subjectIds, semester) {
+    const payload = { subjectIds };
+    if (semester !== undefined && semester !== null && semester !== '') {
+      payload.semester = Number(semester);
+    }
+    return await api.patch(`/admin/users/${userId}/courses`, payload, token);
   },
 };
 
