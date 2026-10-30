@@ -12,6 +12,14 @@ export const moderationService = {
   },
 
   /**
+   * Obtener el detalle de una denuncia junto con el contenido denunciado
+   * Backend endpoint: GET /api/reports/:id
+   */
+  async getReportDetail(token, reportId) {
+    return api.get(`/reports/${reportId}`, token);
+  },
+
+  /**
    * Resolver una denuncia (marcar como atendida)
    * Backend endpoint: PUT /api/reports/:id/resolve
    */
@@ -51,6 +59,17 @@ export const moderationService = {
   },
 
   /**
+   * Eliminar/Ocultar una respuesta del foro por causa de moderación
+   * Backend endpoint: DELETE /api/forum/replies/:id/moderate
+   */
+  async moderateReply(token, replyId, reason = '') {
+    return api.delete(`/forum/replies/${replyId}/moderate`, {
+      token,
+      body: JSON.stringify({ reason }),
+    });
+  },
+
+  /**
    * Aplicar restricción temporal a un usuario para participar en foros
    * Backend endpoint: PUT /api/users/:id/restrict
    */
@@ -60,6 +79,25 @@ export const moderationService = {
       { restrictedUntil, reason },
       token
     );
+  },
+
+  /**
+   * Levantar una restricción temporal previamente aplicada
+   * Backend endpoint: DELETE /api/users/:id/restrict
+   */
+  async liftUserRestriction(token, userId, reason = '') {
+    return api.delete(`/users/${userId}/restrict`, {
+      token,
+      body: JSON.stringify({ reason }),
+    });
+  },
+
+  /**
+   * Métricas agregadas del panel de moderación
+   * Backend endpoint: GET /api/moderation/stats
+   */
+  async getModerationStats(token) {
+    return api.get('/moderation/stats', token);
   },
 
   /**

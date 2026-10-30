@@ -217,7 +217,7 @@ export class NoteService {
   ) {
     let query = `
       SELECT n.id, n.subject_id, n.verified, n.verified_by, n.title, n.description, n.original_name, n.mimetype,
-             n.file_size, n.created_at, n.uploader_id,
+             n.file_size, n.created_at, n.uploader_id, n.moderation_status,
              s.name AS subject_name, s.semester,
              c.name AS career_name,
              u.name AS uploader_name
@@ -228,6 +228,13 @@ export class NoteService {
       WHERE n.is_active = TRUE
     `;
     const params: (string | number)[] = [];
+
+    // Regla de moderación: el contenido oculto/bloqueado solo lo ven moderadores y admins.
+    // El resto de roles (estudiantes y docentes) únicamente ve apuntes en estado "visible".
+    const canViewModeratedContent = user?.role === 'admin' || user?.role === 'moderator';
+    if (!canViewModeratedContent) {
+      query += " AND n.moderation_status = 'visible'";
+    }
 
     // Determinar si el usuario es docente y consultar sus materias asignadas en tiempo real desde la BD
     if (user?.role === 'teacher' && user?.userId) {
@@ -293,15 +300,19 @@ export class NoteService {
 
   async getFilePath(
     noteId: number,
+    requesterRole: string = 'student',
   ): Promise<{ filePath: string; originalName: string; mimetype: string }> {
+    // Moderadores y admins pueden previsualizar/descargar apuntes ocultos o bloqueados
+    // para revisar la denuncia. El resto solo accede a apuntes visibles.
     const [rows] = await pool.query<NoteRow[]>(
       `SELECT n.filename, n.original_name, n.mimetype, n.title, n.description,
               s.name AS subject_name, u.name AS uploader_name
        FROM notes n
        LEFT JOIN subjects s ON n.subject_id = s.id
        LEFT JOIN users u ON n.uploader_id = u.id
-       WHERE n.id = ? AND n.is_active = TRUE`,
-      [noteId],
+       WHERE n.id = ? AND n.is_active = TRUE
+         AND (n.moderation_status = 'visible' OR ? IN ('admin', 'moderator'))`,
+      [noteId, requesterRole],
     );
     const note = rows[0];
     if (!note) throw new AppError(404, 'Apunte no encontrado');

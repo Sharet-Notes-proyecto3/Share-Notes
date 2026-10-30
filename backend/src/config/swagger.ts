@@ -699,6 +699,21 @@ const options: swaggerJsdoc.Options = {
           },
         },
       },
+      '/reports/{id}': {
+        get: {
+          tags: ['6. Moderación'],
+          summary: 'Obtener detalle de una denuncia y el contenido denunciado',
+          security: [{ bearerAuth: [] }],
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+          responses: {
+            200: { description: 'Denuncia con vista previa del recurso denunciado' },
+            400: { description: 'ID inválido' },
+            401: { description: 'No autenticado' },
+            403: { description: 'Acceso denegado: se requiere permiso reports:view_all' },
+            404: { description: 'Denuncia no encontrada' },
+          },
+        },
+      },
       '/notes/{id}/moderate-status': {
         put: {
           tags: ['6. Moderación'],
@@ -733,6 +748,21 @@ const options: swaggerJsdoc.Options = {
           },
         },
       },
+      '/forum/replies/{id}/moderate': {
+        delete: {
+          tags: ['6. Moderación'],
+          summary: 'Eliminar respuesta infractora del foro por moderación',
+          security: [{ bearerAuth: [] }],
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+          responses: {
+            200: { description: 'Respuesta eliminada por moderación' },
+            400: { description: 'ID inválido' },
+            401: { description: 'No autenticado' },
+            403: { description: 'Acceso denegado: se requiere permiso forum:moderate_delete' },
+            404: { description: 'Respuesta no encontrada' },
+          },
+        },
+      },
       '/users/{id}/restrict': {
         put: {
           tags: ['6. Moderación'],
@@ -749,6 +779,31 @@ const options: swaggerJsdoc.Options = {
             401: { description: 'No autenticado' },
             403: { description: 'Acceso denegado: se requiere permiso users:restrict' },
             404: { description: 'Usuario no encontrado' },
+          },
+        },
+        delete: {
+          tags: ['6. Moderación'],
+          summary: 'Levantar la restricción temporal de participación en el foro',
+          security: [{ bearerAuth: [] }],
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+          responses: {
+            200: { description: 'Restricción levantada exitosamente' },
+            400: { description: 'ID inválido' },
+            401: { description: 'No autenticado' },
+            403: { description: 'Acceso denegado: se requiere permiso users:restrict' },
+            404: { description: 'Usuario no encontrado' },
+          },
+        },
+      },
+      '/moderation/stats': {
+        get: {
+          tags: ['6. Moderación'],
+          summary: 'Métricas agregadas para el panel de moderación',
+          security: [{ bearerAuth: [] }],
+          responses: {
+            200: { description: 'Conteo de denuncias por estado, restricciones activas y apuntes moderados' },
+            401: { description: 'No autenticado' },
+            403: { description: 'Acceso denegado: se requiere permiso moderation:view_logs' },
           },
         },
       },

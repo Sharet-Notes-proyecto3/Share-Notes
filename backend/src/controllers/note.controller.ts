@@ -126,7 +126,7 @@ export const downloadNote = async (req: Request, res: Response, next: NextFuncti
       res.status(400).json({ message: 'ID de apunte inválido', correlationId: req.correlationId });
       return;
     }
-    const { filePath, originalName, mimetype } = await service.getFilePath(noteId);
+    const { filePath, originalName, mimetype } = await service.getFilePath(noteId, req.user?.role);
     const absolutePath = path.resolve(filePath);
     const safeName = encodeURIComponent(originalName);
     const isAttachment = req.query.download === 'true';
