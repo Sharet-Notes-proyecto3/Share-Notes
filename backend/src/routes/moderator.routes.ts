@@ -15,6 +15,14 @@ router.get(
   ctrl.listReports
 );
 
+// GET /api/reports/:id — detalle de la denuncia + contenido denunciado
+router.get(
+  '/reports/:id',
+  authMiddleware,
+  requirePermission('reports:view_all'),
+  ctrl.getReportById
+);
+
 // PUT /api/reports/:id/resolve — marcar denuncia como atendida
 router.put(
   '/reports/:id/resolve',
@@ -48,6 +56,14 @@ router.delete(
   ctrl.moderateDeletePost
 );
 
+// DELETE /api/forum/replies/:id/moderate — eliminar respuesta que viole términos
+router.delete(
+  '/forum/replies/:id/moderate',
+  authMiddleware,
+  requirePermission('forum:moderate_delete'),
+  ctrl.moderateDeleteReply
+);
+
 // ─── Gestión de Usuarios Infractores ───────────────────────────────────────
 // PUT /api/users/:id/restrict — restricción temporal de participación en foro
 router.put(
@@ -55,6 +71,22 @@ router.put(
   authMiddleware,
   requirePermission('users:restrict'),
   ctrl.restrictUser
+);
+
+// DELETE /api/users/:id/restrict — levantar la restricción temporal
+router.delete(
+  '/users/:id/restrict',
+  authMiddleware,
+  requirePermission('users:restrict'),
+  ctrl.liftUserRestriction
+);
+
+// GET /api/moderation/stats — métricas para el panel del moderador
+router.get(
+  '/moderation/stats',
+  authMiddleware,
+  requirePermission('moderation:view_logs'),
+  ctrl.getModerationStats
 );
 
 // GET /api/moderation/logs — historial de logs de moderación

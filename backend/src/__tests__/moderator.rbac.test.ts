@@ -1,8 +1,14 @@
 // src/__tests__/moderator.rbac.test.ts
-// Test suite unitario para el rol MODERATOR (RBAC + Auditoría)
+// Suite unitaria del rol MODERATOR: RBAC, reglas de negocio y auditoría.
+// Exactamente 10 pruebas (MOD-01 … MOD-10).
 
 import { roleGuard, adminGuard } from '../middlewares/auth.middleware';
 import { ModeratorService } from '../services/moderator.service';
+import {
+  assertCanRestrictUser,
+  computeRestrictedUntil,
+  isRestrictionActive,
+} from '../services/moderation.policy';
 
 // Mock del pool de la base de datos
 jest.mock('../config/database', () => ({
@@ -31,7 +37,7 @@ function mockRes() {
   return { res: { status, json } as any, status, json };
 }
 
-describe('🧪 Suite de Pruebas Unitarias — Rol MODERATOR (RBAC + Auditoría)', () => {
+describe('🧪 Suite de Pruebas Unitarias — Rol MODERATOR (RBAC + Reglas de Negocio)', () => {
   let moderatorService: ModeratorService;
 
   beforeEach(() => {
@@ -42,7 +48,7 @@ describe('🧪 Suite de Pruebas Unitarias — Rol MODERATOR (RBAC + Auditoría)'
   // 1. Resolución exitosa de denuncia por moderador
   test('MOD-01 | Debería permitir a un moderador resolver una denuncia (status = resolved)', async () => {
     (pool.query as jest.Mock)
-      .mockResolvedValueOnce([[{ id: 1, target_type: 'note', target_id: 10 }]]) // SELECT report
+      .mockResolvedValueOnce([[{ id: 1, target_type: 'note', target_id: 10, status: 'pending' }]]) // SELECT report
       .mockResolvedValueOnce([{}]); // UPDATE query
 
     const result = await moderatorService.resolveReport(1, 'resolved', 20, 'moderator');
@@ -92,5 +98,96 @@ describe('🧪 Suite de Pruebas Unitarias — Rol MODERATOR (RBAC + Auditoría)'
     const guardSoloAdmin = roleGuard('admin');
     guardSoloAdmin(req, res, next);
     expect(status).toHaveBeenCalledWith(403);
+  });
+
+  // 5. Validación del filtro de estado de la cola de denuncias
+  test('MOD-05 | Debería rechazar (400) un filtro de estado inválido sin consultar la BD', async () => {
+    await expect(moderatorService.listReports('aprobado')).rejects.toMatchObject({
+      statusCode: 400,
+    });
+    expect(pool.query).not.toHaveBeenCalled();
+  });
+
+  // 6. Una denuncia cerrada no puede volver a procesarse
+  test('MOD-06 | Debería impedir (409) resolver una denuncia que ya estaba resuelta', async () => {
+    (pool.query as jest.Mock).mockResolvedValueOnce([
+      [{ id: 8, target_type: 'thread', target_id: 3, status: 'resolved' }],
+    ]);
+
+    await expect(
+      moderatorService.resolveReport(8, 'dismissed', 20, 'moderator')
+    ).rejects.toMatchObject({ statusCode: 409 });
+
+    // Solo se ejecutó el SELECT; el UPDATE no debe ocurrir.
+    expect(pool.query).toHaveBeenCalledTimes(1);
+  });
+
+  // 7. Cálculo de la fecha de restricción a partir de días
+  test('MOD-07 | Debería calcular restrictedUntil sumando los días indicados y validar el rango', () => {
+    const now = new Date('2026-01-01T00:00:00.000Z');
+    const until = computeRestrictedUntil({ days: 3, now });
+
+    expect(until.toISOString()).toBe('2026-01-04T00:00:00.000Z');
+    expect(() => computeRestrictedUntil({ days: 0, now })).toThrow(
+      'entre 1 y 365'
+    );
+    expect(() => computeRestrictedUntil({ days: 2.5, now })).toThrow(
+      'entre 1 y 365'
+    );
+  });
+
+  // 8. Vigencia de una restricción
+  test('MOD-08 | Debería determinar correctamente si una restricción sigue activa', () => {
+    const now = new Date('2026-01-01T00:00:00.000Z');
+
+    expect(isRestrictionActive(new Date('2026-01-02T00:00:00.000Z'), now)).toBe(true);
+    expect(isRestrictionActive('2025-12-31T00:00:00.000Z', now)).toBe(false);
+    expect(isRestrictionActive(null, now)).toBe(false);
+    expect(isRestrictionActive('fecha-invalida', now)).toBe(false);
+  });
+
+  // 9. Jerarquía: un moderador no puede sancionar a otro moderador ni a sí mismo
+  test('MOD-09 | Debería impedir que un moderador restrinja a otro moderador o a sí mismo', () => {
+    expect(() =>
+      assertCanRestrictUser({ actorId: 20, actorRole: 'moderator', targetId: 20, targetRole: 'student' })
+    ).toThrow('ti mismo');
+
+    expect(() =>
+      assertCanRestrictUser({ actorId: 20, actorRole: 'moderator', targetId: 36, targetRole: 'moderator' })
+    ).toThrow('mismo rol o superior');
+
+    expect(() =>
+      assertCanRestrictUser({ actorId: 20, actorRole: 'moderator', targetId: 1, targetRole: 'admin' })
+    ).toThrow('administrador');
+
+    expect(() =>
+      assertCanRestrictUser({ actorId: 20, actorRole: 'moderator', targetId: 15, targetRole: 'student' })
+    ).not.toThrow();
+  });
+
+  // 10. Métricas agregadas del panel de moderación
+  test('MOD-10 | Debería agregar las métricas de denuncias, restricciones y apuntes moderados', async () => {
+    (pool.query as jest.Mock)
+      .mockResolvedValueOnce([
+        [
+          { status: 'pending', total: '4' },
+          { status: 'resolved', total: 2 },
+          { status: 'dismissed', total: 1 },
+        ],
+      ]) // GROUP BY status
+      .mockResolvedValueOnce([[{ total: '3' }]]) // restricciones activas
+      .mockResolvedValueOnce([[{ total: '1' }]]); // apuntes moderados
+
+    const stats = await moderatorService.getModerationStats();
+
+    expect(stats.reports).toEqual({
+      pending: 4,
+      reviewed: 0,
+      resolved: 2,
+      dismissed: 1,
+      total: 7,
+    });
+    expect(stats.activeRestrictions).toBe(3);
+    expect(stats.moderatedNotes).toBe(1);
   });
 });
