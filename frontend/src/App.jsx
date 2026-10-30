@@ -7,17 +7,23 @@ import ForumView from './components/forum/ForumView';
 import AdminView from './components/admin/AdminView';
 import TeacherDashboard from './components/teacher/TeacherDashboard';
 import ModeratorDashboard from './components/moderator/ModeratorDashboard';
+import LandingPage from './components/home/LandingPage';
 import useReportsQueue from './composables/useReportsQueue';
 import PaletteSwitcher from './components/common/PaletteSwitcher';
 import { Can } from './directives/Can';
 import { RoleGate } from './directives/RoleGate';
 import { routes, beforeEachRouteGuard } from './router';
+import { preferencesService } from './services/preferences.service';
 import './App.css';
 
 function MainLayout() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user, userRole } = useAuth();
   const [activeTab, setActiveTab] = useState('notes');
   const { pendingCount } = useReportsQueue();
+
+  // Landing (antes del login): controla si se muestra la bienvenida o el formulario
+  const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState('login');
 
   const hasInitializedRoute = useRef(false);
   const lastAlertPath = useRef('');
@@ -88,13 +94,29 @@ function MainLayout() {
 
   // Sincronizar ruta inicial por URL directa (protección contra acceso forzado por URL)
   useEffect(() => {
-    if (!isAuthenticated || loading) return;
+    if (loading) return;
+
+    if (!isAuthenticated) {
+      // Se cerró sesión: el próximo inicio vuelve a la pantalla elegida en Preferencias
+      if (hasInitializedRoute.current) {
+        hasInitializedRoute.current = false;
+        window.history.replaceState(null, '', '/');
+      }
+      return;
+    }
 
     if (!hasInitializedRoute.current) {
       hasInitializedRoute.current = true;
       const currentPath = window.location.pathname;
-      const initialTab = pathToTab(currentPath);
-      navigateToTab(initialTab, false);
+      const hasDeepLink = currentPath !== '/' && currentPath !== '';
+
+      if (hasDeepLink) {
+        // URL directa: se respeta (y el guard de rutas valida el permiso)
+        navigateToTab(pathToTab(currentPath), false);
+      } else {
+        // Sin URL directa: pantalla de inicio elegida en Preferencias
+        navigateToTab(preferencesService.getStartTab(user?.id, userRole), true);
+      }
     }
 
     const onPopState = () => {
@@ -104,7 +126,13 @@ function MainLayout() {
 
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, [isAuthenticated, loading, pathToTab, navigateToTab]);
+  }, [isAuthenticated, loading, user?.id, userRole, pathToTab, navigateToTab]);
+
+  // Al iniciar sesión, la próxima vez que se cierre sesión se vuelve a ver la landing.
+  // IMPORTANTE: este hook va ANTES de cualquier "return" condicional (loading / !isAuthenticated).
+  useEffect(() => {
+    if (isAuthenticated) setShowAuth(false);
+  }, [isAuthenticated]);
 
   // Pantalla de carga reactiva basada en el estado real de autenticación/sesión
   if (loading) {
@@ -171,8 +199,19 @@ function MainLayout() {
     );
   }
 
+  // Sin sesión: primero la landing; al pulsar un botón, el formulario de acceso
   if (!isAuthenticated) {
-    return <AuthModal />;
+    if (!showAuth) {
+      return (
+        <LandingPage
+          onEnter={(mode) => {
+            setAuthMode(mode || 'login');
+            setShowAuth(true);
+          }}
+        />
+      );
+    }
+    return <AuthModal initialMode={authMode} onBack={() => setShowAuth(false)} />;
   }
 
   return (

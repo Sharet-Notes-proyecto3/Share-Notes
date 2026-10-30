@@ -119,8 +119,13 @@ export async function beforeEachRouteGuard(to, from, next) {
 
   const requiredAuthorities = to?.meta?.authorities || [];
 
-  // Intenta recuperar sesión y evalúa permisos con el servicio de cuenta
-  const hasPermission = await accountService.hasAnyAuthorityAndCheckAuth(requiredAuthorities);
+  
+    // Evalúa el rol del usuario contra las autoridades requeridas (el admin pasa siempre)
+  const role = (user.role || '').toString().toLowerCase();
+  const hasPermission =
+    requiredAuthorities.length === 0 ||
+    role === 'admin' ||
+    requiredAuthorities.some((a) => a.toString().toLowerCase() === role);
 
   if (hasPermission) {
     if (typeof next === 'function') next();
@@ -139,3 +144,4 @@ export const router = {
 };
 
 export default router;
+

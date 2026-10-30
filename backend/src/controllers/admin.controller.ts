@@ -40,12 +40,44 @@ export const updateTeacherCourses = async (req: Request, res: Response, next: Ne
       res.status(400).json({ message: 'ID de docente inválido' });
       return;
     }
-    const { subjectIds } = req.body;
+    const { subjectIds, semester } = req.body;
     const result = await service.updateTeacherCourses(
       teacherId,
       subjectIds,
-      req.user!.userId
+      req.user!.userId,
+      semester
     );
+    res.json(result);
+  } catch (err) { next(err); }
+};
+
+export const getTeacherCourses = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const teacherId = parseInt(req.params.id);
+    if (isNaN(teacherId)) {
+      res.status(400).json({ message: 'ID de docente inválido' });
+      return;
+    }
+    const result = await service.getTeacherCourses(teacherId);
+    res.json(result);
+  } catch (err) { next(err); }
+};
+
+export const getAllTeacherAssignments = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await service.getAllTeacherAssignments();
+    res.json(result);
+  } catch (err) { next(err); }
+};
+
+export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = parseInt(req.params.id);
+    if (isNaN(userId)) {
+      res.status(400).json({ message: 'ID de usuario inválido' });
+      return;
+    }
+    const result = await service.deleteUser(userId, req.user!.userId);
     res.json(result);
   } catch (err) { next(err); }
 };

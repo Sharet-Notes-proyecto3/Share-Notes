@@ -35,6 +35,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => getStoredUser());
   const [loading, setLoading] = useState(() => Boolean(getStoredToken()));
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   // ---------------------------------------------------------------------------
   // CERRAR SESIÓN
@@ -54,10 +55,11 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     setUnauthorizedHandler(() => {
-      alert('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
-      logout();
+      // Evitar que el modal se dispare múltiples veces (p. ej. StrictMode o peticiones 401 concurrentes)
+      if (sessionExpired) return;
+      setSessionExpired(true);
     });
-  }, []);
+  }, [sessionExpired]);
 
   // ---------------------------------------------------------------------------
   // ONBOARDING ACADÉMICO (Carrera y Semestre) — primer inicio de sesión
@@ -254,6 +256,81 @@ export const AuthProvider = ({ children }) => {
     >
       {children}
       {isAuthenticated && needsOnboarding && <OnboardingModal />}
+
+      {/* Modal de sesión expirada (reemplaza al alert) */}
+      {sessionExpired && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.55)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+            padding: '20px',
+            backdropFilter: 'blur(4px)',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div
+            style={{
+              background: 'var(--card-bg)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '14px',
+              padding: '32px 40px',
+              maxWidth: '420px',
+              width: '100%',
+              textAlign: 'center',
+              boxShadow: '0 24px 60px rgba(0,0,0,0.7)',
+            }}
+          >
+            <div style={{ fontSize: '36px', marginBottom: '14px' }}>⚠️</div>
+            <h3
+              style={{
+                margin: '0 0 10px',
+                color: 'var(--text-primary)',
+                fontSize: '18px',
+                fontWeight: '700',
+              }}
+            >
+              Sesión expirada
+            </h3>
+            <p
+              style={{
+                margin: '0 0 22px',
+                color: 'var(--text-secondary)',
+                fontSize: '14px',
+                lineHeight: '1.5',
+              }}
+            >
+              Tu sesión ha expirado. Por favor, inicia sesión de nuevo.
+            </p>
+            <button
+              onClick={() => {
+                setSessionExpired(false);
+                logout();
+              }}
+              style={{
+                width: '100%',
+                padding: '10px 0',
+                background: 'var(--primary-color)',
+                color: 'var(--text-inverse)',
+                border: 'none',
+                borderRadius: '10px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'opacity 0.2s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+            >
+              Iniciar sesión
+            </button>
+          </div>
+        </div>
+      )}
     </AuthContext.Provider>
   );
 };

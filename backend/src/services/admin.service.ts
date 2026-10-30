@@ -12,7 +12,7 @@ export class AdminService {
 
   async listUsers() {
     const [rows] = await pool.query<RowDataPacket[]>(
-      `SELECT id, name, email, role, is_active, created_at FROM users ORDER BY created_at DESC`
+      `SELECT id, name, email, role, is_active, created_at FROM users WHERE email NOT LIKE 'deleted_%@deleted.local' ORDER BY created_at DESC`
     );
     return rows;
   }
@@ -133,7 +133,7 @@ export class AdminService {
     }
   }
 
-  async updateTeacherCourses(teacherId: number, subjectIds: any, adminId: number) {
+  async updateTeacherCourses(teacherId: number, subjectIds: any, adminId: number, semester?: any) {
     if (!Number.isInteger(teacherId) || teacherId <= 0) {
       throw new AppError(400, 'ID de docente inválido');
     }
@@ -177,6 +177,15 @@ export class AdminService {
         const values = cleanSubjectIds.map((sid) => [teacherId, sid]);
         await conn.query('INSERT INTO teacher_courses (teacher_id, subject_id) VALUES ?', [values]);
       }
+
+      // Si se envía semestre para el docente, actualizarlo en la tabla users
+      if (semester !== undefined && semester !== null && semester !== '') {
+        const semNum = Number(semester);
+        if (Number.isInteger(semNum) && semNum >= 1 && semNum <= 10) {
+          await conn.query('UPDATE users SET semester = ? WHERE id = ?', [semNum, teacherId]);
+        }
+      }
+
       await conn.commit();
 
       await logAuditAction({
@@ -185,13 +194,14 @@ export class AdminService {
         action: 'UPDATE_TEACHER_COURSES',
         targetResource: 'user',
         targetId: teacherId,
-        details: { newSubjectIds: cleanSubjectIds },
+        details: { newSubjectIds: cleanSubjectIds, semester },
       });
 
       return {
         message: 'Materias asignadas actualizadas exitosamente',
         teacherId,
         assignedSubjects: cleanSubjectIds,
+        semester: semester ? Number(semester) : undefined,
       };
     } catch (err) {
       await conn.rollback();
@@ -201,15 +211,66 @@ export class AdminService {
     }
   }
 
+  async getTeacherCourses(teacherId: number) {
+    if (!Number.isInteger(teacherId) || teacherId <= 0) {
+      throw new AppError(400, 'ID de docente inválido');
+    }
+    const [users] = await pool.query<RowDataPacket[]>(
+      'SELECT id, name, email, role, semester FROM users WHERE id = ?',
+      [teacherId]
+    );
+    const user = users[0];
+    if (!user) throw new AppError(404, 'Docente no encontrado');
+    if (user.role !== 'teacher') {
+      throw new AppError(400, 'El usuario no tiene el rol de docente');
+    }
+
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT s.id, s.name, s.semester, s.career_id, c.name AS career_name
+       FROM teacher_courses tc
+       JOIN subjects s ON tc.subject_id = s.id
+       JOIN careers c ON s.career_id = c.id
+       WHERE tc.teacher_id = ?
+       ORDER BY s.semester, s.name`,
+      [teacherId]
+    );
+    return {
+      teacher: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        semester: user.semester,
+      },
+      courses: rows,
+    };
+  }
+
+  async getAllTeacherAssignments() {
+    const [teachers] = await pool.query<RowDataPacket[]>(
+      `SELECT id, name, email, semester, is_active FROM users WHERE role = 'teacher' AND email NOT LIKE 'deleted_%@deleted.local' ORDER BY name ASC`
+    );
+    const [assignments] = await pool.query<RowDataPacket[]>(
+      `SELECT tc.teacher_id, s.id AS subject_id, s.name AS subject_name, s.semester, s.career_id, c.name AS career_name
+       FROM teacher_courses tc
+       JOIN subjects s ON tc.subject_id = s.id
+       JOIN careers c ON s.career_id = c.id
+       ORDER BY tc.teacher_id, s.semester, s.name`
+    );
+    return { teachers, assignments };
+  }
+
   async toggleUserStatus(userId: number, adminId: number) {
     if (userId === adminId) throw new AppError(400, 'No puedes suspenderte a ti mismo');
 
     const [rows] = await pool.query<RowDataPacket[]>(
-      'SELECT id, is_active, role FROM users WHERE id = ?',
+      'SELECT id, is_active, role, email FROM users WHERE id = ?',
       [userId]
     );
     const user = rows[0];
     if (!user) throw new AppError(404, 'Usuario no encontrado');
+    if (user.email && user.email.startsWith('deleted_') && user.email.endsWith('@deleted.local')) {
+      throw new AppError(400, 'No se puede cambiar el estado de una cuenta eliminada');
+    }
     if (user.role === 'admin') throw new AppError(403, 'No puedes suspender otro administrador');
 
     await pool.query('UPDATE users SET is_active = ? WHERE id = ?', [!user.is_active, userId]);
@@ -224,6 +285,51 @@ export class AdminService {
     });
 
     return { message: user.is_active ? 'Usuario suspendido' : 'Usuario reactivado' };
+  }
+
+  async deleteUser(userId: number, adminId: number) {
+    if (userId === adminId) {
+      throw new AppError(400, 'No puedes eliminar tu propia cuenta');
+    }
+
+    const [rows] = await pool.query<RowDataPacket[]>(
+      'SELECT id, name, email, role FROM users WHERE id = ?',
+      [userId]
+    );
+    const user = rows[0];
+    if (!user) {
+      throw new AppError(404, 'Usuario no encontrado');
+    }
+
+    if (user.role === 'admin') {
+      throw new AppError(400, 'No puedes eliminar a otro administrador');
+    }
+
+    if (user.email && user.email.startsWith('deleted_') && user.email.endsWith('@deleted.local')) {
+      throw new AppError(400, 'La cuenta ya ha sido eliminada previamente');
+    }
+
+    await pool.query(
+      `UPDATE users SET name = 'Usuario Eliminado', email = CONCAT('deleted_', id, '_', UNIX_TIMESTAMP(), '@deleted.local'), password_hash = '', avatar_url = NULL, restricted_until = NULL, is_active = FALSE WHERE id = ?`,
+      [userId]
+    );
+
+    await pool.query('DELETE FROM teacher_courses WHERE teacher_id = ?', [userId]);
+
+    await logAuditAction({
+      userId: adminId,
+      userRole: 'admin',
+      action: 'DELETE_USER',
+      targetResource: 'user',
+      targetId: userId,
+      details: {
+        originalEmail: user.email,
+        originalName: user.name,
+        originalRole: user.role,
+      },
+    });
+
+    return { message: 'Cuenta de usuario eliminada correctamente' };
   }
 
   async changeUserRole(userId: number, role: 'student' | 'teacher' | 'moderator' | 'admin', adminId: number) {

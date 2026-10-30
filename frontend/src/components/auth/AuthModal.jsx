@@ -1,42 +1,20 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import PaletteSwitcher from '../common/PaletteSwitcher';
 import './Auth.css';
 
-export default function AuthModal() {
+export default function AuthModal({ initialMode = 'login', onBack }) {
   const { login, register } = useAuth();
 
-  const [isLogin, setIsLogin] = useState(true);
+    const [isLogin, setIsLogin] = useState(initialMode !== 'register');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  const [programType, setProgramType] = useState('');
-  const [semester, setSemester] = useState('');
 
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
-
-  // Opciones de semestre recalculadas dinámicamente según el tipo de programa:
-  // - Tecnólogo: 1 a 6
-  // - Ingeniería: 7 a 10
-  const semesterOptions = useMemo(() => {
-    if (programType === 'tecnologo') {
-      return [1, 2, 3, 4, 5, 6];
-    }
-    if (programType === 'ingenieria') {
-      return [7, 8, 9, 10];
-    }
-    return [];
-  }, [programType]);
-
-  const handleProgramTypeChange = (e) => {
-    const nextType = e.target.value;
-    setProgramType(nextType);
-    setSemester(''); // Restablecer para no permitir semestres inválidos entre programas
-  };
 
   const getPasswordStrength = () => {
     if (!password) return 0;
@@ -95,20 +73,11 @@ export default function AuthModal() {
           );
         }
 
-        if (!programType) {
-          throw new Error('Por favor selecciona tu tipo de programa académico.');
-        }
-        if (!semester) {
-          throw new Error('Por favor selecciona tu semestre actual.');
-        }
-
         await register(
           name.trim(),
           email.trim(),
           password,
-          'student',
-          programType,
-          Number(semester)
+          'student'
         );
 
         setSuccess(
@@ -117,8 +86,6 @@ export default function AuthModal() {
 
         setIsLogin(true);
         setPassword('');
-        setProgramType('');
-        setSemester('');
       }
     } catch (err) {
       setError(
@@ -134,14 +101,40 @@ export default function AuthModal() {
     setError('');
     setSuccess('');
     setPassword('');
-    setProgramType('');
-    setSemester('');
   };
 
   return (
     <div className="auth-page">
       {/* Selector de Paleta de Colores en Pantalla de Login */}
-      <div style={{ position: 'absolute', top: '24px', right: '24px', zIndex: 10 }}>
+            <div
+        style={{
+          position: 'absolute',
+          top: '24px',
+          right: '24px',
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+        }}
+      >
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            style={{
+              padding: '7px 14px',
+              borderRadius: '999px',
+              border: '1px solid var(--border-strong)',
+              background: 'var(--bg-surface)',
+              color: 'var(--text-primary)',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            ← Volver al inicio
+          </button>
+        )}
         <PaletteSwitcher />
       </div>
 
@@ -221,7 +214,7 @@ export default function AuthModal() {
               </div>
 
               <span className="auth-eyebrow">
-                {isLogin ? 'BIENVENIDO DE NUEVO' : 'ÚNETE A SHAREDNOTES'}
+                {isLogin ? 'BIENVENIDO DE NUEVO' : 'ÚNETE A SHARENOTES'}
               </span>
 
               <h2>
@@ -378,67 +371,15 @@ export default function AuthModal() {
               </div>
 
               {!isLogin && (
-                <>
-                  <div className="auth-field">
-                    <label htmlFor="programType">
-                      Tipo de programa académico
-                    </label>
-
-                    <div className="input-wrapper">
-                      <span className="input-icon">🎓</span>
-
-                      <select
-                        id="programType"
-                        value={programType}
-                        onChange={handleProgramTypeChange}
-                        required
-                      >
-                        <option value="">Selecciona tu programa...</option>
-                        <option value="tecnologo">Tecnólogo (Semestres 1 a 6)</option>
-                        <option value="ingenieria">Ingeniería (Semestres 7 a 10)</option>
-                      </select>
-                    </div>
+                <div className="auth-teacher-notice">
+                  <span className="notice-icon">ℹ️</span>
+                  <div>
+                    <strong>¿Eres docente?</strong>
+                    <p>
+                      El registro público crea cuentas de estudiante. Para habilitar permisos y acceso al panel docente, un administrador asignará tu rol una vez registrado.
+                    </p>
                   </div>
-
-                  <div className="auth-field">
-                    <label htmlFor="semester">
-                      Semestre actual
-                    </label>
-
-                    <div className="input-wrapper">
-                      <span className="input-icon">📅</span>
-
-                      <select
-                        id="semester"
-                        value={semester}
-                        onChange={(e) => setSemester(e.target.value)}
-                        disabled={!programType}
-                        required
-                      >
-                        <option value="">
-                          {!programType
-                            ? 'Selecciona primero el tipo de programa'
-                            : 'Selecciona tu semestre...'}
-                        </option>
-                        {semesterOptions.map((s) => (
-                          <option key={s} value={s}>
-                            {s}° Semestre
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="auth-teacher-notice">
-                    <span className="notice-icon">ℹ️</span>
-                    <div>
-                      <strong>¿Eres docente?</strong>
-                      <p>
-                        El registro público crea cuentas de estudiante. Para habilitar permisos y acceso al panel docente, un administrador asignará tu rol una vez registrado.
-                      </p>
-                    </div>
-                  </div>
-                </>
+                </div>
               )}
 
               <button

@@ -22,8 +22,17 @@ router.patch('/users/:id/role', requirePermission('users:assign_roles'), ctrl.ch
 // POST   /api/admin/users           — crear cuenta de personal (docente o moderador)
 router.post('/users', requirePermission('users:create'), ctrl.createStaffUser);
 
+// GET    /api/admin/teacher-assignments — resumen de docentes y asignaciones de materias
+router.get('/teacher-assignments', requirePermission('users:assign_courses'), ctrl.getAllTeacherAssignments);
+
+// GET    /api/admin/users/:id/courses — consultar materias asignadas a un docente
+router.get('/users/:id/courses', requirePermission('users:assign_courses'), ctrl.getTeacherCourses);
+
 // PATCH  /api/admin/users/:id/courses — asignar / editar materias a docente
 router.patch('/users/:id/courses', requirePermission('users:assign_courses'), ctrl.updateTeacherCourses);
+
+// DELETE /api/admin/users/:id       — eliminar cuenta de usuario
+router.delete('/users/:id', requirePermission('users:delete'), ctrl.deleteUser);
 
 // ─── Reportes ──────────────────────────────────────────────────────────────
 // GET    /api/admin/reports          — listar reportes (query: ?status=pending)

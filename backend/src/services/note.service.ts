@@ -5,13 +5,13 @@ import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import fs from 'fs';
 import path from 'path';
 import 'multer';
-import QRCode from 'qrcode';
 import {
   sendEmailNotification,
   generatePdfReport,
 } from '../utils/microservicesClient';
 import { logAuditAction } from './audit.service';
 import logger from '../utils/logger';
+import { ensureNoteFileOnDisk } from '../utils/pdfFallback';
 
 interface NoteRow extends RowDataPacket {
   id: number;
@@ -28,6 +28,8 @@ interface NoteRow extends RowDataPacket {
   uploader_id: number;
   uploader_name: string;
   is_active: boolean;
+    verified: boolean;
+  verified_by: number | null;
   created_at: Date;
 }
 
@@ -84,6 +86,27 @@ export class NoteService {
     correlationId: string;
   }): Promise<void> {
     const correlationId = data.correlationId;
+
+    
+    // Respetar la preferencia del destinatario (Preferencias > Notificaciones por correo)
+    try {
+      const [prefRows] = await pool.query<RowDataPacket[]>(
+        'SELECT email_notifications FROM users WHERE email = ? LIMIT 1',
+        [data.notifyTo],
+      );
+      if (prefRows[0] && !prefRows[0].email_notifications) {
+        logger.info('Correo omitido: el destinatario desactivó las notificaciones', {
+          correlationId,
+          recipient: data.notifyTo,
+        });
+        return;
+      }
+    } catch (prefErr: any) {
+      logger.error('No se pudo consultar la preferencia de correo; se envía de todas formas', {
+        correlationId,
+        error: prefErr?.message,
+      });
+    }
 
     try {
       const emailResult = await sendEmailNotification(
@@ -193,7 +216,7 @@ export class NoteService {
     }
   ) {
     let query = `
-      SELECT n.id, n.title, n.description, n.original_name, n.mimetype,
+      SELECT n.id, n.subject_id, n.verified, n.verified_by, n.title, n.description, n.original_name, n.mimetype,
              n.file_size, n.created_at, n.uploader_id,
              s.name AS subject_name, s.semester,
              c.name AS career_name,
@@ -272,57 +295,28 @@ export class NoteService {
     noteId: number,
   ): Promise<{ filePath: string; originalName: string; mimetype: string }> {
     const [rows] = await pool.query<NoteRow[]>(
-      'SELECT filename, original_name, mimetype FROM notes WHERE id = ? AND is_active = TRUE',
+      `SELECT n.filename, n.original_name, n.mimetype, n.title, n.description,
+              s.name AS subject_name, u.name AS uploader_name
+       FROM notes n
+       LEFT JOIN subjects s ON n.subject_id = s.id
+       LEFT JOIN users u ON n.uploader_id = u.id
+       WHERE n.id = ? AND n.is_active = TRUE`,
       [noteId],
     );
     const note = rows[0];
     if (!note) throw new AppError(404, 'Apunte no encontrado');
 
-    const uploadDir = process.env.UPLOAD_DIR || 'uploads';
-    const filePath = path.join(uploadDir, note.filename);
-
-    if (!fs.existsSync(filePath))
-      throw new AppError(404, 'Archivo no disponible');
+    const filePath = ensureNoteFileOnDisk(note.filename, {
+      title: note.title,
+      description: note.description,
+      subjectName: (note as any).subject_name,
+      uploaderName: (note as any).uploader_name,
+    });
 
     return {
       filePath,
       originalName: note.original_name,
-      mimetype: note.mimetype,
-    };
-  }
-
-  /**
-   * Genera el código QR para un apunte específico (apuntando a su descarga)
-   */
-  async generateNoteQR(noteId: number): Promise<{
-    qrCodeDataUrl: string;
-    downloadUrl: string;
-    noteTitle: string;
-  }> {
-    const [rows] = await pool.query<NoteRow[]>(
-      'SELECT id, title, filename FROM notes WHERE id = ? AND is_active = TRUE',
-      [noteId],
-    );
-    const note = rows[0];
-    if (!note) throw new AppError(404, 'Apunte no encontrado');
-
-    const appPublicUrl = process.env.APP_PUBLIC_URL || 'http://localhost:3000';
-    const downloadUrl = `${appPublicUrl}/api/notes/${noteId}/download`;
-
-    // Generar código QR en Base64 Data URL usando la librería qrcode
-    const qrCodeDataUrl = await QRCode.toDataURL(downloadUrl, {
-      width: 300,
-      margin: 2,
-      color: {
-        dark: '#0f172a',
-        light: '#ffffff',
-      },
-    });
-
-    return {
-      qrCodeDataUrl,
-      downloadUrl,
-      noteTitle: note.title,
+      mimetype: note.mimetype || 'application/pdf',
     };
   }
 

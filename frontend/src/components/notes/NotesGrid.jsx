@@ -12,11 +12,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useFilteredSubjects } from '../../hooks/useFilteredSubjects';
 import NoteCard from './NoteCard';
 import UploadModal from './UploadModal';
-import QRModal from './QRModal';
 import PreviewModal from './PreviewModal';
 
 export default function NotesGrid() {
-  const { token, isTeacher } = useAuth();
+  const { token, isTeacher, isAdmin } = useAuth();
   const [notes, setNotes] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [teacherCourses, setTeacherCourses] = useState([]);
@@ -25,10 +24,10 @@ export default function NotesGrid() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [downloadingReport, setDownloadingReport] = useState(false);
+  const [searching, setSearching] = useState(false);
 
   // Modales
   const [showUpload, setShowUpload] = useState(false);
-  const [selectedNoteForQR, setSelectedNoteForQR] = useState(null);
   const [selectedNoteForPreview, setSelectedNoteForPreview] = useState(null);
 
   const [selectedSemester, setSelectedSemester] = useState('');
@@ -130,9 +129,14 @@ export default function NotesGrid() {
     return () => window.clearTimeout(timeoutId);
   }, [refreshNotes, searchTerm, selectedSubject, selectedSemester, token]);
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
-    refreshNotes();
+    setSearching(true);
+    try {
+      await refreshNotes();
+    } finally {
+      setSearching(false);
+    }
   };
 
   const handleDownloadReport = async () => {
@@ -171,6 +175,7 @@ export default function NotesGrid() {
 
         <div style={{ display: 'flex', gap: '10px' }}>
           <>
+            {isAdmin && (
               <button
                 onClick={handleDownloadReport}
                 disabled={downloadingReport}
@@ -185,14 +190,15 @@ export default function NotesGrid() {
               >
                 {downloadingReport ? '⏳ Generando PDF...' : '📑 Reporte PDF'}
               </button>
+            )}
 
-              <button
-                onClick={() => setShowUpload(true)}
-                className="primary-btn"
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', fontSize: '13px' }}
-              >
-                ➕ Subir Apunte
-              </button>
+            <button
+              onClick={() => setShowUpload(true)}
+              className="primary-btn"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', fontSize: '13px' }}
+            >
+              ➕ Subir Apunte
+            </button>
           </>
         </div>
       </div>
@@ -232,8 +238,13 @@ export default function NotesGrid() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <button type="submit" className="primary-btn" style={{ padding: '0 16px' }}>
-            🔍
+          <button
+            type="submit"
+            className="primary-btn"
+            disabled={searching}
+            style={{ padding: '0 16px', opacity: searching ? 0.7 : 1 }}
+          >
+            {searching ? '🔍 Buscando...' : '🔍'}
           </button>
         </form>
 
@@ -394,7 +405,6 @@ export default function NotesGrid() {
             <NoteCard
               key={note.id}
               note={note}
-              onOpenQR={(n) => setSelectedNoteForQR(n)}
               onOpenPreview={(n) => setSelectedNoteForPreview(n)}
               onDeleteNote={handleDeleteNote}
             />
@@ -408,13 +418,6 @@ export default function NotesGrid() {
           subjects={subjects}
           onClose={() => setShowUpload(false)}
           onNoteUploaded={refreshNotes}
-        />
-      )}
-
-      {selectedNoteForQR && (
-        <QRModal
-          note={selectedNoteForQR}
-          onClose={() => setSelectedNoteForQR(null)}
         />
       )}
 

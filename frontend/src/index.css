@@ -430,34 +430,40 @@ select.form-input option {
    5. BOTÓN DE ALTERNANCIA DÍA / NOCHE
    ========================================================= */
 .theme-toggle-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 14px;
-  border-radius: 999px;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 50%;
   border: 1px solid var(--theme-btn-border);
   background: var(--theme-btn-bg);
   color: var(--text-primary);
-  font-size: 12px;
-  font-weight: 600;
-  font-family: var(--font-family);
   cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s ease, border-color 0.2s;
   box-shadow: var(--theme-btn-shadow);
-  white-space: nowrap;
   user-select: none;
+  flex-shrink: 0;
 }
 
 .theme-toggle-btn:hover {
   border-color: var(--primary-color);
-  color: var(--primary-color);
-  transform: translateY(-1px);
+  transform: scale(1.08);
+}
+
+.theme-toggle-btn:hover .theme-toggle-icon {
+  transform: scale(1.12);
 }
 
 .theme-toggle-btn:active {
-  transform: scale(0.97);
+  transform: scale(0.95);
 }
 
 .theme-toggle-icon {
-  font-size: 14px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
 }

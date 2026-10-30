@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { adminService } from '../../services/admin.service';
+import { notesService } from '../../services/notes.service';
 import { useAuth } from '../../context/AuthContext';
 import UsersTable from './UsersTable';
 import ReportsTable from './ReportsTable';
@@ -12,6 +13,7 @@ import SanctionsModal from './SanctionsModal';
 import MicroservicesCard from './MicroservicesCard';
 import AcademicCatalog from './AcademicCatalog';
 import StaffAccountManager from './StaffAccountManager';
+import TeacherCourseAssignment from './TeacherCourseAssignment';
 
 export default function AdminView() {
   const { token, isModerator, isAdmin } = useAuth();
@@ -20,7 +22,9 @@ export default function AdminView() {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [selectedUserForSanction, setSelectedUserForSanction] = useState(null);
+  const [downloadingReport, setDownloadingReport] = useState(false);
 
   const loadAdminData = async () => {
     try {
@@ -87,18 +91,39 @@ export default function AdminView() {
     };
   }, [users, reports]);
 
+  const activeUsersList = useMemo(() => users.filter((u) => !!u.is_active), [users]);
+  const suspendedUsersList = useMemo(() => users.filter((u) => !u.is_active), [users]);
+
   const handleToggleUser = async (userId) => {
     try {
-      await adminService.toggleUserStatus(token, userId);
+      setError('');
+      setSuccessMessage('');
+      const res = await adminService.toggleUserStatus(token, userId);
+      setSuccessMessage(res.message || 'Estado de usuario actualizado correctamente.');
       await loadAdminData();
     } catch (err) {
       setError(err.message || 'No se pudo actualizar el estado del usuario.');
     }
   };
 
+  const handleDeleteUser = async (userId) => {
+    try {
+      setError('');
+      setSuccessMessage('');
+      const res = await adminService.deleteUser(token, userId);
+      setSuccessMessage(res.message || 'Cuenta de usuario eliminada correctamente.');
+      await loadAdminData();
+    } catch (err) {
+      setError(err.message || 'No se pudo eliminar la cuenta del usuario.');
+    }
+  };
+
   const handleChangeRole = async (userId, nextRole) => {
     try {
-      await adminService.changeUserRole(token, userId, nextRole);
+      setError('');
+      setSuccessMessage('');
+      const res = await adminService.changeUserRole(token, userId, nextRole);
+      setSuccessMessage(res.message || 'Rol de usuario actualizado correctamente.');
       await loadAdminData();
     } catch (err) {
       setError(err.message || 'No se pudo cambiar el rol del usuario.');
@@ -107,10 +132,24 @@ export default function AdminView() {
 
   const handleResolveReport = async (reportId, status) => {
     try {
-      await adminService.resolveReport(token, reportId, status);
+      setError('');
+      setSuccessMessage('');
+      const res = await adminService.resolveReport(token, reportId, status);
+      setSuccessMessage(res.message || `Reporte #${reportId} marcado como: ${status === 'resolved' ? 'Resuelto' : 'Descartado'}`);
       await loadAdminData();
     } catch (err) {
       setError(err.message || 'No se pudo resolver el reporte.');
+    }
+  };
+
+  const handleDownloadPdfReport = async () => {
+    try {
+      setDownloadingReport(true);
+      await notesService.downloadNotesReport(token);
+    } catch (err) {
+      setError(err.message || 'No se pudo descargar el reporte PDF.');
+    } finally {
+      setDownloadingReport(false);
     }
   };
 
@@ -126,11 +165,30 @@ export default function AdminView() {
   return (
     <div style={{ padding: '24px' }} className="animate-fade-in">
       {/* Encabezado */}
-      <div style={{ marginBottom: '24px' }}>
-        <h2 style={{ margin: '0 0 4px', color: 'var(--text-primary)', fontSize: '24px' }}>🛡️ Panel de Administración y Moderación</h2>
-        <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>
-          Gestión de usuarios, asignación de roles académicos, catálogo y resolución de reportes
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
+        <div>
+          <h2 style={{ margin: '0 0 4px', color: 'var(--text-primary)', fontSize: '24px' }}>🛡️ Panel de Administración y Moderación</h2>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>
+            Gestión de usuarios, asignación de roles académicos, catálogo y resolución de reportes
+          </p>
+        </div>
+
+        {isAdmin && (
+          <button
+            onClick={handleDownloadPdfReport}
+            disabled={downloadingReport}
+            className="btn-outline"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '9px 16px',
+              fontSize: '13px',
+            }}
+          >
+            {downloadingReport ? '⏳ Generando PDF...' : '📑 Reporte PDF del Sistema'}
+          </button>
+        )}
       </div>
 
       {error && (
@@ -143,9 +201,59 @@ export default function AdminView() {
             borderRadius: '12px',
             padding: '12px 16px',
             fontSize: '13px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
           }}
         >
-          ⚠️ {error}
+          <div>⚠️ {error}</div>
+          <button
+            type="button"
+            onClick={() => setError('')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--color-danger-text)',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 'bold',
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {successMessage && (
+        <div
+          style={{
+            marginBottom: '20px',
+            background: 'var(--color-success-bg)',
+            border: '1px solid var(--color-success-border)',
+            color: 'var(--color-success-text)',
+            borderRadius: '12px',
+            padding: '12px 16px',
+            fontSize: '13px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div>✓ {successMessage}</div>
+          <button
+            type="button"
+            onClick={() => setSuccessMessage('')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--color-success-text)',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 'bold',
+            }}
+          >
+            ✕
+          </button>
         </div>
       )}
 
@@ -195,7 +303,23 @@ export default function AdminView() {
             color: activeTab === 'users' ? 'var(--primary-contrast)' : 'var(--text-secondary)',
           }}
         >
-          👥 Gestión de Usuarios ({users.length})
+          👥 Gestión de Usuarios ({metrics.activeUsers})
+        </button>
+
+        <button
+          onClick={() => setActiveTab('suspended')}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '8px',
+            border: 'none',
+            cursor: 'pointer',
+            fontWeight: '600',
+            fontSize: '13px',
+            background: activeTab === 'suspended' ? 'var(--primary-color)' : 'transparent',
+            color: activeTab === 'suspended' ? 'var(--primary-contrast)' : 'var(--text-secondary)',
+          }}
+        >
+          🚫 Usuarios Suspendidos ({metrics.suspendedUsers})
         </button>
 
         <button
@@ -247,6 +371,24 @@ export default function AdminView() {
             👔 Cuentas de Personal
           </button>
         )}
+
+        {isAdmin && (
+          <button
+            onClick={() => setActiveTab('teacher-assignment')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '13px',
+              background: activeTab === 'teacher-assignment' ? 'var(--primary-color)' : 'transparent',
+              color: activeTab === 'teacher-assignment' ? 'var(--primary-contrast)' : 'var(--text-secondary)',
+            }}
+          >
+            👨‍🏫 Asignar Materias a Docentes
+          </button>
+        )}
       </div>
 
       {/* Contenido según pestaña */}
@@ -256,11 +398,23 @@ export default function AdminView() {
         </div>
       ) : activeTab === 'users' ? (
         <UsersTable
-          users={users}
+          users={activeUsersList}
+          emptyMessage="No hay usuarios activos registrados."
           onRefresh={loadAdminData}
           onToggleUser={handleToggleUser}
           onChangeRole={handleChangeRole}
           onOpenSanction={(user) => setSelectedUserForSanction(user)}
+          onDeleteUser={handleDeleteUser}
+        />
+      ) : activeTab === 'suspended' ? (
+        <UsersTable
+          users={suspendedUsersList}
+          emptyMessage="No hay usuarios suspendidos."
+          onRefresh={loadAdminData}
+          onToggleUser={handleToggleUser}
+          onChangeRole={handleChangeRole}
+          onOpenSanction={(user) => setSelectedUserForSanction(user)}
+          onDeleteUser={handleDeleteUser}
         />
       ) : activeTab === 'catalog' ? (
         <AcademicCatalog />
@@ -268,6 +422,11 @@ export default function AdminView() {
         <StaffAccountManager
           token={token}
           onAccountCreated={loadAdminData}
+        />
+      ) : activeTab === 'teacher-assignment' ? (
+        <TeacherCourseAssignment
+          token={token}
+          onAssignmentUpdated={loadAdminData}
         />
       ) : (
         <ReportsTable
