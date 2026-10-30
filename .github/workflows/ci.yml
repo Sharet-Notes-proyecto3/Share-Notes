@@ -98,7 +98,7 @@ jobs:
         working-directory: frontend
         run: |
           npm install
-          npm install --save-dev @rolldown/binding-linux-x64-gnu@1.2.16
+          npm install --save-dev @rolldown/binding-linux-x64-gnu@1.2.16 lightningcss-linux-x64-gnu@1.33.0
 
       - name: 🔨 Compilar Frontend para Producción
         working-directory: frontend
