@@ -96,7 +96,9 @@ jobs:
 
       - name: 📦 Instalar dependencias del frontend
         working-directory: frontend
-        run: npm install
+        run: |
+          npm install
+          npm install --save-dev @rolldown/binding-linux-x64-gnu@1.2.16
 
       - name: 🔨 Compilar Frontend para Producción
         working-directory: frontend
