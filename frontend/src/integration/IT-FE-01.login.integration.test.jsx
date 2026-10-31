@@ -93,7 +93,7 @@ describe('IT-FE-01 | Flujo de login y autenticación', () => {
       password: 'Clave1234',
     });
 
-    expect(localStorage.getItem('jhi-authenticationToken')).toBe('token-incorrecto');
+    expect(localStorage.getItem('jhi-authenticationToken')).toBe('token-jwt-falso');
     expect(JSON.parse(localStorage.getItem('jhi-userAccount')).email).toBe('ana@uni.edu.co');
   });
 
