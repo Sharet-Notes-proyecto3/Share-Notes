@@ -58,7 +58,7 @@ describe('Módulo Moderador - Pruebas Unitarias UI', () => {
     expect(screen.getByText('Juan Pérez')).toBeInTheDocument();
     expect(screen.getByText('María López')).toBeInTheDocument();
 
-    expect(screen.getByText(/Apunte/i)).toBeInTheDocument();
+    expect(screen.getByText(/📝\s*Apunte/i)).toBeInTheDocument();
     expect(screen.getByText(/Publicación/i)).toBeInTheDocument();
   });
 
