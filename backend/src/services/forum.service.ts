@@ -53,10 +53,15 @@ export class ForumService {
     return { id: (result as any).insertId, message: 'Hilo creado' };
   }
 
-  async listThreads(subjectId?: number) {
+  async listThreads(
+    subjectId?: number,
+    semester?: number,
+    sort: 'recent' | 'week' | 'answers' = 'recent',
+  ) {
     let query = `
       SELECT ft.id, ft.title, ft.body, ft.created_at,
              s.name AS subject_name, ft.subject_id,
+             s.semester AS subject_semester,
              u.name AS author_name, ft.author_id,
              (SELECT COUNT(*) FROM forum_replies fr WHERE fr.thread_id = ft.id AND fr.is_active = TRUE) AS reply_count
       FROM forum_threads ft
@@ -69,7 +74,21 @@ export class ForumService {
       query += ' AND ft.subject_id = ?';
       params.push(subjectId);
     }
-    query += ' ORDER BY ft.created_at DESC';
+    if (semester) {
+      query += ' AND s.semester = ?';
+      params.push(semester);
+    }
+    if (sort === 'week') {
+      query += ' AND ft.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
+    }
+    if (sort === 'answers') {
+      query +=
+        ' AND EXISTS (SELECT 1 FROM forum_replies fr2 WHERE fr2.thread_id = ft.id AND fr2.is_active = TRUE)';
+    }
+    query +=
+      sort === 'answers'
+        ? ' ORDER BY reply_count DESC, ft.created_at DESC'
+        : ' ORDER BY ft.created_at DESC';
 
     const [rows] = await pool.query<ThreadRow[]>(query, params);
     return rows;
@@ -264,6 +283,25 @@ export class ForumService {
     targetId: number;
     reason: string;
   }) {
+    // No se puede reportar contenido propio
+    const ownerQueries: Record<string, string> = {
+      thread: 'SELECT author_id AS owner_id FROM forum_threads WHERE id = ?',
+      reply: 'SELECT author_id AS owner_id FROM forum_replies WHERE id = ?',
+      note: 'SELECT uploader_id AS owner_id FROM notes WHERE id = ?',
+    };
+    const ownerQuery = ownerQueries[data.targetType];
+    if (ownerQuery) {
+      const [ownerRows] = await pool.query<RowDataPacket[]>(ownerQuery, [
+        data.targetId,
+      ]);
+      if (
+        ownerRows[0] &&
+        Number(ownerRows[0].owner_id) === Number(data.reporterId)
+      ) {
+        throw new AppError(400, 'No puedes reportar tu propio contenido');
+      }
+    }
+
     await pool.query(
       'INSERT INTO reports (reporter_id, target_type, target_id, reason) VALUES (?, ?, ?, ?)',
       [data.reporterId, data.targetType, data.targetId, data.reason],

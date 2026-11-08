@@ -3,7 +3,7 @@
 // Responsable: Integrante 3 (Foro Académico & Comunidad)
 // =============================================================================
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { forumService } from '../../services/forum.service';
 import { useAuth } from '../../context/AuthContext';
 
@@ -12,8 +12,22 @@ export default function NewThreadModal({ subjects, onClose, onThreadCreated }) {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [subjectId, setSubjectId] = useState(subjects[0]?.id || '');
+  const [semesterFilter, setSemesterFilter] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const visibleSubjects = useMemo(() => {
+    if (!semesterFilter) return subjects;
+    return subjects.filter((s) => String(s.semester) === String(semesterFilter));
+  }, [subjects, semesterFilter]);
+
+  const handleSemesterFilter = (value) => {
+    setSemesterFilter(value);
+    const current = subjects.find((s) => String(s.id) === String(subjectId));
+    if (value && current && String(current.semester) !== String(value)) {
+      setSubjectId('');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -83,6 +97,22 @@ export default function NewThreadModal({ subjects, onClose, onThreadCreated }) {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div>
+            <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Filtrar materias por semestre</label>
+            <select
+              className="form-input"
+              value={semesterFilter}
+              onChange={(e) => handleSemesterFilter(e.target.value)}
+            >
+              <option value="">Todos los semestres</option>
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                <option key={n} value={n}>
+                  Semestre {n}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
             <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Materia *</label>
             <select
               className="form-input"
@@ -91,7 +121,7 @@ export default function NewThreadModal({ subjects, onClose, onThreadCreated }) {
               required
             >
               <option value="">Selecciona una materia...</option>
-              {subjects.map((sub) => (
+              {visibleSubjects.map((sub) => (
                 <option key={sub.id} value={sub.id}>
                   {sub.name} (Semestre {sub.semester})
                 </option>

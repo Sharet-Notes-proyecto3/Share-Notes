@@ -226,6 +226,7 @@ export default function ThreadCard({ thread, onRefresh }) {
               <span className="subject-chip">
                 <span className="subject-chip-dot"></span>
                 {thread.subject_name || 'Materia General'}
+                {thread.subject_semester ? ` · ${thread.subject_semester}.º semestre` : ''}
               </span>
               <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                 💬 {thread.reply_count || replies.length || 0} respuestas
@@ -256,6 +257,7 @@ export default function ThreadCard({ thread, onRefresh }) {
                 </button>
               )}
 
+              {!isThreadCreator && (
               <button
                 onClick={handleOpenReportThread}
                 style={{
@@ -273,6 +275,7 @@ export default function ThreadCard({ thread, onRefresh }) {
               >
                 🚩 Reportar
               </button>
+              )}
             </div>
 
           </div>
@@ -423,7 +426,8 @@ export default function ThreadCard({ thread, onRefresh }) {
                           </button>
                         )}
 
-                        {/* Botón Reportar Respuesta */}
+                        {/* Botón Reportar Respuesta (no se puede reportar contenido propio) */}
+                        {!isReplyCreator && (
                         <button
                           onClick={() => handleOpenReportReply(reply)}
                           style={{
@@ -439,6 +443,7 @@ export default function ThreadCard({ thread, onRefresh }) {
                         >
                           🚩 Reportar
                         </button>
+                        )}
                       </div>
                     </div>
 

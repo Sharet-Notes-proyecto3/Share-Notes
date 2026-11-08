@@ -15,6 +15,8 @@ export default function ForumView() {
   const [threads, setThreads] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState('');
+  const [selectedSemester, setSelectedSemester] = useState('');
+  const [sortBy, setSortBy] = useState('recent');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [showNewThreadModal, setShowNewThreadModal] = useState(false);
@@ -23,14 +25,14 @@ export default function ForumView() {
     if (!token) return;
     try {
       setLoading(true);
-      const threadsRes = await forumService.getThreads(token, selectedSubject);
+      const threadsRes = await forumService.getThreads(token, selectedSubject, selectedSemester, sortBy);
       setThreads(threadsRes.data || threadsRes || []);
     } catch (err) {
       console.error('Error al cargar datos del foro:', err);
     } finally {
       setLoading(false);
     }
-  }, [token, selectedSubject]);
+  }, [token, selectedSubject, selectedSemester, sortBy]);
 
   // Cargar lista de materias solo UNA vez al montar
   useEffect(() => {
@@ -44,14 +46,14 @@ export default function ForumView() {
     return () => { isMounted = false; };
   }, [token]);
 
-  // Cargar hilos del foro al cambiar token o filtro de materia
+  // Cargar hilos del foro al cambiar token o filtros (materia, semestre, orden)
   useEffect(() => {
     if (!token) return;
     let isMounted = true;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
 
-    forumService.getThreads(token, selectedSubject)
+    forumService.getThreads(token, selectedSubject, selectedSemester, sortBy)
       .then((threadsRes) => {
         if (isMounted) setThreads(threadsRes.data || threadsRes || []);
       })
@@ -63,7 +65,22 @@ export default function ForumView() {
     return () => {
       isMounted = false;
     };
-  }, [token, selectedSubject]);
+  }, [token, selectedSubject, selectedSemester, sortBy]);
+
+  // Materias visibles en el selector: todas, o solo las del semestre elegido
+  const visibleSubjects = useMemo(() => {
+    if (!selectedSemester) return subjects;
+    return subjects.filter((s) => String(s.semester) === String(selectedSemester));
+  }, [subjects, selectedSemester]);
+
+  const handleSemesterChange = (value) => {
+    setSelectedSemester(value);
+    // Si la materia elegida no pertenece al nuevo semestre, se limpia
+    const current = subjects.find((s) => String(s.id) === String(selectedSubject));
+    if (value && current && String(current.semester) !== String(value)) {
+      setSelectedSubject('');
+    }
+  };
 
   // Buscador de Debates en tiempo real por palabra clave
   const filteredThreads = useMemo(() => {
@@ -130,27 +147,54 @@ export default function ForumView() {
           )}
         </div>
 
-        {/* Selector de Materia */}
-        <div style={{ width: '280px', display: 'flex', gap: '8px' }}>
+        {/* Filtros: materia, semestre y orden */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'stretch' }}>
           <select
             className="form-input"
-            style={{ flex: 1 }}
+            style={{ width: '230px' }}
             value={selectedSubject}
             onChange={(e) => setSelectedSubject(e.target.value)}
           >
             <option value="">📚 Todas las materias</option>
-            {subjects.map((sub) => (
+            {visibleSubjects.map((sub) => (
               <option key={sub.id} value={sub.id}>
                 {sub.name} (Semestre {sub.semester})
               </option>
             ))}
           </select>
 
-          {(searchTerm || selectedSubject) && (
+          <select
+            className="form-input"
+            style={{ width: '180px' }}
+            value={selectedSemester}
+            onChange={(e) => handleSemesterChange(e.target.value)}
+          >
+            <option value="">🎓 Todos los semestres</option>
+            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+              <option key={n} value={n}>
+                Semestre {n}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="form-input"
+            style={{ width: '200px' }}
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="recent">🗂️ Todos los debates</option>
+            <option value="week">🕒 Recientes (7 días)</option>
+            <option value="answers">💬 Más respondidos</option>
+          </select>
+
+          {(searchTerm || selectedSubject || selectedSemester || sortBy !== 'recent') && (
             <button
               onClick={() => {
                 setSearchTerm('');
                 setSelectedSubject('');
+                setSelectedSemester('');
+                setSortBy('recent');
               }}
               style={{
                 padding: '0 12px',

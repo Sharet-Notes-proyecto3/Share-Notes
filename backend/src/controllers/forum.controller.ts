@@ -22,8 +22,12 @@ export const createThread = async (req: Request, res: Response, next: NextFuncti
 
 export const listThreads = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { subjectId } = req.query;
-    const threads = await service.listThreads(subjectId ? parseInt(subjectId as string) : undefined);
+    const { subjectId, semester, sort } = req.query;
+    const threads = await service.listThreads(
+      subjectId ? parseInt(subjectId as string) : undefined,
+      semester ? parseInt(semester as string) : undefined,
+      sort === 'answers' || sort === 'week' ? sort : 'recent',
+    );
     res.json(threads);
   } catch (err) { next(err); }
 };

@@ -3,8 +3,13 @@ import { api } from './api';
 
 export const forumService = {
   
-  async getThreads(token, subjectId = '') {
-    const query = subjectId ? `?subjectId=${subjectId}` : '';
+  async getThreads(token, subjectId = '', semester = '', sort = 'recent') {
+    const params = new URLSearchParams();
+    if (subjectId) params.set('subjectId', subjectId);
+    if (semester) params.set('semester', semester);
+    if (sort && sort !== 'recent') params.set('sort', sort);
+    const qs = params.toString();
+    const query = qs ? `?${qs}` : '';
     return await api.get(`/forum${query}`, token);
   },
 
