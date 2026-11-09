@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS subjects (
   name      VARCHAR(120) NOT NULL,
   semester  TINYINT UNSIGNED NOT NULL,
   career_id INT UNSIGNED NOT NULL,
+  UNIQUE KEY uq_subject_catalog (name, semester, career_id),
   FOREIGN KEY (career_id) REFERENCES careers(id) ON DELETE CASCADE
 );
 
@@ -173,6 +174,10 @@ INSERT IGNORE INTO subjects (id, name, semester, career_id) VALUES
   (16, 'Microcontroladores',         4, 2),
   (17, 'Señales y Sistemas',         5, 2),
   (18, 'Comunicaciones',             6, 2),
+  (29, 'Sistemas Embebidos',         7, 2),
+  (30, 'Control Automático',         8, 2),
+  (31, 'Procesamiento Digital de Señales', 9, 2),
+  (32, 'Telecomunicaciones Avanzadas', 10, 2),
 
   -- Administración de Empresas
   (19, 'Introducción a la Administración', 1, 3),
@@ -180,17 +185,28 @@ INSERT IGNORE INTO subjects (id, name, semester, career_id) VALUES
   (21, 'Mercadeo',                         3, 3),
   (22, 'Recursos Humanos',                 4, 3),
   (23, 'Emprendimiento',                   5, 3),
+  (33, 'Gestión de Operaciones',           6, 3),
+  (34, 'Finanzas Corporativas',            7, 3),
+  (35, 'Dirección Estratégica',            8, 3),
+  (36, 'Gestión de Proyectos',             9, 3),
+  (37, 'Negocios Internacionales',        10, 3),
 
   -- Contaduría Pública
   (24, 'Contabilidad Financiera I', 1, 4),
   (25, 'Auditoría Financiera',      2, 4),
   (26, 'Tributación',               3, 4),
   (27, 'Costos',                    4, 4),
-  (28, 'Control Interno',           5, 4);
+  (28, 'Control Interno',           5, 4),
+  (38, 'Presupuestos',              6, 4),
+  (39, 'Auditoría de Sistemas',     7, 4),
+  (40, 'Finanzas Públicas',         8, 4),
+  (41, 'Normas Internacionales de Información Financiera', 9, 4),
+  (42, 'Revisoría Fiscal',         10, 4);
 `;
 
 const ALTER_QUERIES = [
   `ALTER TABLE users MODIFY COLUMN role ENUM('student','teacher','moderator','admin') NOT NULL DEFAULT 'student'`,
+  `ALTER TABLE subjects ADD UNIQUE KEY uq_subject_catalog (name, semester, career_id)`,
   `ALTER TABLE users ADD COLUMN avatar_url VARCHAR(255) NULL DEFAULT NULL`,
   `ALTER TABLE users ADD COLUMN restricted_until TIMESTAMP NULL DEFAULT NULL`,
   `ALTER TABLE notes ADD COLUMN verified BOOLEAN NOT NULL DEFAULT FALSE`,

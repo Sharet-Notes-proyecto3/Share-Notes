@@ -13,18 +13,60 @@ SET FOREIGN_KEY_CHECKS = 0;
 INSERT IGNORE INTO careers (id, name) VALUES
   (1, 'Ingeniería en Sistemas'),
   (2, 'Ingeniería Electrónica'),
-  (3, 'Administración de Empresas');
+  (3, 'Administración de Empresas'),
+  (4, 'Contaduría Pública');
 
 -- 2. ASIGNATURAS (MATERIAS)
 INSERT IGNORE INTO subjects (id, name, semester, career_id) VALUES
-  (1, 'Cálculo I',              1, 1),
-  (2, 'Fundamentos de Progr.',  1, 1),
-  (3, 'Álgebra Lineal',         2, 1),
-  (4, 'Estructura de Datos',    3, 1),
-  (5, 'Bases de Datos',         4, 1),
-  (6, 'Redes de Computadores',  5, 1),
-  (7, 'Proyecto de Software I', 5, 1),
-  (8, 'Proyecto de Software II',6, 1);
+  -- Ingeniería en Sistemas (semestres 1-6 tecnólogo, 7-10 ingeniería)
+  (1,  'Cálculo I',                    1,  1),
+  (2,  'Fundamentos de Progr.',        1,  1),
+  (3,  'Álgebra Lineal',               2,  1),
+  (4,  'Estructura de Datos',          3,  1),
+  (5,  'Bases de Datos',               4,  1),
+  (6,  'Redes de Computadores',        5,  1),
+  (7,  'Proyecto de Software I',       5,  1),
+  (8,  'Proyecto de Software II',      6,  1),
+  (9,  'Arquitectura de Software',     7,  1),
+  (10, 'Inteligencia Artificial',      8,  1),
+  (11, 'Seguridad Informática',        9,  1),
+  (12, 'Computación en la Nube',       10, 1),
+
+  -- Ingeniería Electrónica
+  (13, 'Circuitos Eléctricos I',       1,  2),
+  (14, 'Electrónica Analógica',        2,  2),
+  (15, 'Electrónica Digital',          3,  2),
+  (16, 'Microcontroladores',           4,  2),
+  (17, 'Señales y Sistemas',           5,  2),
+  (18, 'Comunicaciones',               6,  2),
+  (29, 'Sistemas Embebidos',           7,  2),
+  (30, 'Control Automático',           8,  2),
+  (31, 'Procesamiento Digital de Señales', 9, 2),
+  (32, 'Telecomunicaciones Avanzadas', 10, 2),
+
+  -- Administración de Empresas
+  (19, 'Introducción a la Administración', 1, 3),
+  (20, 'Contabilidad Básica',              2, 3),
+  (21, 'Mercadeo',                         3, 3),
+  (22, 'Recursos Humanos',                 4, 3),
+  (23, 'Emprendimiento',                   5, 3),
+  (33, 'Gestión de Operaciones',           6, 3),
+  (34, 'Finanzas Corporativas',            7, 3),
+  (35, 'Dirección Estratégica',            8, 3),
+  (36, 'Gestión de Proyectos',             9, 3),
+  (37, 'Negocios Internacionales',        10, 3),
+
+  -- Contaduría Pública
+  (24, 'Contabilidad Financiera I',    1,  4),
+  (25, 'Auditoría Financiera',         2,  4),
+  (26, 'Tributación',                  3,  4),
+  (27, 'Costos',                       4,  4),
+  (28, 'Control Interno',              5,  4),
+  (38, 'Presupuestos',                 6,  4),
+  (39, 'Auditoría de Sistemas',        7,  4),
+  (40, 'Finanzas Públicas',            8,  4),
+  (41, 'Normas Internacionales de Información Financiera', 9, 4),
+  (42, 'Revisoría Fiscal',            10,  4);
 
 -- 3. USUARIOS (Contraseña de todos: password123)
 -- Hash bcrypt correspondiente: $2b$10$4VRzsmFzlJvbj.7WpDC21.zxmNJBmK7UALMMMA73WWkmntI96ijzm

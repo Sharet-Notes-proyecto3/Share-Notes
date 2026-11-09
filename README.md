@@ -103,6 +103,8 @@ npm install
 npm run db:migrate
 ```
 
+> **Bases de datos existentes:** si el catálogo de materias quedó duplicado o no aparecen las materias de los semestres 7-10, ejecuta `npm run db:repair-catalog`. El script consolida duplicados, remapea referencias e inserta las materias faltantes.
+
 ---
 
 ### 4. Iniciar Todos los Servicios
